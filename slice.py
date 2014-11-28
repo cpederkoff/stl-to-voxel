@@ -26,14 +26,7 @@ def triangleToVoxels(line, pixels, x, y):
             newpoint = linearInterpolation(p1, p2, i / (x + y))
             # can replace with just int for spped increase. Decreases quality?
             pixels[int(newpoint[0]), int(newpoint[1])] = True
-    avg = [0, 0]
-    for pt in line:
-        avg[0] += pt[0]
-        avg[1] += pt[1]
-    avg[0] = int(round(avg[0] / 3))
-    avg[1] = int(round(avg[1] / 3))
-    # line2 = [[l[0],l[1]] for l in line]
-    fill(avg, pixels)
+    fill(line, pixels)
 
 
 def lineToVoxels(line, pixels, x, y):
@@ -62,24 +55,24 @@ def toVoxels(pointList, x, y):
             assert(False)
     return pixels
 
-def fill(start, pixels):
-    def getnearby(x,y):
-        if x >= pixels.shape[0] or x < 0 or y >= pixels.shape[1] or y < 0:
-            return
-        for i in [[1,0],[0,1],[-1,0],[0,-1]]:
-            yield (x+i[0],y+i[1])
-    stack = []
-    if not pixels[start[0],start[1]]:
-        stack.append(start)
-    while len(stack) > 0:
-        x,y = heapq.heappop(stack)
-        if not pixels[x,y]:
-            near = list(getnearby(x,y))
-            for n in near:
-                heapq.heappush(stack, n)
-            pixels[x,y] = True
+def fill(triangle, pixels):
+    numSteps = max(manDistance(triangle[0],triangle[2]),manDistance(triangle[1],triangle[2]))
+    for i in range(numSteps):
+        p1 = linearInterpolation(triangle[0],triangle[2],i/numSteps)
+        p2 = linearInterpolation(triangle[1],triangle[2],i/numSteps)
+        lineSteps = int(manDistance(p1,p2))+1
+        for j in range(lineSteps):
+            point = linearInterpolation(p1,p2,j/lineSteps)
+            pixels[int(point[0]),int(point[1])] = True
 
 
+
+def manDistance(p1,p2):
+    assert(len(p1)==len(p2))
+    d = 0
+    for i in range(len(p1)):
+        d+=abs(p1[i] - p2[i])
+    return d
 def printBigArray(big, yes='1', no='0'):
     print()
     for line in big:
