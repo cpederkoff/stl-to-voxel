@@ -19,41 +19,47 @@ def toPerimeterLinesOrTriangles(mesh,height):
         elif len(pair[0]) == 3:
             yield pair[0]
 
-def toVoxels(lines, x, y):
+
+def triangleToVoxels(line, pixels, x, y):
+    for (p1, p2) in itertools.combinations(line, 2):
+        for i in range(x + y):
+            newpoint = linearInterpolation(p1, p2, i / (x + y))
+            # can replace with just int for spped increase. Decreases quality?
+            pixels[int(newpoint[0]), int(newpoint[1])] = True
+    avg = [0, 0]
+    for pt in line:
+        avg[0] += pt[0]
+        avg[1] += pt[1]
+    avg[0] = int(round(avg[0] / 3))
+    avg[1] = int(round(avg[1] / 3))
+    # line2 = [[l[0],l[1]] for l in line]
+    fill(avg, pixels)
+
+
+def lineToVoxels(line, pixels, x, y):
+    p1 = line[0]
+    p2 = line[1]
+    for i in range(x + y):
+        newpoint = linearInterpolation(p1, p2, i / (x + y))
+        # can replace with just int for spped increase. Decreases quality?
+        pixels[int(newpoint[0]), int(newpoint[1])] = True
+
+
+def toVoxels(pointList, x, y):
     #find all voxels that intersect any lines
-    assert(lines!=None)
+    assert(pointList!=None)
     pixels = np.zeros((x, y), dtype=bool)
-    for line in lines:
+    for line in pointList:
         line = removeDupsFromPointList(line)
-        if len(line) == 0:
-            pass
-        elif len(line) == 1:
+        if len(line) == 1:
             newpoint = line[0]
             pixels[int(newpoint[0]),int(newpoint[1])] = True
         elif len(line) == 2:
-            p1 = line[0]
-            p2 = line[1]
-            for i in range(x+y):
-                newpoint = linearInterpolation(p1,p2,i/(x+y))
-                #can replace with just int for spped increase. Decreases quality?
-                pixels[int(newpoint[0]),int(newpoint[1])] = True
+            lineToVoxels(line, pixels, x, y)
         elif len(line) == 3:
-            for (p1,p2) in itertools.combinations(line,2):
-                for i in range(x+y):
-                    newpoint = linearInterpolation(p1,p2,i/(x+y))
-                    #can replace with just int for spped increase. Decreases quality?
-                    pixels[int(newpoint[0]),int(newpoint[1])] = True
-            avg = [0,0]
-            for pt in line:
-                avg[0] += pt[0]
-                avg[1] += pt[1]
-            avg[0] = int(round(avg[0]/3))
-            avg[1] = int(round(avg[1]/3))
-            # line2 = [[l[0],l[1]] for l in line]
-            fill(avg,pixels)
+            triangleToVoxels(line, pixels, x, y)
         else:
-            assert False
-            # fill(avg,pixels)
+            assert(False)
     return pixels
 
 def fill(start, pixels):
