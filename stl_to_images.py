@@ -16,7 +16,7 @@ def doExport(path, resolution):
     mesh = list(stl_reader.read_stl_verticies(path))
     (scale,shift, bounding_box) = slice.calculateScaleAndShift(mesh, resolution)
     mesh = list(slice.scaleAndShiftMesh(mesh, scale, shift))
-    for h in range(255):
+    for h in range(bounding_box[2]):
         img = Image.new( 'RGB', (bounding_box[0],bounding_box[1]), "white") # create a new black image
         pixels = img.load() # create the pixel map
         perim = slice.slice(mesh,h)
