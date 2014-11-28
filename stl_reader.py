@@ -19,7 +19,7 @@ def BinarySTL(fname):
     Header = fp.read(80)
     nn = fp.read(4)
     Numtri = unpack('i', nn)[0]
-    #print nn
+    # print nn
     record_dtype = np.dtype([
         ('normals', np.float32, (3,)),
         ('Vertex1', np.float32, (3,)),
@@ -44,7 +44,7 @@ def BinarySTL(fname):
 
 def read_stl_verticies(fname):
     head, p, n, v1, v2, v3 = BinarySTL(fname)
-    for i,j,k in zip(v1,v2,v3):
-        yield (i,j,k)
+    for i, j, k in zip(v1, v2, v3):
+        yield (i, j, k)
 
 
