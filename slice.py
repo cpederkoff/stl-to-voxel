@@ -56,6 +56,9 @@ def toVoxels(pointList, x, y):
 
 def drawLineOnPixels(p1, p2, pixels):
     lineSteps = math.ceil(manDistance(p1, p2))
+    if lineSteps == 0:
+        pixels[int(p1[0]), int(p2[1])] = True
+        return
     for j in range(lineSteps + 1):
         point = linearInterpolation(p1, p2, j / lineSteps)
         pixels[int(point[0]), int(point[1])] = True
