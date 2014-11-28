@@ -176,9 +176,9 @@ def calculateScaleAndShift(mesh, resolution):
         mins[i] = min(allPoints, key=lambda tri: tri[i])[i]
         maxs[i] = max(allPoints, key=lambda tri: tri[i])[i]
     shift = [-min for min in mins]
-    xyscale = float(resolution) / (max(maxs[0] - mins[0], maxs[1] - mins[1])) + 0.0000001
+    xyscale = float(resolution-1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))# + 0.0000001
     scale = [xyscale, xyscale, xyscale]
-    bounding_box = [int(math.ceil((maxs[i] - mins[i]) * xyscale)) for i in range(3)]
+    bounding_box = [resolution, resolution, int(math.ceil((maxs[2] - mins[2]) * xyscale))]
     return (scale, shift, bounding_box)
 
 
