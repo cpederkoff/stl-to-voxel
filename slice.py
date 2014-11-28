@@ -12,25 +12,16 @@ def slice(mesh, height, bounding_box):
 
 def toPerimeterLinesOrTriangles(mesh, height):
     relevantTriangles = list(filter(lambda tri: isAboveAndBelow(tri, height), mesh))
-    intersectingLines = map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles)
-    for pair in intersectingLines:
-        pair = list(pair)
-        if len(pair[0]) == 2:
-            yield map(lambda line: whereLineCrossesZ(line[0], line[1], height), pair)
-        elif len(pair[0]) == 3:
-            yield pair[0]
+    return map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles)
 
 
-def triangleToVoxels(line, pixels, x, y):
-    for (p1, p2) in itertools.combinations(line, 2):
-        for i in range(x + y):
-            newpoint = linearInterpolation(p1, p2, i / (x + y))
-            # can replace with just int for spped increase. Decreases quality?
-            pixels[int(newpoint[0]), int(newpoint[1])] = True
-    fill(line, pixels)
+def triangleToVoxels(triangle, pixels):
+    for (p1, p2) in itertools.combinations(triangle, 2):
+        drawLineOnPixels(p1, p2, pixels)
+    fill(triangle, pixels)
 
 
-def lineToVoxels(line, pixels, x, y):
+def lineToVoxels(line, pixels):
     p1 = line[0]
     p2 = line[1]
     drawLineOnPixels(p1, p2, pixels)
@@ -38,24 +29,19 @@ def lineToVoxels(line, pixels, x, y):
 
 def toVoxels(pointList, x, y):
     # find all voxels that intersect any lines
-    assert (pointList != None)
+    assert (pointList is not None)
     pixels = np.zeros((x, y), dtype=bool)
     for line in pointList:
         line = removeDupsFromPointList(line)
-        if len(line) == 1:
-            newpoint = line[0]
-            pixels[int(newpoint[0]), int(newpoint[1])] = True
-        elif len(line) == 2:
-            lineToVoxels(line, pixels, x, y)
+        if len(line) == 2:
+            lineToVoxels(line, pixels)
         elif len(line) == 3:
-            triangleToVoxels(line, pixels, x, y)
-        else:
-            assert (False)
+            triangleToVoxels(line, pixels)
     return pixels
 
 
 def drawLineOnPixels(p1, p2, pixels):
-    lineSteps = math.ceil(manDistance(p1, p2))
+    lineSteps = math.ceil(manhattanDistance(p1, p2))
     if lineSteps == 0:
         pixels[int(p1[0]), int(p2[1])] = True
         return
@@ -65,19 +51,19 @@ def drawLineOnPixels(p1, p2, pixels):
 
 
 def fill(triangle, pixels):
-    numSteps = max(manDistance(triangle[0], triangle[2]), manDistance(triangle[1], triangle[2]))
+    numSteps = max(manhattanDistance(triangle[0], triangle[2]), manhattanDistance(triangle[1], triangle[2]))
     for i in range(numSteps):
         p1 = linearInterpolation(triangle[0], triangle[2], i / numSteps)
         p2 = linearInterpolation(triangle[1], triangle[2], i / numSteps)
         drawLineOnPixels(p1, p2, pixels)
 
 
-def manDistance(p1, p2, d=2):
+def manhattanDistance(p1, p2, d=2):
     assert (len(p1) == len(p2))
-    sum = 0
+    allDistances = 0
     for i in range(d):
-        sum += abs(p1[i] - p2[i])
-    return sum
+        allDistances += abs(p1[i] - p2[i])
+    return allDistances
 
 
 def printBigArray(big, yes='1', no='0'):
@@ -126,9 +112,6 @@ def isAboveAndBelow(pointList, height):
     :return: true if at line from the triangle crosses or is on the height line,
     '''
     deltas = list(map(lambda pt: pt[2] - height, pointList))
-    # if max(deltas) == 0 and min(deltas) == 0 and len(pointList) == 3:
-    # #Unicorn case
-    # print("unicorn", pointList, height)
     if max(deltas) >= 0 and min(deltas) <= 0:
         return True
     else:
@@ -142,17 +125,17 @@ def triangleToIntersectingLines(triangle, height):
     assert (len(triangle) == 3)
     if len(same) == 3:
         # return a triangle if all is on the intersecting plane.
-        yield triangle
+        return triangle
+    elif len(same) == 2:
+        return same[0], same[1]
     else:
-        # return a line otherwise
-        for aind in range(3):
-            a = triangle[aind]
-            for b in triangle[aind:]:
-                if list(a) != list(b) and isAboveAndBelow((a, b), height):
-                    if (a[2] > b[2]):
-                        yield (b, a)
-                    else:
-                        yield (a, b)
+        lines = []
+        for a in above:
+            for b in below:
+                lines.append((b, a))
+        for s in same:
+            lines.append((s, s))
+        return map(lambda line: whereLineCrossesZ(line[0], line[1], height), lines)
 
 
 def whereLineCrossesZ(p1, p2, z):
@@ -176,7 +159,7 @@ def calculateScaleAndShift(mesh, resolution):
         mins[i] = min(allPoints, key=lambda tri: tri[i])[i]
         maxs[i] = max(allPoints, key=lambda tri: tri[i])[i]
     shift = [-min for min in mins]
-    xyscale = float(resolution-1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))# + 0.0000001
+    xyscale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))
     scale = [xyscale, xyscale, xyscale]
     bounding_box = [resolution, resolution, int(math.ceil((maxs[2] - mins[2]) * xyscale))]
     return (scale, shift, bounding_box)
