@@ -19,8 +19,7 @@ def doExport(path, resolution):
     for h in range(bounding_box[2]):
         img = Image.new( 'RGB', (bounding_box[0],bounding_box[1]), "white") # create a new black image
         pixels = img.load() # create the pixel map
-        perim = slice.slice(mesh,h)
-        prepixels = slice.toVoxels(perim,bounding_box[0],bounding_box[1])
+        prepixels = slice.slice(mesh,h, bounding_box)
         arrayToPixel(prepixels, pixels)
         img.save("./images/"+str(h) + ".png")
 

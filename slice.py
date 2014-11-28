@@ -5,9 +5,12 @@ import itertools
 import matplotlib.pyplot as plt
 
 
-def slice(mesh,height):
-    relevantTriangles = list(filter(lambda tri:isAboveAndBelow(tri,height), mesh))
+def slice(mesh,height, bounding_box):
+    perim = toPerimeterLinesOrTriangles(mesh,height)
+    return toVoxels(perim, bounding_box[0], bounding_box[1])
 
+def toPerimeterLinesOrTriangles(mesh,height):
+    relevantTriangles = list(filter(lambda tri:isAboveAndBelow(tri,height), mesh))
     intersectingLines = map(lambda tri:triangleToIntersectingLines(tri,height),relevantTriangles)
     for pair in intersectingLines:
         pair = list(pair)
@@ -16,13 +19,12 @@ def slice(mesh,height):
         elif len(pair[0]) == 3:
             yield pair[0]
 
-def toVoxels(lines, x, y, f=False):
+def toVoxels(lines, x, y):
     #find all voxels that intersect any lines
     assert(lines!=None)
     pixels = np.zeros((x, y), dtype=bool)
     for line in lines:
         line = removeDupsFromPointList(line)
-
         if len(line) == 0:
             pass
         elif len(line) == 1:
@@ -35,9 +37,7 @@ def toVoxels(lines, x, y, f=False):
                 newpoint = linearInterpolation(p1,p2,i/(x+y))
                 #can replace with just int for spped increase. Decreases quality?
                 pixels[int(newpoint[0]),int(newpoint[1])] = True
-
         elif len(line) == 3:
-            #
             for (p1,p2) in itertools.combinations(line,2):
                 for i in range(x+y):
                     newpoint = linearInterpolation(p1,p2,i/(x+y))
@@ -51,16 +51,9 @@ def toVoxels(lines, x, y, f=False):
             avg[1] = int(round(avg[1]/3))
             # line2 = [[l[0],l[1]] for l in line]
             fill(avg,pixels)
-
-
         else:
             assert False
             # fill(avg,pixels)
-
-
-    #spacefill inside shape
-    if f:
-        fill((x/2,y/2),pixels)
     return pixels
 
 def fill(start, pixels):

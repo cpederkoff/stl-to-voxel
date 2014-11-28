@@ -98,7 +98,7 @@ class TestSequenceFunctions(unittest.TestCase):
             [3,2,3]
         ]
         lines = list(slice.triangleToIntersectingLines(tri,3))
-        self.assertTrue((tri[0],tri[1]) in lines and (tri[1],tri[2]) and (tri[0],tri[2]) in lines)
+        self.assertTrue(tri in lines)
 
     def test_fill(self):
         test = np.array([
@@ -136,8 +136,3 @@ class TestSequenceFunctions(unittest.TestCase):
                     [False, False, False,  True,  True, False, False, False]]
         slice.printBigArray(slice.toVoxels(lines,8,8))
         # self.assertTrue((expected==)
-
-    def test_removeDupsFromPointList(self):
-        a = [[253, 152, 0], [253, 152, 0], [254, 139, 0]]
-        expected = [(253, 152, 0),  (254, 139, 0)]
-        self.assertEqual(expected, slice.removeDupsFromList(a))
