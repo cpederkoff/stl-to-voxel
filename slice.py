@@ -32,10 +32,7 @@ def triangleToVoxels(line, pixels, x, y):
 def lineToVoxels(line, pixels, x, y):
     p1 = line[0]
     p2 = line[1]
-    for i in range(x + y):
-        newpoint = linearInterpolation(p1, p2, i / (x + y))
-        # can replace with just int for spped increase. Decreases quality?
-        pixels[int(newpoint[0]), int(newpoint[1])] = True
+    drawLineOnPixels(p1,p2,pixels)
 
 
 def toVoxels(pointList, x, y):
@@ -55,24 +52,29 @@ def toVoxels(pointList, x, y):
             assert(False)
     return pixels
 
+
+def drawLineOnPixels(p1, p2, pixels):
+    lineSteps = math.ceil(manDistance(p1, p2))
+    for j in range(lineSteps+1):
+        point = linearInterpolation(p1, p2, j / lineSteps)
+        pixels[int(point[0]), int(point[1])] = True
+
+
 def fill(triangle, pixels):
     numSteps = max(manDistance(triangle[0],triangle[2]),manDistance(triangle[1],triangle[2]))
     for i in range(numSteps):
         p1 = linearInterpolation(triangle[0],triangle[2],i/numSteps)
         p2 = linearInterpolation(triangle[1],triangle[2],i/numSteps)
-        lineSteps = int(manDistance(p1,p2))+1
-        for j in range(lineSteps):
-            point = linearInterpolation(p1,p2,j/lineSteps)
-            pixels[int(point[0]),int(point[1])] = True
+        drawLineOnPixels(p1, p2, pixels)
 
 
 
-def manDistance(p1,p2):
+def manDistance(p1,p2, d=2):
     assert(len(p1)==len(p2))
-    d = 0
-    for i in range(len(p1)):
-        d+=abs(p1[i] - p2[i])
-    return d
+    sum = 0
+    for i in range(d):
+        sum+=abs(p1[i] - p2[i])
+    return sum
 def printBigArray(big, yes='1', no='0'):
     print()
     for line in big:
