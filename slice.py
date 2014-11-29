@@ -1,8 +1,6 @@
-import heapq
 import numpy as np
 import math
 import itertools
-import matplotlib.pyplot as plt
 
 
 def slice(mesh, height, bounding_box):
