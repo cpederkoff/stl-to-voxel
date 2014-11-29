@@ -69,13 +69,11 @@ def AsciiSTL(fname):
 def IsAsciiStl(fname):
     with open(fname,'rb') as input_data:
         line = input_data.readline()
-        if line[:3] == b'VCG' or line[:5] == b'COLOR':
-            #binary
-            return False
-        elif line[:5] == b'solid':
+        if line[:5] == b'solid':
             return True
         else:
-            raise RuntimeError("Couldn't decide whet type of STL file this is ", line[:10])
+            return False
+
 
 def read_stl_verticies(fname):
     if IsAsciiStl(fname):
