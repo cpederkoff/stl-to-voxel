@@ -109,8 +109,12 @@ def isAboveAndBelow(pointList, height):
     :param height:
     :return: true if at line from the triangle crosses or is on the height line,
     '''
-    deltas = list(map(lambda pt: pt[2] - height, pointList))
-    if max(deltas) >= 0 and min(deltas) <= 0:
+    above = list(filter(lambda pt: pt[2] > height, pointList))
+    below = list(filter(lambda pt: pt[2] < height, pointList))
+    same = list(filter(lambda pt: pt[2] == height, pointList))
+    if len(same) == 3 or len(same) == 2:
+        return True
+    elif (above and below):
         return True
     else:
         return False
@@ -126,14 +130,17 @@ def triangleToIntersectingLines(triangle, height):
         return triangle
     elif len(same) == 2:
         return same[0], same[1]
+    elif len(same) == 1:
+        side1 = whereLineCrossesZ(above[0], below[0], height)
+        return side1, same[0]
     else:
         lines = []
         for a in above:
             for b in below:
                 lines.append((b, a))
-        for s in same:
-            lines.append((s, s))
-        return map(lambda line: whereLineCrossesZ(line[0], line[1], height), lines)
+        side1 = whereLineCrossesZ(lines[0][0], lines[0][1], height)
+        side2 = whereLineCrossesZ(lines[1][0], lines[1][1], height)
+        return side1, side2
 
 
 def whereLineCrossesZ(p1, p2, z):
@@ -159,7 +166,7 @@ def calculateScaleAndShift(mesh, resolution):
     shift = [-min for min in mins]
     xyscale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))
     scale = [xyscale, xyscale, xyscale]
-    bounding_box = [resolution, resolution, int(math.ceil((maxs[2] - mins[2]) * xyscale))]
+    bounding_box = [resolution, resolution, math.ceil((maxs[2] - mins[2]) * xyscale)]
     return (scale, shift, bounding_box)
 
 
@@ -171,7 +178,10 @@ def scaleAndShiftMesh(mesh, scale, shift):
             for i in range(3):
                 newpt[i] = int((pt[i] + shift[i]) * scale[i])
             newTri.append(newpt)
-        yield newTri
+        if len(removeDupsFromPointList(newTri)) == 3:
+            yield newTri
+        else:
+            pass
 
 
 def removeDupsFromPointList(ptList):
