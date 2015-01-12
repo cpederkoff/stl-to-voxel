@@ -19,7 +19,6 @@ def BinarySTL(fname):
     Header = fp.read(80)
     nn = fp.read(4)
     Numtri = unpack('i', nn)[0]
-    # print nn
     record_dtype = np.dtype([
         ('normals', np.float32, (3,)),
         ('Vertex1', np.float32, (3,)),
@@ -48,7 +47,6 @@ def AsciiSTL(fname):
         triangles = []
         verticies = []
         for line in input_data:
-            print("in line")
             if line.strip() == 'outer loop':  # Or whatever test is needed
                 init = True
                 verticies = []
@@ -60,7 +58,6 @@ def AsciiSTL(fname):
                 continue
             elif init:
                 words = line.strip().split(' ')
-                print(words)
                 assert words[0] == 'vertex'
                 verticies.append((float(words[1]), float(words[2]), float(words[3])))
 
@@ -78,10 +75,10 @@ def IsAsciiStl(fname):
 def read_stl_verticies(fname):
     if IsAsciiStl(fname):
         for (i,j,k) in AsciiSTL(fname):
-            yield (i,j,k)
+            yield (tuple(i),tuple(j),tuple(k))
     else:
         head, p, n, v1, v2, v3 = BinarySTL(fname)
         for i, j, k in zip(v1, v2, v3):
-            yield (i, j, k)
+            yield (tuple(i), tuple(j), tuple(k))
 
 

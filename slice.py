@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import itertools
+import perimeter
 
 
 def slice(mesh, height, bounding_box):
@@ -13,10 +14,7 @@ def toPerimeterLinesOrTriangles(mesh, height):
     return map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles)
 
 
-def triangleToVoxels(triangle, pixels):
-    for (p1, p2) in itertools.combinations(triangle, 2):
-        drawLineOnPixels(p1, p2, pixels)
-    fill(triangle, pixels)
+
 
 
 def lineToVoxels(line, pixels):
@@ -29,12 +27,16 @@ def toVoxels(pointList, x, y):
     # find all voxels that intersect any lines
     assert (pointList is not None)
     pixels = np.zeros((x, y), dtype=bool)
+    perim = []
     for line in pointList:
         line = removeDupsFromPointList(line)
         if len(line) == 2:
+            perim.append(line)
             lineToVoxels(line, pixels)
         elif len(line) == 3:
             triangleToVoxels(line, pixels)
+    if len(perim) > 0:
+        fillPerimeter(removeDupsFromPointList(list(perim)), pixels)
     return pixels
 
 
@@ -47,14 +49,37 @@ def drawLineOnPixels(p1, p2, pixels):
         point = linearInterpolation(p1, p2, j / lineSteps)
         pixels[int(point[0]), int(point[1])] = True
 
+def fillPerimeter(lineList, pixels):
+    # triangles = perimeter.triangulatePerimeter(lineList)
+    # for triangle in triangles:
+    #     triangleToVoxels(triangle, pixels)
+    perimeter.fillPerimeter(lineList, pixels)
+
+def triangleToVoxels(triangle, pixels):
+    for (p1, p2) in itertools.combinations(triangle, 2):
+        drawLineOnPixels(p1, p2, pixels)
+    fill(triangle, pixels)
 
 def fill(triangle, pixels):
-    numSteps = max(manhattanDistance(triangle[0], triangle[2]), manhattanDistance(triangle[1], triangle[2]))
+    numSteps = math.ceil(max(manhattanDistance(triangle[0], triangle[2]), manhattanDistance(triangle[1], triangle[2])))
     for i in range(numSteps):
         p1 = linearInterpolation(triangle[0], triangle[2], i / numSteps)
         p2 = linearInterpolation(triangle[1], triangle[2], i / numSteps)
         drawLineOnPixels(p1, p2, pixels)
 
+def roundList(l):
+    if type(l) is list:
+        ret = []
+        for element in l:
+            ret.append(roundList(element))
+        return ret
+    elif type(l) is tuple:
+        ret = []
+        for element in l:
+            ret.append(roundList(element))
+        return tuple(ret)
+    else:
+        return int(l)
 
 def manhattanDistance(p1, p2, d=2):
     assert (len(p1) == len(p2))
@@ -95,11 +120,11 @@ def linearInterpolation(p1, p2, distance):
     slopex = (p1[0] - p2[0])
     slopey = (p1[1] - p2[1])
     slopez = p1[2] - p2[2]
-    return [
+    return (
         p1[0] - distance * slopex,
         p1[1] - distance * slopey,
         p1[2] - distance * slopez
-    ]
+    )
 
 
 def isAboveAndBelow(pointList, height):
@@ -107,7 +132,7 @@ def isAboveAndBelow(pointList, height):
 
     :param pointList: Can be line or triangle
     :param height:
-    :return: true if at line from the triangle crosses or is on the height line,
+    :return: true if any line from the triangle crosses or is on the height line,
     '''
     above = list(filter(lambda pt: pt[2] > height, pointList))
     below = list(filter(lambda pt: pt[2] < height, pointList))
@@ -176,8 +201,8 @@ def scaleAndShiftMesh(mesh, scale, shift):
         for pt in tri:
             newpt = [0, 0, 0]
             for i in range(3):
-                newpt[i] = int((pt[i] + shift[i]) * scale[i])
-            newTri.append(newpt)
+                newpt[i] = (pt[i] + shift[i]) * scale[i]
+            newTri.append(tuple(newpt))
         if len(removeDupsFromPointList(newTri)) == 3:
             yield newTri
         else:
@@ -191,3 +216,19 @@ def removeDupsFromPointList(ptList):
             newList.append(p)
     return newList
 
+def isPoint(thing):
+    if type(thing) is list and len(thing) == 3 and type(thing[0] is int) and type(thing[1] is int) and type(thing[2] is int):
+        return True
+    else:
+        return False
+def isLine(thing):
+    if type(thing) is list and len(thing) == 2 and isPoint(thing[0]) and isPoint(thing[1]):
+        return True
+    else:
+        return False
+
+def isTri(thing):
+    if type(thing) is list and len(thing) == 3 and isPoint(thing[0]) and isPoint(thing[1]) and isPoint(thing[2]) :
+       return True
+    else:
+        return False

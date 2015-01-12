@@ -8,18 +8,18 @@ import random
 import numpy as np
 
 
-class TestSequenceFunctions(unittest.TestCase):
+class TestSlice(unittest.TestCase):
     def testslice(self):
         mesh = list(stl_reader.read_stl_verticies("./stls/cube.stl"))
         # for p in slice.slice(mesh, .5):
         # print(list(p))
 
     def testIsAboveAndBelow(self):
-        tri = [
-            [1, 2, 5],
-            [2, 3, 4],
-            [3, 2, 1]
-        ]
+        tri = (
+            (1, 2, 5),
+            (2, 3, 4),
+            (3, 2, 1)
+        )
         self.assertTrue(slice.isAboveAndBelow(tri, 4))
         self.assertTrue(slice.isAboveAndBelow(tri, 5))
         self.assertTrue(slice.isAboveAndBelow(tri, 1))
