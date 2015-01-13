@@ -36,7 +36,7 @@ def toVoxels(pointList, x, y):
         elif len(line) == 3:
             triangleToVoxels(line, pixels)
     if len(perim) > 0:
-        fillPerimeter(removeDupsFromPointList(list(perim)), pixels)
+        perimeter.fillPerimeter(removeDupsFromPointList(list(perim)), pixels)
     return pixels
 
 
@@ -48,12 +48,6 @@ def drawLineOnPixels(p1, p2, pixels):
     for j in range(lineSteps + 1):
         point = linearInterpolation(p1, p2, j / lineSteps)
         pixels[int(point[0]), int(point[1])] = True
-
-def fillPerimeter(lineList, pixels):
-    # triangles = perimeter.triangulatePerimeter(lineList)
-    # for triangle in triangles:
-    #     triangleToVoxels(triangle, pixels)
-    perimeter.fillPerimeter(lineList, pixels)
 
 def triangleToVoxels(triangle, pixels):
     for (p1, p2) in itertools.combinations(triangle, 2):
@@ -98,16 +92,6 @@ def printBigArray(big, yes='1', no='0'):
             else:
                 print(no, end=" ")
         print()
-
-
-def makeBigArrayOfZeros(n):
-    big = []
-    for i in range(n):
-        row = []
-        for j in range(n):
-            row.append(' ')
-        big.append(row)
-    return big
 
 
 def linearInterpolation(p1, p2, distance):
@@ -210,25 +194,6 @@ def scaleAndShiftMesh(mesh, scale, shift):
 
 
 def removeDupsFromPointList(ptList):
-    newList = []
-    for p in ptList:
-        if p not in newList:
-            newList.append(p)
-    return newList
+    newList = ptList[:]
+    return tuple(set(newList))
 
-def isPoint(thing):
-    if type(thing) is list and len(thing) == 3 and type(thing[0] is int) and type(thing[1] is int) and type(thing[2] is int):
-        return True
-    else:
-        return False
-def isLine(thing):
-    if type(thing) is list and len(thing) == 2 and isPoint(thing[0]) and isPoint(thing[1]):
-        return True
-    else:
-        return False
-
-def isTri(thing):
-    if type(thing) is list and len(thing) == 3 and isPoint(thing[0]) and isPoint(thing[1]) and isPoint(thing[2]) :
-       return True
-    else:
-        return False
