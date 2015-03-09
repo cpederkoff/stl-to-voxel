@@ -6,6 +6,7 @@ import pylab
 from mpl_toolkits.mplot3d import Axes3D
 import random
 import numpy as np
+from util import printBigArray
 
 
 class TestSlice(unittest.TestCase):
@@ -101,23 +102,6 @@ class TestSlice(unittest.TestCase):
         lines = list(slice.triangleToIntersectingLines(tri, 3))
         self.assertTrue(tri in lines)
 
-    def test_fill(self):
-        test = np.array([
-            [False, True, True, True, False],
-            [True, False, False, False, True],
-            [True, False, False, True, False],
-            [True, False, False, False, True],
-            [False, True, True, True, False],
-        ])
-        expected = x = np.array([
-            [False, True, True, True, False],
-            [True, True, True, True, True],
-            [True, True, True, True, False],
-            [True, True, True, True, True],
-            [False, True, True, True, False],
-        ])
-        slice.fill([2, 2], test)
-        self.assertTrue((expected == test).all(), )
 
     def test_toVoxels(self):
         lines = [
@@ -134,5 +118,5 @@ class TestSlice(unittest.TestCase):
                     [False, True, True, True, True, True, True, False],
                     [False, False, True, True, True, True, False, False],
                     [False, False, False, True, True, False, False, False]]
-        slice.printBigArray(slice.toVoxels(lines, 8, 8))
+        printBigArray(slice.toVoxels(lines, 8, 8))
         # self.assertTrue((expected==)

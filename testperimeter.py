@@ -3,6 +3,7 @@ import perimeter
 import numpy as np
 import unittest
 import slice
+from util import printBigArray
 
 
 class PerimeterTest(unittest.TestCase):
@@ -81,7 +82,7 @@ class PerimeterTest(unittest.TestCase):
                 [(3, 9, 0), (0, 0, 0)]]
         pixels = np.zeros((13, 13), dtype=bool)
         perimeter.fillPerimeter(test,pixels)
-        slice.printBigArray(pixels)
+        printBigArray(pixels)
 
     def test_fill_perim_trans(self):
         test = [[(0, 0, 0), (0, 3, 0)],
@@ -90,7 +91,7 @@ class PerimeterTest(unittest.TestCase):
                 [(9, 3, 0), (0, 0, 0)]]
         pixels = np.zeros((13, 13), dtype=bool)
         perimeter.fillPerimeter(test,pixels)
-        slice.printBigArray(pixels)
+        printBigArray(pixels)
 
     def test_cross_line(self):
         self.assertTrue(perimeter.onLine([(0,0,0),(2,2,0)],1,1))

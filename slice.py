@@ -1,44 +1,16 @@
-import numpy as np
 import math
 import itertools
+
+import numpy as np
+
 import perimeter
+from util import manhattanDistance, removeDupsFromPointList
 
-
-def slice(mesh, height, bounding_box):
-    perim = toPerimeterLinesOrTriangles(mesh, height)
-    return toVoxels(perim, bounding_box[0], bounding_box[1])
-
-
-def toPerimeterLinesOrTriangles(mesh, height):
+def toIntersectingLines(mesh, height):
     relevantTriangles = list(filter(lambda tri: isAboveAndBelow(tri, height), mesh))
-    return map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles)
-
-
-
-
-
-def lineToVoxels(line, pixels):
-    p1 = line[0]
-    p2 = line[1]
-    drawLineOnPixels(p1, p2, pixels)
-
-
-def toVoxels(pointList, x, y):
-    # find all voxels that intersect any lines
-    assert (pointList is not None)
-    pixels = np.zeros((x, y), dtype=bool)
-    perim = []
-    for line in pointList:
-        line = removeDupsFromPointList(line)
-        if len(line) == 2:
-            perim.append(line)
-            lineToVoxels(line, pixels)
-        elif len(line) == 3:
-            triangleToVoxels(line, pixels)
-    if len(perim) > 0:
-        perimeter.fillPerimeter(removeDupsFromPointList(list(perim)), pixels)
-    return pixels
-
+    notSameTriangles = filter(lambda tri: not isIntersectingTriangle(tri, height), relevantTriangles)
+    lines = list(map(lambda tri: triangleToIntersectingLines(tri, height), notSameTriangles))
+    return lines
 
 def drawLineOnPixels(p1, p2, pixels):
     lineSteps = math.ceil(manhattanDistance(p1, p2))
@@ -48,51 +20,6 @@ def drawLineOnPixels(p1, p2, pixels):
     for j in range(lineSteps + 1):
         point = linearInterpolation(p1, p2, j / lineSteps)
         pixels[int(point[0]), int(point[1])] = True
-
-def triangleToVoxels(triangle, pixels):
-    for (p1, p2) in itertools.combinations(triangle, 2):
-        drawLineOnPixels(p1, p2, pixels)
-    fill(triangle, pixels)
-
-def fill(triangle, pixels):
-    numSteps = math.ceil(max(manhattanDistance(triangle[0], triangle[2]), manhattanDistance(triangle[1], triangle[2])))
-    for i in range(numSteps):
-        p1 = linearInterpolation(triangle[0], triangle[2], i / numSteps)
-        p2 = linearInterpolation(triangle[1], triangle[2], i / numSteps)
-        drawLineOnPixels(p1, p2, pixels)
-
-def roundList(l):
-    if type(l) is list:
-        ret = []
-        for element in l:
-            ret.append(roundList(element))
-        return ret
-    elif type(l) is tuple:
-        ret = []
-        for element in l:
-            ret.append(roundList(element))
-        return tuple(ret)
-    else:
-        return int(l)
-
-def manhattanDistance(p1, p2, d=2):
-    assert (len(p1) == len(p2))
-    allDistances = 0
-    for i in range(d):
-        allDistances += abs(p1[i] - p2[i])
-    return allDistances
-
-
-def printBigArray(big, yes='1', no='0'):
-    print()
-    for line in big:
-        for char in line:
-            if char:
-                print(yes, end=" ")
-            else:
-                print(no, end=" ")
-        print()
-
 
 def linearInterpolation(p1, p2, distance):
     '''
@@ -128,16 +55,19 @@ def isAboveAndBelow(pointList, height):
     else:
         return False
 
+def isIntersectingTriangle(triangle, height):
+    assert (len(triangle) == 3)
+    same = list(filter(lambda pt: pt[2] == height, triangle))
+    return len(same) == 3
+
 
 def triangleToIntersectingLines(triangle, height):
+    assert (len(triangle) == 3)
     above = list(filter(lambda pt: pt[2] > height, triangle))
     below = list(filter(lambda pt: pt[2] < height, triangle))
     same = list(filter(lambda pt: pt[2] == height, triangle))
-    assert (len(triangle) == 3)
-    if len(same) == 3:
-        # return a triangle if all is on the intersecting plane.
-        return triangle
-    elif len(same) == 2:
+    assert len(same) != 3
+    if len(same) == 2:
         return same[0], same[1]
     elif len(same) == 1:
         side1 = whereLineCrossesZ(above[0], below[0], height)
@@ -192,8 +122,4 @@ def scaleAndShiftMesh(mesh, scale, shift):
         else:
             pass
 
-
-def removeDupsFromPointList(ptList):
-    newList = ptList[:]
-    return tuple(set(newList))
 

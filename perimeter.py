@@ -1,10 +1,9 @@
 import math
-import poly_tri
 from collections import defaultdict
 import matplotlib.pyplot as plt
+import numpy as np
 
-
-def fillPerimeter(lineList, pixels):
+def linesToVoxels(lineList, pixels):
     for x in range(len(pixels)):
         isBlack = False
         lines = list(findRelevantLines(lineList, x))
@@ -59,10 +58,3 @@ def onLine(line, x, y):
         return False
     return True
 
-def intersections(lines, x):
-    ret = []
-    for line in lines:
-        ratio = (x - line[0][0]) / (line[1][0] - line[0][0])
-        ydist = line[1][1] - line[0][1]
-        newy = line[0][1] + ratio*ydist
-    # find all intersection points, then skip all the calls to onLine (skip all white pixels)
