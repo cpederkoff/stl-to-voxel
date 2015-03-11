@@ -1,6 +1,5 @@
 import math
 from collections import defaultdict
-import matplotlib.pyplot as plt
 import numpy as np
 
 def linesToVoxels(lineList, pixels):
