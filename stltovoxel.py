@@ -1,18 +1,17 @@
 import argparse
-from PIL import Image
-import numpy as np
 import os.path
 import io
+import xml.etree.cElementTree as ET
+from zipfile import ZipFile
+import zipfile
+
+from PIL import Image
+import numpy as np
+
 import slice
 import stl_reader
 import perimeter
-import codecs
-from util import arrayToPixel, arrayToWhiteGreyscalePixel
-
-import xml.etree.cElementTree as ET
-
-from zipfile import ZipFile
-import zipfile
+from util import arrayToWhiteGreyscalePixel
 
 
 def doExport(inputFilePath, outputFilePath, resolution):
@@ -38,9 +37,9 @@ def doExport(inputFilePath, outputFilePath, resolution):
 def exportPngs(voxels, bounding_box, outputFilePath):
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
     for height in range(bounding_box[2]):
-        img = Image.new('RGB', (bounding_box[0], bounding_box[1]), 'white')  # create a new black image
+        img = Image.new('L', (bounding_box[0], bounding_box[1]), 'black')  # create a new black image
         pixels = img.load()
-        arrayToPixel(voxels[height], pixels)
+        arrayToWhiteGreyscalePixel(voxels[height], pixels)
         path = outputFilePattern + '-' + str(height) + outputFileExtension
         img.save(path)
 
@@ -70,7 +69,7 @@ def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
         "slices":"density/slice%" + size + "d.png"
     })
     manifest = ET.tostring(root)
-    with zipFile as ZipFile(outputFilePath, 'w', zipfile.ZIP_DEFLATED):
+    with ZipFile(outputFilePath, 'w', zipfile.ZIP_DEFLATED) as zipFile:
         for height in range(bounding_box[2]):
             img = Image.new('L', (bounding_box[0], bounding_box[1]), 'black')  # create a new black image
             pixels = img.load()

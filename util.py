@@ -24,13 +24,6 @@ def removeDupsFromPointList(ptList):
     newList = ptList[:]
     return tuple(set(newList))
 
-
-def arrayToPixel(array, pixels):
-    for i in range(array.shape[0]):
-        for j in range(array.shape[1]):
-            if array[i, j]:
-                pixels[i, j] = (0, 0, 0)
-
 def arrayToWhiteGreyscalePixel(array, pixels):
     for i in range(array.shape[0]):
         for j in range(array.shape[1]):
