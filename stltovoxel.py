@@ -2,11 +2,17 @@ import argparse
 from PIL import Image
 import numpy as np
 import os.path
-
+import io
 import slice
 import stl_reader
 import perimeter
-from util import arrayToPixel
+import codecs
+from util import arrayToPixel, arrayToWhiteGreyscalePixel
+
+import xml.etree.cElementTree as ET
+
+from zipfile import ZipFile
+import zipfile
 
 
 def doExport(inputFilePath, outputFilePath, resolution):
@@ -27,7 +33,7 @@ def doExport(inputFilePath, outputFilePath, resolution):
     elif outputFileExtension == '.xyz':
         exportXyz(vol, bounding_box, outputFilePath)
     elif outputFileExtension == '.svx':
-        exportSvx(vol, bounding_box, outputFilePath)
+        exportSvx(vol, bounding_box, outputFilePath, scale, shift)
 
 def exportPngs(voxels, bounding_box, outputFilePath):
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
@@ -47,8 +53,32 @@ def exportXyz(voxels, bounding_box, outputFilePath):
                     output.write('%s %s %s\n'%(x,y,z))
     output.close()
 
-def exportSvx(voxels, bounding_box, outputFilePath):
-    pass
+def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
+    size = str(len(str(bounding_box[2]))+1)
+    root = ET.Element("grid", attrib={"gridSizeX": str(bounding_box[0]),
+                                      "gridSizeY": str(bounding_box[2]),
+                                      "gridSizeZ": str(bounding_box[1]),
+                                      "voxelSize": str(1.0/scale[0]/1000), #STL is probably in mm, and svx needs meters
+                                      "subvoxelBits": "8",
+                                      "originX": str(-shift[0]),
+                                      "originY": str(-shift[2]),
+                                      "originZ": str(-shift[1]),
+                                      })
+    channels = ET.SubElement(root, "channels")
+    channel = ET.SubElement(channels, "channel", attrib={
+        "type":"DENSITY",
+        "slices":"density/slice%" + size + "d.png"
+    })
+    manifest = ET.tostring(root)
+    with zipFile as ZipFile(outputFilePath, 'w', zipfile.ZIP_DEFLATED):
+        for height in range(bounding_box[2]):
+            img = Image.new('L', (bounding_box[0], bounding_box[1]), 'black')  # create a new black image
+            pixels = img.load()
+            arrayToWhiteGreyscalePixel(voxels[height], pixels)
+            output = io.BytesIO()
+            img.save(output, format="PNG")
+            zipFile.writestr(("density/slice%" + size + "d.png")%height, output.getvalue())
+        zipFile.writestr("manifest.xml",manifest)
 
 
 def file_choices(choices,fname):
@@ -65,4 +95,4 @@ if __name__ == '__main__':
     parser.add_argument('input', nargs='?', type=lambda s:file_choices(('.stl'),s))
     parser.add_argument('output', nargs='?', type=lambda s:file_choices(('.png', '.xyz', '.svx'),s))
     args = parser.parse_args()
-    doExport(args.input, args.output, 256)
+    doExport(args.input, args.output, 100)
