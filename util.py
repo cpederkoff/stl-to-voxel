@@ -1,4 +1,4 @@
-__author__ = 'christian'
+import numpy as np
 
 
 def manhattanDistance(p1, p2, d=2):
@@ -29,3 +29,13 @@ def arrayToWhiteGreyscalePixel(array, pixels):
         for j in range(array.shape[1]):
             if array[i, j]:
                 pixels[i, j] = 255
+
+def padVoxelArray(voxels):
+    shape = voxels.shape
+    new_shape = (shape[0]+2,shape[1]+2,shape[2]+2)
+    vol = np.zeros(new_shape, dtype=bool)
+    for a in range(shape[0]):
+        for b in range(shape[1]):
+            for c in range(shape[2]):
+                vol[a+1,b+1,c+1] = voxels[a,b,c]
+    return vol, (new_shape[1],new_shape[2],new_shape[0])
