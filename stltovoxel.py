@@ -36,12 +36,13 @@ def doExport(inputFilePath, outputFilePath, resolution):
         exportSvx(vol, bounding_box, outputFilePath, scale, shift)
 
 def exportPngs(voxels, bounding_box, outputFilePath):
+    size = str(len(str(bounding_box[2]))+1)
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
     for height in range(bounding_box[2]):
         img = Image.new('L', (bounding_box[0], bounding_box[1]), 'black')  # create a new black image
         pixels = img.load()
         arrayToWhiteGreyscalePixel(voxels[height], pixels)
-        path = outputFilePattern + '-' + str(height) + outputFileExtension
+        path = (outputFilePattern + "%0" + size + "d.png")%height
         img.save(path)
 
 def exportXyz(voxels, bounding_box, outputFilePath):
@@ -67,7 +68,7 @@ def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
     channels = ET.SubElement(root, "channels")
     channel = ET.SubElement(channels, "channel", attrib={
         "type":"DENSITY",
-        "slices":"density/slice%" + size + "d.png"
+        "slices":"density/slice%0" + size + "d.png"
     })
     manifest = ET.tostring(root)
     with ZipFile(outputFilePath, 'w', zipfile.ZIP_DEFLATED) as zipFile:
@@ -77,7 +78,7 @@ def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
             arrayToWhiteGreyscalePixel(voxels[height], pixels)
             output = io.BytesIO()
             img.save(output, format="PNG")
-            zipFile.writestr(("density/slice%" + size + "d.png")%height, output.getvalue())
+            zipFile.writestr(("density/slice%0" + size + "d.png")%height, output.getvalue())
         zipFile.writestr("manifest.xml",manifest)
 
 
