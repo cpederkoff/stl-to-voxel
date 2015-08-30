@@ -4,6 +4,7 @@ Turn STL files into voxels, images, and videos
 * Convert stl files into a voxel representation
 * Output to (a series of) .pngs, .xyz, .svx
 * Command line interface
+
 ### How to run
 ```
 git clone https://github.com/rcpedersen/stl-to-voxel.git
