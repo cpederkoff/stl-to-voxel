@@ -59,7 +59,8 @@ def AsciiSTL(fname):
             elif init:
                 words = line.strip().split(' ')
                 assert words[0] == 'vertex'
-                verticies.append((float(words[1]), float(words[2]), float(words[3])))
+                verticies.append((float(words[3]), float(words[5]), float(words[7])))
+                #verticies.append((float(words[1]), float(words[2]), float(words[3])))
 
     return triangles
 
