@@ -47,7 +47,6 @@ def exportPngs(voxels, bounding_box, outputFilePath):
 
 def exportXyz(voxels, bounding_box, outputFilePath):
     output = open(outputFilePath, 'w')
-    print(bounding_box[2])
     for z in bounding_box[2]:
         for x in bounding_box[0]:
             for y in bounding_box[1]:
