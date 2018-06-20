@@ -45,12 +45,22 @@ def exportPngs(voxels, bounding_box, outputFilePath):
         path = (outputFilePattern + "%0" + size + "d.png")%height
         img.save(path)
 
+#def exportXyz(voxels, bounding_box, outputFilePath):
+    #output = open(outputFilePath, 'w')
+    #for z in bounding_box[2]:
+        #for x in bounding_box[0]:
+            #for y in bounding_box[1]:
+                #if vol[z][x][y]:
+                    #output.write('%s %s %s\n'%(x,y,z))
+    #output.close()
+
+#fix from github user artBoffin   
 def exportXyz(voxels, bounding_box, outputFilePath):
     output = open(outputFilePath, 'w')
-    for z in bounding_box[2]:
-        for x in bounding_box[0]:
-            for y in bounding_box[1]:
-                if vol[z][x][y]:
+    for z in range(bounding_box[2]):
+        for x in range(bounding_box[0]):
+            for y in range(bounding_box[1]):
+                if voxels[z][x][y]:
                     output.write('%s %s %s\n'%(x,y,z))
     output.close()
 
