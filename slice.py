@@ -6,10 +6,9 @@ import numpy as np
 import perimeter
 from util import manhattanDistance, removeDupsFromPointList
 
-def toIntersectingLines(mesh, height):
-    relevantTriangles = list(filter(lambda tri: isAboveAndBelow(tri, height), mesh))
-    notSameTriangles = filter(lambda tri: not isIntersectingTriangle(tri, height), relevantTriangles)
-    lines = list(map(lambda tri: triangleToIntersectingLines(tri, height), notSameTriangles))
+def toIntersectingLines(mesh, height, pixels):
+    relevantTriangles = list(filter(lambda tri: isAboveAndBelow(tri, height, pixels), mesh))
+    lines = list(map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles))
     return lines
 
 def drawLineOnPixels(p1, p2, pixels):
@@ -38,7 +37,7 @@ def linearInterpolation(p1, p2, distance):
     )
 
 
-def isAboveAndBelow(pointList, height):
+def isAboveAndBelow(pointList, height, pixels):
     '''
 
     :param pointList: Can be line or triangle
@@ -48,18 +47,16 @@ def isAboveAndBelow(pointList, height):
     above = list(filter(lambda pt: pt[2] > height, pointList))
     below = list(filter(lambda pt: pt[2] < height, pointList))
     same = list(filter(lambda pt: pt[2] == height, pointList))
-    if len(same) == 3 or len(same) == 2:
+    if len(same) == 2:
         return True
     elif (above and below):
         return True
+    elif len(same) == 1:
+        x = int(same[0][0])
+        y = int(same[0][1])
+        pixels[x][y] = True
     else:
         return False
-
-def isIntersectingTriangle(triangle, height):
-    assert (len(triangle) == 3)
-    same = list(filter(lambda pt: pt[2] == height, triangle))
-    return len(same) == 3
-
 
 def triangleToIntersectingLines(triangle, height):
     assert (len(triangle) == 3)

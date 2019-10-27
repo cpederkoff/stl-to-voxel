@@ -18,12 +18,12 @@ def doExport(inputFilePath, outputFilePath, resolution):
     mesh = list(stl_reader.read_stl_verticies(inputFilePath))
     (scale, shift, bounding_box) = slice.calculateScaleAndShift(mesh, resolution)
     mesh = list(slice.scaleAndShiftMesh(mesh, scale, shift))
-    #Note: vol should be addressed with vol[z][x][y]
+    # Note: vol should be addressed with vol[z][x][y]
     vol = np.zeros((bounding_box[2],bounding_box[0],bounding_box[1]), dtype=bool)
     for height in range(bounding_box[2]):
         print('Processing layer %d/%d'%(height+1,bounding_box[2]))
-        lines = slice.toIntersectingLines(mesh, height)
         prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
+        lines = slice.toIntersectingLines(mesh, height, prepixel)
         perimeter.linesToVoxels(lines, prepixel)
         vol[height] = prepixel
     vol, bounding_box = padVoxelArray(vol)

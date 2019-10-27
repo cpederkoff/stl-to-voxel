@@ -5,8 +5,8 @@ import numpy as np
 def linesToVoxels(lineList, pixels):
     for x in range(len(pixels)):
         isBlack = False
-        lines = list(findRelevantLines(lineList, x))
-        targetYs = list(map(lambda line:int(generateY(line,x)),lines))
+        lines = list(filter(lambda line: isRelevantLines(line, x, pixels), lineList))
+        targetYs = list(map(lambda line:int(generateY(line, x)),lines))
         for y in range(len(pixels[x])):
             if isBlack:
                 pixels[x][y] = True
@@ -20,22 +20,21 @@ def linesToVoxels(lineList, pixels):
             print("an error has occured at x%sz%s"%(x,lineList[0][0][2]))
 
 
-def findRelevantLines(lineList, x, ind=0):
-    for line in lineList:
-        same = False
-        above = False
-        below = False
-        for pt in line:
-            if pt[ind] > x:
-                above = True
-            elif pt[ind] == x:
-                same = True
-            else:
-                below = True
-        if above and below:
-            yield line
-        elif same and above:
-            yield line
+def isRelevantLines(line, x, pixels):
+    above = list(filter(lambda pt: pt[0] > x, line))
+    below = list(filter(lambda pt: pt[0] < x, line))
+    same = list(filter(lambda pt: pt[0] == x, line))
+    if above and below:
+        return True
+    elif same and above:
+        return True
+    elif len(same) == 2:
+        start = min(int(same[0][1]), int(same[1][1]))
+        stop = max(int(same[0][1]), int(same[1][1])) + 1
+        for y in range(start, stop):
+            pixels[x][y] = True
+    else:
+        return False
 
 
 def generateY(line, x):
