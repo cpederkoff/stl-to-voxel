@@ -11,15 +11,6 @@ def toIntersectingLines(mesh, height, pixels):
     lines = list(map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles))
     return lines
 
-def drawLineOnPixels(p1, p2, pixels):
-    lineSteps = math.ceil(manhattanDistance(p1, p2))
-    if lineSteps == 0:
-        pixels[int(p1[0]), int(p2[1])] = True
-        return
-    for j in range(lineSteps + 1):
-        point = linearInterpolation(p1, p2, j / lineSteps)
-        pixels[int(point[0]), int(point[1])] = True
-
 def linearInterpolation(p1, p2, distance):
     '''
     :param p1: Point 1
@@ -103,7 +94,7 @@ def calculateScaleAndShift(mesh, resolution):
     xyscale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))
     #TODO: Change this to return one scale. If not, verify svx exporting still works.
     scale = [xyscale, xyscale, xyscale]
-    bounding_box = [resolution, resolution, math.ceil((maxs[2] - mins[2]) * xyscale)]
+    bounding_box = [resolution, resolution, round((maxs[2] - mins[2]) * xyscale) + 1]
     return (scale, shift, bounding_box)
 
 
@@ -113,7 +104,7 @@ def scaleAndShiftMesh(mesh, scale, shift):
         for pt in tri:
             newpt = [0, 0, 0]
             for i in range(3):
-                newpt[i] = (pt[i] + shift[i]) * scale[i]
+                newpt[i] = round((pt[i] + shift[i]) * scale[i])
             newTri.append(tuple(newpt))
         if len(removeDupsFromPointList(newTri)) == 3:
             yield newTri

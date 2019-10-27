@@ -96,4 +96,4 @@ if __name__ == '__main__':
     parser.add_argument('input', nargs='?', type=lambda s:file_choices(('.stl'),s))
     parser.add_argument('output', nargs='?', type=lambda s:file_choices(('.png', '.xyz', '.svx'),s))
     args = parser.parse_args()
-    doExport(args.input, args.output, 100)
+    doExport(args.input, args.output, 26)
