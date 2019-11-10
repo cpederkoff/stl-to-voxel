@@ -38,7 +38,13 @@ def isAboveAndBelow(pointList, height, pixels):
     above = list(filter(lambda pt: pt[2] > height, pointList))
     below = list(filter(lambda pt: pt[2] < height, pointList))
     same = list(filter(lambda pt: pt[2] == height, pointList))
-    if len(same) == 2:
+    if len(same) == 3:
+        lines = []
+        for i in range(0, len(same) - 1):
+            for j in range(i + 1, len(same)):
+                lines.append((same[i], same[j]))
+        perimeter.linesToVoxels(lines, pixels)
+    elif len(same) == 2:
         return True
     elif (above and below):
         return True
