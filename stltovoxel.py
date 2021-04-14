@@ -107,6 +107,7 @@ if __name__ == '__main__':
     parser.add_argument('output', nargs='?', type=lambda s:file_choices(('.png', '.xyz', '.svx'),s), help='path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
     parser.add_argument('resolution', nargs='?', type=int, help='number of voxels in both directions')
     args = parser.parse_args()
+
     if(args.resolution):	
         doExport(args.input, args.output, args.resolution)
     else:
