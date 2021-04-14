@@ -68,10 +68,14 @@ def AsciiSTL(fname):
 def IsAsciiStl(fname):
     with open(fname,'rb') as input_data:
         line = input_data.readline()
-        if line[:5] == b'solid':
-            return True
-        else:
+        if line[:6] != b'solid ':
             return False
+        line = input_data.readline().strip()
+        if line[:5] == b'facet':
+            return True
+        if line[:8] == b'endsolid':
+            return True
+    return False
 
 
 def read_stl_verticies(fname):
