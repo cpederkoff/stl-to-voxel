@@ -45,6 +45,16 @@ def exportPngs(voxels, bounding_box, outputFilePath):
         path = (outputFilePattern + "%0" + size + "d.png")%height
         img.save(path)
 
+#def exportXyz(voxels, bounding_box, outputFilePath):
+    #output = open(outputFilePath, 'w')
+    #for z in bounding_box[2]:
+        #for x in bounding_box[0]:
+            #for y in bounding_box[1]:
+                #if vol[z][x][y]:
+                    #output.write('%s %s %s\n'%(x,y,z))
+    #output.close()
+
+#fix from github user artBoffin   
 def exportXyz(voxels, bounding_box, outputFilePath):
     output = open(outputFilePath, 'w')
     for z in range(bounding_box[2]):
@@ -93,7 +103,11 @@ def file_choices(choices,fname):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert STL files to voxels')
-    parser.add_argument('input', nargs='?', type=lambda s:file_choices(('.stl'),s))
-    parser.add_argument('output', nargs='?', type=lambda s:file_choices(('.png', '.xyz', '.svx'),s))
+    parser.add_argument('input', nargs='?', type=lambda s:file_choices(('.stl'),s),help='The input STL file')
+    parser.add_argument('output', nargs='?', type=lambda s:file_choices(('.png', '.xyz', '.svx'),s), help='path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
+    parser.add_argument('resolution', nargs='?', type=int, help='number of voxels in both directions')
     args = parser.parse_args()
-    doExport(args.input, args.output, 26)
+    if(args.resolution):	
+        doExport(args.input, args.output, args.resolution)
+    else:
+        doExport(args.input, args.output, 100)
