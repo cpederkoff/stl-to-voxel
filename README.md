@@ -7,7 +7,7 @@ Turn STL files into voxels, images, and videos
 
 ### How to run
 ```
-git clone https://github.com/youngkiu/stl-to-voxel.git
+git clone https://github.com/cpederkoff/stl-to-voxel.git
 $ cd stl-to-voxel
 
 $ python3 stltovoxel.py Pyramid.stl Pyramid.png
