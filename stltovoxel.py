@@ -18,12 +18,12 @@ def doExport(inputFilePath, outputFilePath, resolution):
     mesh = list(stl_reader.read_stl_verticies(inputFilePath))
     (scale, shift, bounding_box) = slice.calculateScaleAndShift(mesh, resolution)
     mesh = list(slice.scaleAndShiftMesh(mesh, scale, shift))
-    #Note: vol should be addressed with vol[z][x][y]
+    # Note: vol should be addressed with vol[z][x][y]
     vol = np.zeros((bounding_box[2],bounding_box[0],bounding_box[1]), dtype=bool)
     for height in range(bounding_box[2]):
         print('Processing layer %d/%d'%(height+1,bounding_box[2]))
-        lines = slice.toIntersectingLines(mesh, height)
         prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
+        lines = slice.toIntersectingLines(mesh, height, prepixel)
         perimeter.linesToVoxels(lines, prepixel)
         vol[height] = prepixel
     vol, bounding_box = padVoxelArray(vol)
@@ -97,7 +97,6 @@ if __name__ == '__main__':
     parser.add_argument('output', nargs='?', type=lambda s:file_choices(('.png', '.xyz', '.svx'),s), help='path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
     parser.add_argument('resolution', nargs='?', type=int, help='number of voxels in both directions')
     args = parser.parse_args()
-
     if(args.resolution):
         doExport(args.input, args.output, args.resolution)
     else:

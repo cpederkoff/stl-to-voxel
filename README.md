@@ -7,9 +7,12 @@ Turn STL files into voxels, images, and videos
 
 ### How to run
 ```
-git clone https://github.com/rcpedersen/stl-to-voxel.git
+git clone https://github.com/youngkiu/stl-to-voxel.git
 $ cd stl-to-voxel
-$ python3 stltovoxel.py ~/path/to/file.stl ~/path/to/output.png [desired_resolution]
+
+$ python3 stltovoxel.py Pyramid.stl Pyramid.png
+# https://www.thingiverse.com/thing:3611495
+
 ```
 The resolution is optional and defaults to 100.
 
