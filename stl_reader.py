@@ -40,6 +40,7 @@ def BinarySTL(fname):
 
     return Header, Points, Normals, Vertex1, Vertex2, Vertex3
 
+
 def AsciiSTL(fname):
     with open(fname, 'r') as input_data:
         # Skips text before the beginning of the interesting block:
@@ -62,8 +63,8 @@ def AsciiSTL(fname):
                 assert words[0] == 'vertex'
                 verticies.append((float(words[1]), float(words[2]), float(words[3])))
 
-
     return triangles
+
 
 def IsAsciiStl(fname):
     with open(fname,'rb') as input_data:
@@ -86,5 +87,3 @@ def read_stl_verticies(fname):
         head, p, n, v1, v2, v3 = BinarySTL(fname)
         for i, j, k in zip(v1, v2, v3):
             yield (tuple(i), tuple(j), tuple(k))
-
-

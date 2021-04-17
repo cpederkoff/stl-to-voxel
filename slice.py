@@ -6,19 +6,12 @@ import numpy as np
 import perimeter
 from util import manhattanDistance, removeDupsFromPointList
 
+
 def toIntersectingLines(mesh, height, pixels):
     relevantTriangles = list(filter(lambda tri: isAboveAndBelow(tri, height, pixels), mesh))
     lines = list(map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles))
     return lines
 
-def drawLineOnPixels(p1, p2, pixels):
-    lineSteps = math.ceil(manhattanDistance(p1, p2))
-    if lineSteps == 0:
-        pixels[int(p1[0]), int(p2[1])] = True
-        return
-    for j in range(lineSteps + 1):
-        point = linearInterpolation(p1, p2, j / lineSteps)
-        pixels[int(point[0]), int(point[1])] = True
 
 def linearInterpolation(p1, p2, distance):
     '''
@@ -39,7 +32,6 @@ def linearInterpolation(p1, p2, distance):
 
 def isAboveAndBelow(pointList, height, pixels):
     '''
-
     :param pointList: Can be line or triangle
     :param height:
     :return: true if any line from the triangle crosses or is on the height line,
@@ -63,6 +55,7 @@ def isAboveAndBelow(pointList, height, pixels):
         pixels[x][y] = True
     else:
         return False
+
 
 def triangleToIntersectingLines(triangle, height):
     assert (len(triangle) == 3)
@@ -125,5 +118,3 @@ def scaleAndShiftMesh(mesh, scale, shift):
             yield newTri
         else:
             pass
-
-

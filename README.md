@@ -10,10 +10,10 @@ Turn STL files into voxels, images, and videos
 git clone https://github.com/cpederkoff/stl-to-voxel.git
 $ cd stl-to-voxel
 
-$ python3 stltovoxel.py Pyramid.stl Pyramid.png
-# https://www.thingiverse.com/thing:3611495
-
+$ python3 stltovoxel.py Stanford_Bunny.stl Stanford_Bunny.png
 ```
+<!--- https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl --->
+
 The resolution is optional and defaults to 100.
 
 ### Example: 
