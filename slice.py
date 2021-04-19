@@ -6,10 +6,12 @@ import numpy as np
 import perimeter
 from util import manhattanDistance, removeDupsFromPointList
 
+
 def toIntersectingLines(mesh, height, pixels):
     relevantTriangles = list(filter(lambda tri: isAboveAndBelow(tri, height, pixels), mesh))
     lines = list(map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles))
     return lines
+
 
 def linearInterpolation(p1, p2, distance):
     '''
@@ -30,7 +32,6 @@ def linearInterpolation(p1, p2, distance):
 
 def isAboveAndBelow(pointList, height, pixels):
     '''
-
     :param pointList: Can be line or triangle
     :param height:
     :return: true if any line from the triangle crosses or is on the height line,
@@ -54,6 +55,7 @@ def isAboveAndBelow(pointList, height, pixels):
         pixels[x][y] = True
     else:
         return False
+
 
 def triangleToIntersectingLines(triangle, height):
     assert (len(triangle) == 3)
@@ -100,7 +102,7 @@ def calculateScaleAndShift(mesh, resolution):
     xyscale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))
     #TODO: Change this to return one scale. If not, verify svx exporting still works.
     scale = [xyscale, xyscale, xyscale]
-    bounding_box = [resolution, resolution, round((maxs[2] - mins[2]) * xyscale) + 1]
+    bounding_box = [resolution, resolution, math.ceil((maxs[2] - mins[2]) * xyscale)]
     return (scale, shift, bounding_box)
 
 
@@ -110,11 +112,9 @@ def scaleAndShiftMesh(mesh, scale, shift):
         for pt in tri:
             newpt = [0, 0, 0]
             for i in range(3):
-                newpt[i] = round((pt[i] + shift[i]) * scale[i])
+                newpt[i] = (pt[i] + shift[i]) * scale[i]
             newTri.append(tuple(newpt))
         if len(removeDupsFromPointList(newTri)) == 3:
             yield newTri
         else:
             pass
-
-
