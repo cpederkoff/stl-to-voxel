@@ -10,30 +10,6 @@ from util import printBigArray
 
 
 class TestSlice(unittest.TestCase):
-    def testIsAboveAndBelow(self):
-        tri = (
-            (1, 2, 5),
-            (2, 3, 4),
-            (3, 2, 1)
-        )
-        pixels = np.zeros((10,10), dtype=bool)
-        self.assertTrue(slice.isAboveAndBelow(tri, 4, pixels))
-        self.assertFalse(slice.isAboveAndBelow(tri, 5, pixels))
-        self.assertTrue(pixels[1][2])
-        self.assertFalse(slice.isAboveAndBelow(tri, 1, pixels))
-        self.assertTrue(pixels[3][2])
-        self.assertFalse(slice.isAboveAndBelow(tri, 5.5, pixels))
-        self.assertFalse(slice.isAboveAndBelow(tri, 0, pixels))
-
-
-    def testIsAboveAndBelow_inclusive(self):
-        tri = [
-            [1, 2, 5],
-            [2, 3, 5],
-            [3, 2, 1]
-        ]
-        self.assertTrue(slice.isAboveAndBelow(tri, 5, []))
-
     def test_wherelinecrossesz(self):
         p1 = (2, 4, 1)
         p2 = (1, 2, 5)

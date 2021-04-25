@@ -6,11 +6,8 @@ import numpy as np
 import perimeter
 from util import manhattanDistance, removeDupsFromPointList
 
-
-def toIntersectingLines(mesh, height, pixels):
-    relevantTriangles = list(filter(lambda tri: isAboveAndBelow(tri, height, pixels), mesh))
-    lines = list(map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles))
-    return lines
+def toIntersectingLines(mesh, height):
+    return list(map(lambda tri: triangleToIntersectingLines(tri, height), mesh))
 
 
 def linearInterpolation(p1, p2, distance):
@@ -29,36 +26,14 @@ def linearInterpolation(p1, p2, distance):
         p1[2] - distance * slopez
     )
 
-
-def isAboveAndBelow(pointList, height, pixels):
-    '''
-    :param pointList: Can be line or triangle
-    :param height:
-    :return: true if any line from the triangle crosses or is on the height line,
-    '''
-    above = list(filter(lambda pt: pt[2] > height, pointList))
-    below = list(filter(lambda pt: pt[2] < height, pointList))
-    same = list(filter(lambda pt: pt[2] == height, pointList))
-    if len(same) == 3:
-        lines = [
-            (same[0], same[1]),
-            (same[0], same[2]),
-            (same[1], same[2]),
-        ]
-        perimeter.linesToVoxels(lines, pixels)
-        return False
-    elif len(same) == 2:
-        return True
-    elif (above and below):
-        return True
-    elif len(same) == 1:
-        x = int(same[0][0])
-        y = int(same[0][1])
-        pixels[x][y] = True
-        return False
-    else:
-        return False
-
+def generateEvents(mesh):
+    # Create data structure for plane sweep
+    events = []
+    for i, tri in enumerate(mesh):
+        bottom, middle, top = sorted(tri, key=lambda pt: pt[2])
+        events.append((bottom[2], 'start', i))
+        events.append((top[2], 'end', i))
+    return sorted(events, key=lambda tup: tup[0])
 
 def triangleToIntersectingLines(triangle, height):
     assert (len(triangle) == 3)

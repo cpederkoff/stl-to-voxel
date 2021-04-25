@@ -20,12 +20,31 @@ def doExport(inputFilePath, outputFilePath, resolution):
     mesh = list(slice.scaleAndShiftMesh(mesh, scale, shift))
     # Note: vol should be addressed with vol[z][x][y]
     vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
-    for height in range(bounding_box[2]):
-        print('Processing layer %d/%d' % (height+1, bounding_box[2]))
-        prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
-        lines = slice.toIntersectingLines(mesh, height, prepixel)
-        perimeter.linesToVoxels(lines, prepixel)
-        vol[height] = prepixel
+
+    events = slice.generateEvents(mesh)
+
+    current_triangle_indecies = set()
+
+    slice_height = -1
+    for (z, status, tri_ind) in events:
+        while z - slice_height >= 1:
+            slice_height += 1
+            print('Processing layer %d/%d' % (slice_height+1, bounding_box[2]))
+            prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
+            mesh_subset = []
+            for index in current_triangle_indecies:
+                mesh_subset.append(mesh[index])
+            lines = slice.toIntersectingLines(mesh_subset, slice_height)
+            perimeter.linesToVoxels(lines, prepixel)
+            vol[slice_height] = prepixel
+
+        if status == 'start':
+            assert tri_ind not in current_triangle_indecies
+            current_triangle_indecies.add(tri_ind)
+        elif status == 'end':
+            assert tri_ind in current_triangle_indecies
+            current_triangle_indecies.remove(tri_ind)
+
     vol, bounding_box = padVoxelArray(vol)
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
     if outputFileExtension == '.png':
