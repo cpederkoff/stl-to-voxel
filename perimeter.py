@@ -4,22 +4,46 @@ import numpy as np
 
 
 def linesToVoxels(lineList, pixels):
-    for x in range(len(pixels)):
-        isBlack = False
-        lines = list(filter(lambda line: isRelevantLines(line, x, pixels), lineList))
-        targetYs = list(map(lambda line: int(generateY(line, x)),lines))
-        for y in range(len(pixels[x])):
-            if isBlack:
-                pixels[x][y] = True
-            if y in targetYs:
-                for line in lines:
-                    if onLine(line, x, y):
-                        isBlack = not isBlack
-                        pixels[x][y] = True
+    current_line_indecies = set()
+    x = -1
+    for (event_x, status, line_ind) in generateEvents(lineList):
+        while event_x - x >= 1:
+            x += 1
+            lines = []
+            for cur_line_ind in current_line_indecies:
+                lines.append(lineList[cur_line_ind])
+            paintPixels(lines, pixels, x)
 
+        if status == 'start':
+            assert line_ind not in current_line_indecies
+            current_line_indecies.add(line_ind)
+        elif status == 'end':
+            assert line_ind in current_line_indecies
+            current_line_indecies.remove(line_ind)
+
+
+def paintPixels(lines, pixels, x):
+    isBlack = False
+    targetYs = list(map(lambda line: int(generateY(line, x)),lines))
+    for y in range(len(pixels[x])):
         if isBlack:
-            print("an error has occured at x%sz%s" % (x, lineList[0][0][2]))
+            pixels[x][y] = True
+        if y in targetYs:
+            for line in lines:
+                if onLine(line, x, y):
+                    isBlack = not isBlack
+                    pixels[x][y] = True
 
+    if isBlack:
+        print("an error has occured at x%sz%s" % (x, lineList[0][0][2]))
+
+def generateEvents(lineList):
+    events = []
+    for i, line in enumerate(lineList):
+        first, second = sorted(line, key=lambda pt:pt[0])
+        events.append((first[0], 'start', i))
+        events.append((second[0], 'end', i))
+    return sorted(events, key=lambda tup: tup[0])
 
 def isRelevantLines(line, x, pixels):
     above = list(filter(lambda pt: pt[0] > x, line))
