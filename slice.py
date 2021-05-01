@@ -6,9 +6,19 @@ import numpy as np
 import perimeter
 from util import manhattanDistance, removeDupsFromPointList
 
-def toIntersectingLines(mesh, height):
-    return list(map(lambda tri: triangleToIntersectingLines(tri, height), mesh))
+def toIntersectingLines(mesh, height, pixels):
+    relevantTriangles = list(filter(lambda tri: isAboveAndBelow(tri, height, pixels), mesh))
+    lines = list(map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles))
+    return lines
 
+def drawLineOnPixels(p1, p2, pixels):
+    lineSteps = math.ceil(manhattanDistance(p1, p2))
+    if lineSteps == 0:
+        pixels[int(p1[0]), int(p2[1])] = True
+        return
+    for j in range(lineSteps + 1):
+        point = linearInterpolation(p1, p2, j / lineSteps)
+        pixels[int(point[0]), int(point[1])] = True    
 
 def linearInterpolation(p1, p2, distance):
     '''
@@ -34,6 +44,33 @@ def generateEvents(mesh):
         events.append((bottom[2], 'start', i))
         events.append((top[2], 'end', i))
     return sorted(events, key=lambda tup: tup[0])
+
+def isAboveAndBelow(pointList, height, pixels):
+    '''
+
+    :param pointList: Can be line or triangle
+    :param height:
+    :return: true if any line from the triangle crosses or is on the height line,
+    '''
+    above = list(filter(lambda pt: pt[2] > height, pointList))
+    below = list(filter(lambda pt: pt[2] < height, pointList))
+    same = list(filter(lambda pt: pt[2] == height, pointList))
+    if len(same) == 3:
+        lines = []
+        for i in range(0, len(same) - 1):
+            for j in range(i + 1, len(same)):
+                lines.append((same[i], same[j]))
+        perimeter.linesToVoxels(lines, pixels)
+    elif len(same) == 2:
+        return True
+    elif (above and below):
+        return True
+    elif len(same) == 1:
+        x = int(same[0][0])
+        y = int(same[0][1])
+        pixels[x][y] = True
+    else:
+        return False
 
 def triangleToIntersectingLines(triangle, height):
     assert (len(triangle) == 3)
@@ -80,6 +117,7 @@ def calculateScaleAndShift(mesh, resolution):
     xyscale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))
     #TODO: Change this to return one scale. If not, verify svx exporting still works.
     scale = [xyscale, xyscale, xyscale]
+    # bounding_box = [resolution, resolution, round((maxs[2] - mins[2]) * xyscale) + 1]
     bounding_box = [resolution, resolution, math.ceil((maxs[2] - mins[2]) * xyscale)]
     return (scale, shift, bounding_box)
 
@@ -90,9 +128,12 @@ def scaleAndShiftMesh(mesh, scale, shift):
         for pt in tri:
             newpt = [0, 0, 0]
             for i in range(3):
+                # newpt[i] = round((pt[i] + shift[i]) * scale[i])
                 newpt[i] = (pt[i] + shift[i]) * scale[i]
             newTri.append(tuple(newpt))
         if len(removeDupsFromPointList(newTri)) == 3:
             yield newTri
         else:
             pass
+
+

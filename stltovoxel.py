@@ -34,7 +34,7 @@ def doExport(inputFilePath, outputFilePath, resolution):
             mesh_subset = []
             for index in current_triangle_indecies:
                 mesh_subset.append(mesh[index])
-            lines = slice.toIntersectingLines(mesh_subset, slice_height)
+            lines = slice.toIntersectingLines(mesh_subset, slice_height, prepixel)
             perimeter.linesToVoxels(lines, prepixel)
             vol[slice_height] = prepixel
 
