@@ -7,7 +7,7 @@ import perimeter
 from util import manhattanDistance, removeDupsFromPointList
 
 def toIntersectingLines(mesh, height):
-    return list(map(lambda tri: triangleToIntersectingLines(tri, height), mesh))
+    return list(filter(None, map(lambda tri: triangleToIntersectingLines(tri, height), mesh)))
 
 
 def linearInterpolation(p1, p2, distance):
@@ -35,6 +35,7 @@ def generateEvents(mesh):
         events.append((top[2], 'end', i))
     return sorted(events, key=lambda tup: tup[0])
 
+# Return a line segment of the triangle sliced at the given height.
 def triangleToIntersectingLines(triangle, height):
     assert (len(triangle) == 3)
     above = list(filter(lambda pt: pt[2] > height, triangle))
@@ -43,9 +44,11 @@ def triangleToIntersectingLines(triangle, height):
     assert len(same) != 3
     if len(same) == 2:
         return same[0], same[1]
-    elif len(same) == 1:
+    elif len(same) == 1 and len(above) == 1 and len(below) == 1:
         side1 = whereLineCrossesZ(above[0], below[0], height)
         return side1, same[0]
+    elif len(same) == 1:
+        return None
     else:
         lines = []
         for a in above:
