@@ -17,5 +17,5 @@ $ python3 stltovoxel.py data/Stanford_Bunny.stl data/Stanford_Bunny.png
 The resolution is optional and defaults to 100.
 
 ### Example: 
-![alt text](https://github.com/rcpedersen/stl-to-voxel/raw/master/stanford_bunny.png "STL version of the stanford bunny")
-![alt text](https://github.com/rcpedersen/stl-to-voxel/raw/master/stanford_bunny.gif "voxel version of the stanford bunny")
+![alt text](https://github.com/rcpedersen/stl-to-voxel/raw/master/data/stanford_bunny.png "STL version of the stanford bunny")
+![alt text](https://github.com/rcpedersen/stl-to-voxel/raw/master/data/stanford_bunny.gif "voxel version of the stanford bunny")
