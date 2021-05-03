@@ -1,10 +1,7 @@
 import math
-import itertools
 
-import numpy as np
+from util import removeDupsFromPointList
 
-import perimeter
-from util import manhattanDistance, removeDupsFromPointList
 
 def toIntersectingLines(mesh, height):
     return list(filter(None, map(lambda tri: triangleToIntersectingLines(tri, height), mesh)))
@@ -26,6 +23,7 @@ def linearInterpolation(p1, p2, distance):
         p1[2] - distance * slopez
     )
 
+
 def generateEvents(mesh):
     # Create data structure for plane sweep
     events = []
@@ -34,6 +32,7 @@ def generateEvents(mesh):
         events.append((bottom[2], 'start', i))
         events.append((top[2], 'end', i))
     return sorted(events, key=lambda tup: tup[0])
+
 
 # Return a line segment of the triangle sliced at the given height.
 def triangleToIntersectingLines(triangle, height):
@@ -81,7 +80,7 @@ def calculateScaleAndShift(mesh, resolution):
         maxs[i] = max(allPoints, key=lambda tri: tri[i])[i]
     shift = [-min for min in mins]
     xyscale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))
-    #TODO: Change this to return one scale. If not, verify svx exporting still works.
+    #  TODO: Change this to return one scale. If not, verify svx exporting still works.
     scale = [xyscale, xyscale, xyscale]
     bounding_box = [resolution, resolution, math.ceil((maxs[2] - mins[2]) * xyscale)]
     return (scale, shift, bounding_box)

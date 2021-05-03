@@ -81,17 +81,12 @@ def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
     root = ET.Element("grid", attrib={"gridSizeX": str(bounding_box[0]),
                                       "gridSizeY": str(bounding_box[2]),
                                       "gridSizeZ": str(bounding_box[1]),
-                                      "voxelSize": str(1.0/scale[0]/1000), #STL is probably in mm, and svx needs meters
+                                      "voxelSize": str(1.0/scale[0]/1000),  # STL is probably in mm, and svx needs meters
                                       "subvoxelBits": "8",
                                       "originX": str(-shift[0]),
                                       "originY": str(-shift[2]),
                                       "originZ": str(-shift[1]),
                                       })
-    channels = ET.SubElement(root, "channels")
-    channel = ET.SubElement(channels, "channel", attrib={
-        "type": "DENSITY",
-        "slices": "density/slice%0" + size + "d.png"
-    })
     manifest = ET.tostring(root)
     with ZipFile(outputFilePath, 'w', zipfile.ZIP_DEFLATED) as zipFile:
         for height in range(bounding_box[2]):
@@ -101,10 +96,10 @@ def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
             output = io.BytesIO()
             img.save(output, format="PNG")
             zipFile.writestr(("density/slice%0" + size + "d.png") % height, output.getvalue())
-        zipFile.writestr("manifest.xml",manifest)
+        zipFile.writestr("manifest.xml", manifest)
 
 
-def file_choices(choices,fname):
+def file_choices(choices, fname):
     filename, ext = os.path.splitext(fname)
     if ext == '' or ext not in choices:
         if len(choices) == 1:
@@ -113,10 +108,14 @@ def file_choices(choices,fname):
             parser.error('%s doesn\'t end with one of %s' % (fname, choices))
     return fname
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert STL files to voxels')
     parser.add_argument('input', nargs='?', type=lambda s: file_choices(('.stl', ), s), help='The input STL file')
-    parser.add_argument('output', nargs='?', type=lambda s: file_choices(('.png', '.xyz', '.svx'), s), help='path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
+    parser.add_argument(
+        'output', nargs='?',
+        type=lambda s: file_choices(('.png', '.xyz', '.svx'), s),
+        help='path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
     parser.add_argument('resolution', nargs='?', type=int, default=100, help='number of voxels in both directions')
 
     args = parser.parse_args()
