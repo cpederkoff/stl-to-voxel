@@ -1,8 +1,3 @@
-import math
-from collections import defaultdict
-import numpy as np
-
-
 def linesToVoxels(lineList, pixels):
     current_line_indecies = set()
     x = -1
@@ -24,7 +19,7 @@ def linesToVoxels(lineList, pixels):
 
 def paintPixels(lines, pixels, x):
     isBlack = False
-    targetYs = list(map(lambda line: int(generateY(line, x)),lines))
+    targetYs = list(map(lambda line: int(generateY(line, x)), lines))
     for y in range(len(pixels[x])):
         if isBlack:
             pixels[x][y] = True
@@ -35,15 +30,17 @@ def paintPixels(lines, pixels, x):
                     pixels[x][y] = True
 
     if isBlack:
-        print("an error has occured at x%sz%s" % (x, lineList[0][0][2]))
+        print("an error has occured at x%s" % (x))
+
 
 def generateEvents(lineList):
     events = []
     for i, line in enumerate(lineList):
-        first, second = sorted(line, key=lambda pt:pt[0])
+        first, second = sorted(line, key=lambda pt: pt[0])
         events.append((first[0], 'start', i))
         events.append((second[0], 'end', i))
     return sorted(events, key=lambda tup: tup[0])
+
 
 def isRelevantLines(line, x, pixels):
     above = list(filter(lambda pt: pt[0] > x, line))

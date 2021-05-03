@@ -24,7 +24,7 @@ def BinarySTL(fname):
         ('Vertex1', np.float32, (3,)),
         ('Vertex2', np.float32, (3,)),
         ('Vertex3', np.float32, (3,)),
-        ('atttr', '<i2', (1,) )
+        ('atttr', '<i2', (1,))
     ])
     data = np.fromfile(fp, dtype=record_dtype, count=Numtri)
     fp.close()
@@ -35,7 +35,7 @@ def BinarySTL(fname):
     Vertex3 = data['Vertex3']
 
     p = np.append(Vertex1, Vertex2, axis=0)
-    p = np.append(p, Vertex3, axis=0)  #list(v1)
+    p = np.append(p, Vertex3, axis=0)
     Points = np.array(list(set(tuple(p1) for p1 in p)))
 
     return Header, Points, Normals, Vertex1, Vertex2, Vertex3
@@ -59,7 +59,7 @@ def AsciiSTL(fname):
                 continue
             elif init:
                 words = line.strip().split(' ')
-                words=list(filter(None,words))
+                words = list(filter(None, words))
                 assert words[0] == 'vertex'
                 verticies.append((float(words[1]), float(words[2]), float(words[3])))
 
@@ -67,7 +67,7 @@ def AsciiSTL(fname):
 
 
 def IsAsciiStl(fname):
-    with open(fname,'rb') as input_data:
+    with open(fname, 'rb') as input_data:
         line = input_data.readline()
         if line[:6] != b'solid ':
             return False
@@ -81,8 +81,8 @@ def IsAsciiStl(fname):
 
 def read_stl_verticies(fname):
     if IsAsciiStl(fname):
-        for (i,j,k) in AsciiSTL(fname):
-            yield (tuple(i),tuple(j),tuple(k))
+        for (i, j, k) in AsciiSTL(fname):
+            yield (tuple(i), tuple(j), tuple(k))
     else:
         head, p, n, v1, v2, v3 = BinarySTL(fname)
         for i, j, k in zip(v1, v2, v3):
