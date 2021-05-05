@@ -101,7 +101,7 @@ def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
 
 def file_choices(choices, fname):
     filename, ext = os.path.splitext(fname)
-    if ext == '' or ext not in choices:
+    if ext == '' or ext.lower() not in choices:
         if len(choices) == 1:
             parser.error('%s doesn\'t end with %s' % (fname, choices))
         else:
