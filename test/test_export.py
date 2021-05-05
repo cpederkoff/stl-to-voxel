@@ -19,3 +19,9 @@ def test_issue_files():
     doExport('data/test1.stl', 'data/test1.png', 100)
     # Provided by @silverscorpio in PR #18
     doExport('data/test2.stl', 'data/test2.png', 100)
+
+
+def test_resolution():
+    for i in range(1, 100):
+        print('resolution:', i)
+        doExport('data/Pyramid.stl', 'data/Pyramid.png', i)

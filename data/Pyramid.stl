@@ -1,0 +1,44 @@
+solid Onshape
+  facet normal 0 0.894427 0.447214
+    outer loop
+      vertex 30.1039 -0.834258 25
+      vertex 42.6039 11.6657 0
+      vertex 17.6039 11.6657 0
+    endloop
+  endfacet
+  facet normal 0.894427 0 0.447214
+    outer loop
+      vertex 30.1039 -0.834258 25
+      vertex 42.6039 -13.3343 0
+      vertex 42.6039 11.6657 0
+    endloop
+  endfacet
+  facet normal 0 -0.894427 0.447214
+    outer loop
+      vertex 30.1039 -0.834258 25
+      vertex 17.6039 -13.3343 0
+      vertex 42.6039 -13.3343 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 42.6039 -13.3343 0
+      vertex 17.6039 -13.3343 0
+      vertex 42.6039 11.6657 0
+    endloop
+  endfacet
+  facet normal 0 0 -1
+    outer loop
+      vertex 17.6039 -13.3343 0
+      vertex 17.6039 11.6657 0
+      vertex 42.6039 11.6657 0
+    endloop
+  endfacet
+  facet normal -0.894427 0 0.447214
+    outer loop
+      vertex 30.1039 -0.834258 25
+      vertex 17.6039 11.6657 0
+      vertex 17.6039 -13.3343 0
+    endloop
+  endfacet
+endsolid Onshape
