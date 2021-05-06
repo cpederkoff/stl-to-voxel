@@ -18,18 +18,18 @@ def doExport(inputFilePath, outputFilePath, resolution):
     mesh = list(stl_reader.read_stl_verticies(inputFilePath))
     (scale, shift, bounding_box) = slice.calculateScaleAndShift(mesh, resolution)
     mesh = list(slice.scaleAndShiftMesh(mesh, scale, shift))
-    # Note: vol should be addressed with vol[z][x][y]
-    vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
 
     events = slice.generateEvents(mesh)
 
     current_triangle_indecies = set()
+    # Note: vol should be addressed with vol[z][x][y]
+    vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
 
     slice_height = -1
     for (z, status, tri_ind) in events:
-        while z - slice_height >= 1:
+        while z - slice_height > 1:
             slice_height += 1
-            print('Processing layer %d/%d' % (slice_height+1, bounding_box[2]))
+            print('Processing layer %d/%d' % (slice_height, bounding_box[2]))
             prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
             mesh_subset = []
             for index in current_triangle_indecies:
