@@ -25,10 +25,9 @@ def doExport(inputFilePath, outputFilePath, resolution):
     # Note: vol should be addressed with vol[z][x][y]
     vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
 
-    slice_height = -1
+    slice_height = 0
     for i, (z, status, tri_ind) in enumerate(events):
-        while z - slice_height >= 1:
-            slice_height += 1
+        while z - slice_height >= 0:
             print('Processing layer %d/%d' % (slice_height, bounding_box[2]))
             prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
             mesh_subset = []
@@ -37,6 +36,7 @@ def doExport(inputFilePath, outputFilePath, resolution):
             lines = slice.toIntersectingLines(mesh_subset, slice_height)
             perimeter.linesToVoxels(lines, prepixel)
             vol[slice_height] = prepixel
+            slice_height += 1
 
         if status == 'start':
             assert tri_ind not in current_triangle_indecies
