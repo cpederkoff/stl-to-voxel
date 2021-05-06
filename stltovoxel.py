@@ -1,6 +1,7 @@
 import argparse
 import os.path
 import io
+import glob
 import xml.etree.cElementTree as ET
 from zipfile import ZipFile
 import zipfile
@@ -27,7 +28,7 @@ def doExport(inputFilePath, outputFilePath, resolution):
 
     slice_height = 0
     for i, (z, status, tri_ind) in enumerate(events):
-        while z - slice_height >= 0:
+        while z - slice_height > 0:
             print('Processing layer %d/%d' % (slice_height, bounding_box[2]))
             prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
             mesh_subset = []
@@ -56,13 +57,22 @@ def doExport(inputFilePath, outputFilePath, resolution):
 
 
 def exportPngs(voxels, bounding_box, outputFilePath):
-    size = str(len(str(bounding_box[2]))+1)
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
+
+    # delete the previous output files
+    fileList = glob.glob(outputFilePattern + '_*.png')
+    for filePath in fileList:
+        try:
+            os.remove(filePath)
+        except:
+            print("Error while deleting file : ", filePath)
+
+    size = str(len(str(bounding_box[2]))+1)
     for height in range(bounding_box[2]):
         img = Image.new('L', (bounding_box[0], bounding_box[1]), 'black')  # create a new black image
         pixels = img.load()
         arrayToWhiteGreyscalePixel(voxels[height], pixels)
-        path = (outputFilePattern + "%0" + size + "d.png") % height
+        path = (outputFilePattern + "_%0" + size + "d.png") % height
         img.save(path)
 
 
