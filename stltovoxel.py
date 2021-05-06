@@ -13,38 +13,37 @@ import slice
 import stl_reader
 import perimeter
 from util import arrayToWhiteGreyscalePixel, padVoxelArray
+from functools import reduce
 
 
 def doExport(inputFilePath, outputFilePath, resolution):
     mesh = list(stl_reader.read_stl_verticies(inputFilePath))
     (scale, shift, bounding_box) = slice.calculateScaleAndShift(mesh, resolution)
     mesh = list(slice.scaleAndShiftMesh(mesh, scale, shift))
-
-    events = slice.generateEvents(mesh)
-
-    current_triangle_indecies = set()
     # Note: vol should be addressed with vol[z][x][y]
     vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
 
+    events = slice.generateEvents(mesh)
+
+    current_mesh_indices = set()
+
     slice_height = 0
     for i, (z, status, tri_ind) in enumerate(events):
-        while z - slice_height > 0:
+        while z - slice_height >= 0:
             print('Processing layer %d/%d' % (slice_height, bounding_box[2]))
             prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
-            mesh_subset = []
-            for index in current_triangle_indecies:
-                mesh_subset.append(mesh[index])
+            mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
             lines = slice.toIntersectingLines(mesh_subset, slice_height)
             perimeter.linesToVoxels(lines, prepixel)
             vol[slice_height] = prepixel
             slice_height += 1
 
         if status == 'start':
-            assert tri_ind not in current_triangle_indecies
-            current_triangle_indecies.add(tri_ind)
+            assert tri_ind not in current_mesh_indices
+            current_mesh_indices.add(tri_ind)
         elif status == 'end':
-            assert tri_ind in current_triangle_indecies
-            current_triangle_indecies.remove(tri_ind)
+            assert tri_ind in current_mesh_indices
+            current_mesh_indices.remove(tri_ind)
 
     vol, bounding_box = padVoxelArray(vol)
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
