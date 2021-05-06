@@ -26,8 +26,8 @@ def doExport(inputFilePath, outputFilePath, resolution):
     vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
 
     slice_height = -1
-    for (z, status, tri_ind) in events:
-        while z - slice_height > 1:
+    for i, (z, status, tri_ind) in enumerate(events):
+        while z - slice_height >= 1:
             slice_height += 1
             print('Processing layer %d/%d' % (slice_height, bounding_box[2]))
             prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
