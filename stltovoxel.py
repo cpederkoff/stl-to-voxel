@@ -64,7 +64,7 @@ def exportPngs(voxels, bounding_box, outputFilePath):
     for filePath in fileList:
         try:
             os.remove(filePath)
-        except:
+        except Exception as e:
             print("Error while deleting file : ", filePath)
 
     size = str(len(str(bounding_box[2]))+1)
