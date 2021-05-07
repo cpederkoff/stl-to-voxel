@@ -60,3 +60,15 @@ class TestSlice(unittest.TestCase):
             (tri[0], tri[1]),
         ]
         self.assertEqual(expected, lines)
+
+    def test_triangleToIntersectingLines_intersectOnePoint(self):
+        pixels = np.zeros((100, 100), dtype=bool)
+        lines = []
+        tri = [
+            [2, 4, 3],
+            [3, 2, 3],
+            [1, 2, 5],
+        ]
+        slice.triangleToIntersectingLines(tri, 5, pixels, lines)
+        expected = []
+        self.assertEqual(expected, lines)
