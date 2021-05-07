@@ -18,7 +18,7 @@ class TestSlice(unittest.TestCase):
         self.assertEqual(slice.linearInterpolation(p1, p2, 0), p1)
         self.assertEqual(slice.linearInterpolation(p1, p2, 1), p2)
         self.assertEqual(slice.linearInterpolation(p1, p2, .5), (1.5, 3, 3))
-    
+
     def test_triangleToIntersectingLines(self):
         pixels = np.zeros((100, 100), dtype=bool)
         lines = []
@@ -32,7 +32,7 @@ class TestSlice(unittest.TestCase):
             ((1.25, 2.5, 4.0), (2.0, 2.0, 4.0)),
         ]
         self.assertEqual(expected, lines)
-    
+
     def test_triangleToIntersectingLines_onePointSame(self):
         pixels = np.zeros((100, 100), dtype=bool)
         lines = []
@@ -46,7 +46,7 @@ class TestSlice(unittest.TestCase):
             ((1.5, 3, 3), (3, 2, 3)),
         ]
         self.assertEqual(expected, lines)
-    
+
     def test_triangleToIntersectingLines_twoPointSame(self):
         pixels = np.zeros((100, 100), dtype=bool)
         lines = []
