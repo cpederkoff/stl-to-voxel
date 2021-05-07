@@ -23,17 +23,15 @@ def doExport(inputFilePath, outputFilePath, resolution):
     # Note: vol should be addressed with vol[z][x][y]
     vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
 
-    events = slice.generateEvents(mesh)
-
     current_mesh_indices = set()
 
     slice_height = 0
-    for i, (z, status, tri_ind) in enumerate(events):
-        while z - slice_height >= 0:
+    for event_z, status, tri_ind in slice.generateEvents(mesh):
+        while event_z - slice_height >= 0:
             print('Processing layer %d/%d' % (slice_height, bounding_box[2]))
             prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
             mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
-            lines = slice.toIntersectingLines(mesh_subset, slice_height)
+            lines = slice.toIntersectingLines(mesh_subset, slice_height, prepixel)
             perimeter.linesToVoxels(lines, prepixel)
             vol[slice_height] = prepixel
             slice_height += 1
