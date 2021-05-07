@@ -1,20 +1,20 @@
 def linesToVoxels(lineList, pixels):
-    current_line_indecies = set()
+    current_line_indices = set()
     x = -1
     for (event_x, status, line_ind) in generateEvents(lineList):
         while event_x - x >= 1:
             x += 1
             lines = []
-            for cur_line_ind in current_line_indecies:
+            for cur_line_ind in current_line_indices:
                 lines.append(lineList[cur_line_ind])
             paintPixels(lines, pixels, x)
 
         if status == 'start':
-            assert line_ind not in current_line_indecies
-            current_line_indecies.add(line_ind)
+            assert line_ind not in current_line_indices
+            current_line_indices.add(line_ind)
         elif status == 'end':
-            assert line_ind in current_line_indecies
-            current_line_indecies.remove(line_ind)
+            assert line_ind in current_line_indices
+            current_line_indices.remove(line_ind)
 
 
 def paintPixels(lines, pixels, x):

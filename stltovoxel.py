@@ -1,6 +1,7 @@
 import argparse
 import os.path
 import io
+import glob
 import xml.etree.cElementTree as ET
 from zipfile import ZipFile
 import zipfile
@@ -12,6 +13,7 @@ import slice
 import stl_reader
 import perimeter
 from util import arrayToWhiteGreyscalePixel, padVoxelArray
+from functools import reduce
 
 
 def doExport(inputFilePath, outputFilePath, resolution):
@@ -23,27 +25,25 @@ def doExport(inputFilePath, outputFilePath, resolution):
 
     events = slice.generateEvents(mesh)
 
-    current_triangle_indecies = set()
+    current_mesh_indices = set()
 
-    slice_height = -1
-    for (z, status, tri_ind) in events:
-        while z - slice_height >= 1:
-            slice_height += 1
-            print('Processing layer %d/%d' % (slice_height+1, bounding_box[2]))
+    slice_height = 0
+    for i, (z, status, tri_ind) in enumerate(events):
+        while z - slice_height >= 0:
+            print('Processing layer %d/%d' % (slice_height, bounding_box[2]))
             prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
-            mesh_subset = []
-            for index in current_triangle_indecies:
-                mesh_subset.append(mesh[index])
+            mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
             lines = slice.toIntersectingLines(mesh_subset, slice_height)
             perimeter.linesToVoxels(lines, prepixel)
             vol[slice_height] = prepixel
+            slice_height += 1
 
         if status == 'start':
-            assert tri_ind not in current_triangle_indecies
-            current_triangle_indecies.add(tri_ind)
+            assert tri_ind not in current_mesh_indices
+            current_mesh_indices.add(tri_ind)
         elif status == 'end':
-            assert tri_ind in current_triangle_indecies
-            current_triangle_indecies.remove(tri_ind)
+            assert tri_ind in current_mesh_indices
+            current_mesh_indices.remove(tri_ind)
 
     vol, bounding_box = padVoxelArray(vol)
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
@@ -56,13 +56,22 @@ def doExport(inputFilePath, outputFilePath, resolution):
 
 
 def exportPngs(voxels, bounding_box, outputFilePath):
-    size = str(len(str(bounding_box[2]))+1)
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
+
+    # delete the previous output files
+    fileList = glob.glob(outputFilePattern + '_*.png')
+    for filePath in fileList:
+        try:
+            os.remove(filePath)
+        except Exception:
+            print("Error while deleting file : ", filePath)
+
+    size = str(len(str(bounding_box[2]))+1)
     for height in range(bounding_box[2]):
         img = Image.new('L', (bounding_box[0], bounding_box[1]), 'black')  # create a new black image
         pixels = img.load()
         arrayToWhiteGreyscalePixel(voxels[height], pixels)
-        path = (outputFilePattern + "%0" + size + "d.png") % height
+        path = (outputFilePattern + "_%0" + size + "d.png") % height
         img.save(path)
 
 
@@ -101,7 +110,7 @@ def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
 
 def file_choices(choices, fname):
     filename, ext = os.path.splitext(fname)
-    if ext == '' or ext not in choices:
+    if ext == '' or ext.lower() not in choices:
         if len(choices) == 1:
             parser.error('%s doesn\'t end with %s' % (fname, choices))
         else:
