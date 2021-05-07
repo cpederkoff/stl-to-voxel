@@ -1,10 +1,12 @@
 import math
-
+import perimeter
 from util import removeDupsFromPointList
 
 
-def toIntersectingLines(mesh, height):
-    return list(filter(None, map(lambda tri: triangleToIntersectingLines(tri, height), mesh)))
+def toIntersectingLines(mesh, height, pixels):
+    relevantTriangles = list(filter(lambda tri: isAboveAndBelow(tri, height, pixels), mesh))
+    lines = list(map(lambda tri: triangleToIntersectingLines(tri, height), relevantTriangles))
+    return lines
 
 
 def linearInterpolation(p1, p2, distance):
@@ -14,8 +16,8 @@ def linearInterpolation(p1, p2, distance):
     :param distance: Between 0 and 1, Lower numbers return points closer to p1.
     :return: A point on the line between p1 and p2
     '''
-    slopex = (p1[0] - p2[0])
-    slopey = (p1[1] - p2[1])
+    slopex = p1[0] - p2[0]
+    slopey = p1[1] - p2[1]
     slopez = p1[2] - p2[2]
     return (
         p1[0] - distance * slopex,
@@ -24,17 +26,33 @@ def linearInterpolation(p1, p2, distance):
     )
 
 
-def generateEvents(mesh):
-    # Create data structure for plane sweep
-    events = []
-    for i, tri in enumerate(mesh):
-        bottom, middle, top = sorted(tri, key=lambda pt: pt[2])
-        events.append((bottom[2], 'start', i))
-        events.append((top[2], 'end', i))
-    return sorted(events, key=lambda tup: tup[0])
+def isAboveAndBelow(pointList, height, pixels):
+    '''
+    :param pointList: Can be line or triangle
+    :param height:
+    :return: true if any line from the triangle crosses or is on the height line,
+    '''
+    above = list(filter(lambda pt: pt[2] > height, pointList))
+    below = list(filter(lambda pt: pt[2] < height, pointList))
+    same = list(filter(lambda pt: pt[2] == height, pointList))
+    if len(same) == 3:
+        lines = []
+        for i in range(0, len(same) - 1):
+            for j in range(i + 1, len(same)):
+                lines.append((same[i], same[j]))
+        perimeter.linesToVoxels(lines, pixels)
+    elif len(same) == 2:
+        return True
+    elif (above and below):
+        return True
+    elif len(same) == 1:
+        x = int(same[0][0])
+        y = int(same[0][1])
+        pixels[x][y] = True
+    else:
+        return False
 
 
-# Return a line segment of the triangle sliced at the given height.
 def triangleToIntersectingLines(triangle, height):
     assert (len(triangle) == 3)
     above = list(filter(lambda pt: pt[2] > height, triangle))
@@ -43,11 +61,9 @@ def triangleToIntersectingLines(triangle, height):
     assert len(same) != 3
     if len(same) == 2:
         return same[0], same[1]
-    elif len(same) == 1 and len(above) == 1 and len(below) == 1:
+    elif len(same) == 1:
         side1 = whereLineCrossesZ(above[0], below[0], height)
         return side1, same[0]
-    elif len(same) == 1:
-        return None
     else:
         lines = []
         for a in above:
@@ -60,9 +76,7 @@ def triangleToIntersectingLines(triangle, height):
 
 def whereLineCrossesZ(p1, p2, z):
     if (p1[2] > p2[2]):
-        t = p1
-        p1 = p2
-        p2 = t
+        p1, p2 = p2, p1
     # now p1 is below p2 in z
     if p2[2] == p1[2]:
         distance = 0
@@ -103,3 +117,13 @@ def scaleAndShiftMesh(mesh, scale, shift):
             yield newTri
         else:
             pass
+
+
+def generateEvents(mesh):
+    # Create data structure for plane sweep
+    events = []
+    for i, tri in enumerate(mesh):
+        bottom, middle, top = sorted(tri, key=lambda pt: pt[2])
+        events.append((bottom[2], 'start', i))
+        events.append((top[2], 'end', i))
+    return sorted(events, key=lambda tup: tup[0])

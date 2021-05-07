@@ -48,12 +48,3 @@ class TestSlice(unittest.TestCase):
         ]
         lines = list(slice.triangleToIntersectingLines(tri, 3))
         self.assertEqual([tri[0], tri[1]], sorted(lines))
-
-    def test_triangleToIntersectingLines_intersectOnePoint(self):
-        tri = [
-            [2, 4, 3],
-            [3, 2, 3],
-            [1, 2, 5],
-        ]
-        lines = slice.triangleToIntersectingLines(tri, 5)
-        self.assertEqual(None, lines)
