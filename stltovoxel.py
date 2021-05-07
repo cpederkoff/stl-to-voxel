@@ -11,7 +11,6 @@ import numpy as np
 
 import slice
 import stl_reader
-import perimeter
 from util import arrayToWhiteGreyscalePixel, padVoxelArray
 from functools import reduce
 
@@ -24,16 +23,12 @@ def doExport(inputFilePath, outputFilePath, resolution):
     vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
 
     current_mesh_indices = set()
-
     slice_height = 0
     for event_z, status, tri_ind in slice.generateEvents(mesh):
         while event_z - slice_height >= 0:
             print('Processing layer %d/%d' % (slice_height, bounding_box[2]))
-            prepixel = np.zeros((bounding_box[0], bounding_box[1]), dtype=bool)
             mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
-            lines = slice.toIntersectingLines(mesh_subset, slice_height, prepixel)
-            perimeter.linesToVoxels(lines, prepixel)
-            vol[slice_height] = prepixel
+            slice.paintZplane(mesh_subset, slice_height, vol[slice_height, ...])
             slice_height += 1
 
         if status == 'start':

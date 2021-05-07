@@ -1,6 +1,6 @@
 import perimeter
-import numpy as np
 import unittest
+import numpy as np
 
 
 class PerimeterTest(unittest.TestCase):
@@ -19,8 +19,8 @@ class PerimeterTest(unittest.TestCase):
             ((55.17312327125145, 47.89459328407937, 133.0), (54.72938801464095, 47.894596812904574, 133.0))
         ]
         x = 55
-        # have assert or Exception in paintPixels()
-        perimeter.paintPixels(lines, pixels, x)
+        # have assert or Exception in paintYaxis()
+        perimeter.paintYaxis(lines, pixels, x)
 
 
 if __name__ == '__main__':

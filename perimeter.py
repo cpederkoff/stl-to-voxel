@@ -7,7 +7,7 @@ def linesToVoxels(lineList, pixels):
     for (event_x, status, line_ind) in generateEvents(lineList):
         while event_x - x >= 0:
             lines = reduce(lambda acc, cur: acc + [lineList[cur]], current_line_indices, [])
-            paintPixels(lines, pixels, x)
+            paintYaxis(lines, pixels, x)
             x += 1
 
         if status == 'start':
@@ -32,7 +32,7 @@ def generateY(p1, p2, x):
     return y
 
 
-def paintPixels(lines, pixels, x):
+def paintYaxis(lines, pixels, x):
     if len(lines) % 2:
         print('[Warning] The number of lines is odd')
         eq_coefficients = []
@@ -53,6 +53,7 @@ def paintPixels(lines, pixels, x):
         if isBlack:
             for y in range(yi, targetY):
                 pixels[x][y] = True
+        pixels[x][targetYs] = True
         isBlack = not isBlack
         yi = targetY
     assert isBlack is False, 'an error has occured at x%s' % x
