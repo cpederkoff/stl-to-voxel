@@ -19,7 +19,7 @@ class PerimeterTest(unittest.TestCase):
             ((55.17312327125145, 47.89459328407937, 133.0), (54.72938801464095, 47.894596812904574, 133.0))
         ]
         x = 55
-        # have assert or Exception in paintPixels() function
+        # have assert or Exception in paintPixels()
         perimeter.paintPixels(lines, pixels, x)
 
 
