@@ -19,11 +19,17 @@ def linesToVoxels(lineList, pixels):
 
 
 def slope_intercept(p1, p2):
-    x1, y1 = p1
-    x2, y2 = p2
+    x1, y1 = p1[:2]
+    x2, y2 = p2[:2]
     slope = (y2 - y1) / (x2 - x1)
     intercept = y1 - slope * x1
     return slope, intercept
+
+
+def generateY(p1, p2, x):
+    slope, intercept = slope_intercept(p1, p2)
+    y = slope * x + intercept
+    return y
 
 
 def paintPixels(lines, pixels, x):
@@ -31,7 +37,7 @@ def paintPixels(lines, pixels, x):
         print('[Warning] The number of lines is odd')
         eq_coefficients = []
         for line in lines:
-            eq_coefficient = slope_intercept(line[0][:-1], line[1][:-1])
+            eq_coefficient = slope_intercept(line[0], line[1])
             if eq_coefficient in eq_coefficients:
                 lines.remove(line)
                 break
@@ -40,15 +46,15 @@ def paintPixels(lines, pixels, x):
             raise Exception('Not found the same line')
 
     isBlack = False
-    targetYs = list(map(lambda line: int(generateY(line, x)), lines))
-    for y in range(len(pixels[x])):
+    targetYs = list(map(lambda line: int(generateY(line[0], line[1], x)), lines))
+    targetYs.sort()
+    yi = 0
+    for targetY in targetYs:
         if isBlack:
-            pixels[x][y] = True
-        if y in targetYs:
-            for line in lines:
-                if onLine(line, x, y):
-                    isBlack = not isBlack
-                    pixels[x][y] = True
+            for y in range(yi, targetY):
+                pixels[x][y] = True
+        isBlack = not isBlack
+        yi = targetY
     assert isBlack is False, 'an error has occured at x%s' % x
 
 
@@ -76,53 +82,3 @@ def isRelevantLines(line, x, pixels):
             pixels[x][y] = True
     else:
         return False
-
-
-def generateY(line, x):
-    ratio = (x - line[0][0]) / (line[1][0] - line[0][0])
-    ydist = line[1][1] - line[0][1]
-    newy = line[0][1] + ratio * ydist
-    return newy
-
-
-def onLine(line, x, y):
-    newy = generateY(line, x)
-    if int(newy) != y:
-        return False
-    if (int(line[0][0]) != x and
-        int(line[1][0]) != x) and \
-            (max(line[0][0], line[1][0]) < x or
-             min(line[0][0], line[1][0]) > x):
-        return False
-    if (int(line[0][1]) != y and
-        int(line[1][1]) != y) and \
-            (max(line[0][1], line[1][1]) < y or
-             min(line[0][1], line[1][1]) > y):
-        return False
-    return True
-
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-
-    lines = [
-        ((55.183775000510195, 42.91771076583979, 133.0), (54.664478438939994, 42.91190079807315, 133.0)),
-        ((55.05365382117602, 48.399582783540694, 133.0), (54.28259953472679, 48.399582783540694, 133.0)),
-        ((54.72938801464095, 51.1054056827822, 133.0), (55.21085292933077, 51.10540695761318, 133.0)),
-        ((55.17312327125145, 54.131620716008165, 133.0), (54.72938801464095, 54.13161531213461, 133.0)),
-        ((54.28259953472679, 48.399582783540694, 133.0), (55.05365382117602, 48.399582783540694, 133.0)),
-        ((55.05365382117602, 50.600419560857354, 133.0), (54.28259953472679, 50.600419560857354, 133.0)),
-        ((54.72938801464095, 44.868384133402195, 133.0), (55.21085292933077, 44.868386286857266, 133.0)),
-        ((55.183775000510195, 56.0822892341602, 133.0), (54.664478438939994, 56.088101893431286, 133.0)),
-        ((55.17312327125145, 47.89459328407937, 133.0), (54.72938801464095, 47.894596812904574, 133.0))
-    ]
-    x = 55
-    targetYs = [42, 48, 51, 54, 48, 50, 44, 56, 47]
-    for (p1, p2) in lines:
-        x_values = [p1[0], p2[0]]
-        y_values = [p1[1], p2[1]]
-
-        plt.plot(x_values, y_values)
-    for y in targetYs:
-        plt.plot(x, y, 'o')
-    plt.show()
