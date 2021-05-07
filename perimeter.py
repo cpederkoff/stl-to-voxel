@@ -18,9 +18,26 @@ def linesToVoxels(lineList, pixels):
             current_line_indices.remove(line_ind)
 
 
+def slope_intercept(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    slope = (y2 - y1) / (x2 - x1)
+    intercept = y1 - slope * x1
+    return slope, intercept
+
+
 def paintPixels(lines, pixels, x):
     if len(lines) % 2:
         print('[Warning] The number of lines is odd')
+        eq_coefficients = []
+        for line in lines:
+            eq_coefficient = slope_intercept(line[0][:-1], line[1][:-1])
+            if eq_coefficient in eq_coefficients:
+                lines.remove(line)
+                break
+            eq_coefficients.append(eq_coefficient)
+        else:
+            raise Exception('Not found the same line')
 
     isBlack = False
     targetYs = list(map(lambda line: int(generateY(line, x)), lines))
@@ -32,8 +49,7 @@ def paintPixels(lines, pixels, x):
                 if onLine(line, x, y):
                     isBlack = not isBlack
                     pixels[x][y] = True
-    if isBlack:
-        raise Exception('an error has occured at x%s' % x)
+    assert isBlack is False, 'an error has occured at x%s' % x
 
 
 def generateEvents(lineList):
