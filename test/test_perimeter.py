@@ -1,9 +1,33 @@
 import perimeter
-import numpy as np
 import unittest
+import numpy as np
 
 
 class PerimeterTest(unittest.TestCase):
+    def test_lines_to_pixels(self):
+        test = [[(0, 0, 0), (3, 0, 0)],
+                [(9, 9, 0), (3, 9, 0)],
+                [(3, 0, 0), (9, 9, 0)],
+                [(3, 9, 0), (0, 0, 0)]]
+        actual = np.zeros((13, 13), dtype=bool)
+        perimeter.linesToVoxels(test, actual)
+        expected = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ]
+        self.assertEqual(expected, actual.astype(int).tolist())
+
     def test_cross_line(self):
         pixels = np.zeros((100, 100), dtype=bool)
         # when z=133, x=55 at Eiffel_tower_sample.STL, resolution=100
@@ -19,8 +43,8 @@ class PerimeterTest(unittest.TestCase):
             ((55.17312327125145, 47.89459328407937, 133.0), (54.72938801464095, 47.894596812904574, 133.0))
         ]
         x = 55
-        # have assert or Exception in paintPixels()
-        perimeter.paintPixels(lines, pixels, x)
+        # have assert or Exception in paintYaxis()
+        perimeter.paintYaxis(lines, pixels, x)
 
 
 if __name__ == '__main__':

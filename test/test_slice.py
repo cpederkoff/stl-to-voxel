@@ -1,5 +1,6 @@
 import slice
 import unittest
+import numpy as np
 
 
 class TestSlice(unittest.TestCase):
@@ -19,32 +20,55 @@ class TestSlice(unittest.TestCase):
         self.assertEqual(slice.linearInterpolation(p1, p2, .5), (1.5, 3, 3))
 
     def test_triangleToIntersectingLines(self):
+        pixels = np.zeros((100, 100), dtype=bool)
+        lines = []
         tri = [
             [2, 4, 1],
             [1, 2, 5],
             [3, 2, 3]
         ]
-        actual = list(slice.triangleToIntersectingLines(tri, 4))
+        slice.triangleToIntersectingLines(tri, 4, pixels, lines)
         expected = [
-            (1.25, 2.5, 4.0),
-            (2.0, 2.0, 4.0)
+            ((1.25, 2.5, 4.0), (2.0, 2.0, 4.0)),
         ]
-        self.assertEqual(actual, expected)
+        self.assertEqual(expected, lines)
 
     def test_triangleToIntersectingLines_onePointSame(self):
+        pixels = np.zeros((100, 100), dtype=bool)
+        lines = []
         tri = [
             (2, 4, 1),
             (1, 2, 5),
             (3, 2, 3)
         ]
-        lines = list(slice.triangleToIntersectingLines(tri, 3))
-        self.assertEqual([(1.5, 3, 3), (3, 2, 3)], lines)
+        slice.triangleToIntersectingLines(tri, 3, pixels, lines)
+        expected = [
+            ((1.5, 3, 3), (3, 2, 3)),
+        ]
+        self.assertEqual(expected, lines)
 
     def test_triangleToIntersectingLines_twoPointSame(self):
+        pixels = np.zeros((100, 100), dtype=bool)
+        lines = []
         tri = [
             [2, 4, 3],
             [3, 2, 3],
             [1, 2, 5],
         ]
-        lines = list(slice.triangleToIntersectingLines(tri, 3))
-        self.assertEqual([tri[0], tri[1]], sorted(lines))
+        slice.triangleToIntersectingLines(tri, 3, pixels, lines)
+        expected = [
+            (tri[0], tri[1]),
+        ]
+        self.assertEqual(expected, lines)
+
+    def test_triangleToIntersectingLines_intersectOnePoint(self):
+        pixels = np.zeros((100, 100), dtype=bool)
+        lines = []
+        tri = [
+            [2, 4, 3],
+            [3, 2, 3],
+            [1, 2, 5],
+        ]
+        slice.triangleToIntersectingLines(tri, 5, pixels, lines)
+        expected = []
+        self.assertEqual(expected, lines)
