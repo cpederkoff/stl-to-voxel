@@ -1,6 +1,25 @@
 import math
 import perimeter
 from util import removeDupsFromPointList
+from functools import reduce
+
+
+def meshToPlane(mesh, vol):
+    current_mesh_indices = set()
+    z = 0
+    for event_z, status, tri_ind in generateTriEvents(mesh):
+        while event_z - z >= 0:
+            print('Processing layer %d' % z)
+            mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
+            paintZplane(mesh_subset, z, vol[z, ...])
+            z += 1
+
+        if status == 'start':
+            assert tri_ind not in current_mesh_indices
+            current_mesh_indices.add(tri_ind)
+        elif status == 'end':
+            assert tri_ind in current_mesh_indices
+            current_mesh_indices.remove(tri_ind)
 
 
 def paintZplane(mesh, height, pixels):
@@ -101,7 +120,7 @@ def scaleAndShiftMesh(mesh, scale, shift):
             yield newTri
 
 
-def generateEvents(mesh):
+def generateTriEvents(mesh):
     # Create data structure for plane sweep
     events = []
     for i, tri in enumerate(mesh):

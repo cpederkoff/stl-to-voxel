@@ -4,7 +4,7 @@ from functools import reduce
 def linesToVoxels(lineList, pixels):
     current_line_indices = set()
     x = 0
-    for (event_x, status, line_ind) in generateEvents(lineList):
+    for (event_x, status, line_ind) in generateLineEvents(lineList):
         while event_x - x >= 0:
             lines = reduce(lambda acc, cur: acc + [lineList[cur]], current_line_indices, [])
             paintYaxis(lines, pixels, x)
@@ -59,27 +59,10 @@ def paintYaxis(lines, pixels, x):
     assert isBlack is False, 'an error has occured at x%s' % x
 
 
-def generateEvents(lineList):
+def generateLineEvents(lineList):
     events = []
     for i, line in enumerate(lineList):
         first, second = sorted(line, key=lambda pt: pt[0])
         events.append((first[0], 'start', i))
         events.append((second[0], 'end', i))
     return sorted(events, key=lambda tup: tup[0])
-
-
-def isRelevantLines(line, x, pixels):
-    above = list(filter(lambda pt: pt[0] > x, line))
-    below = list(filter(lambda pt: pt[0] < x, line))
-    same = list(filter(lambda pt: pt[0] == x, line))
-    if above and below:
-        return True
-    elif same and above:
-        return True
-    elif len(same) == 2:
-        start = min(int(same[0][1]), int(same[1][1]))
-        stop = max(int(same[0][1]), int(same[1][1])) + 1
-        for y in range(start, stop):
-            pixels[x][y] = True
-    else:
-        return False
