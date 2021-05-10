@@ -25,3 +25,5 @@ def test_resolution():
     for i in range(1, 100):
         print('resolution:', i)
         doExport('data/Pyramid.stl', 'data/Pyramid.png', i)
+        doExport('data/Menger_sponge_sample.stl', 'data/Menger_sponge_sample.png', i)
+        doExport('data/Eiffel_tower_sample.STL', 'data/Eiffel_tower_sample.png', i)
