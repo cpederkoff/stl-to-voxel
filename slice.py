@@ -1,17 +1,24 @@
 import math
 import perimeter
+import ray
+import numpy as np
 from util import removeDupsFromPointList
 from functools import reduce
 
 
-def meshToPlane(mesh, vol):
+def meshToPlane(mesh, bounding_box):
+    ray.init()
+
+    result_ids = []
+
     current_mesh_indices = set()
     z = 0
     for event_z, status, tri_ind in generateTriEvents(mesh):
         while event_z - z >= 0:
-            print('Processing layer %d' % z)
+            print('Processing layer %d/%d' % (z, bounding_box[2]))
             mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
-            paintZplane(mesh_subset, z, vol[z, ...])
+            result_id = paintZplane.remote(mesh_subset, z, bounding_box[:2])
+            result_ids.append(result_id)
             z += 1
 
         if status == 'start':
@@ -21,12 +28,28 @@ def meshToPlane(mesh, vol):
             assert tri_ind in current_mesh_indices
             current_mesh_indices.remove(tri_ind)
 
+    results = ray.get(result_ids)
 
-def paintZplane(mesh, height, pixels):
+    # Note: vol should be addressed with vol[z][x][y]
+    vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
+
+    for z, pixels in results:
+        vol[z, ...] = pixels
+
+    ray.shutdown()
+    return vol
+
+
+@ray.remote
+def paintZplane(mesh, height, plane_shape):
+    pixels = np.zeros(plane_shape, dtype=bool)
+
     lines = []
     for triangle in mesh:
         triangleToIntersectingLines(triangle, height, pixels, lines)
     perimeter.linesToVoxels(lines, pixels)
+
+    return height, pixels
 
 
 def linearInterpolation(p1, p2, distance):

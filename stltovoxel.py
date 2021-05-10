@@ -7,7 +7,6 @@ from zipfile import ZipFile
 import zipfile
 
 from PIL import Image
-import numpy as np
 
 import slice
 import stl_reader
@@ -18,10 +17,8 @@ def doExport(inputFilePath, outputFilePath, resolution):
     mesh = list(stl_reader.read_stl_verticies(inputFilePath))
     (scale, shift, bounding_box) = slice.calculateScaleAndShift(mesh, resolution)
     mesh = list(slice.scaleAndShiftMesh(mesh, scale, shift))
-    # Note: vol should be addressed with vol[z][x][y]
-    vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
 
-    slice.meshToPlane(mesh, vol)
+    vol = slice.meshToPlane(mesh, bounding_box)
 
     vol, bounding_box = padVoxelArray(vol)
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
