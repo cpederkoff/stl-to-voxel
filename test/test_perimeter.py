@@ -1,6 +1,6 @@
 import perimeter
-import numpy as np
 import unittest
+import numpy as np
 
 
 class PerimeterTest(unittest.TestCase):
@@ -29,11 +29,22 @@ class PerimeterTest(unittest.TestCase):
         self.assertEqual(expected, actual.astype(int).tolist())
 
     def test_cross_line(self):
-        self.assertTrue(perimeter.onLine([(0, 0, 0), (2, 2, 0)], 1, 1))
-        self.assertTrue(perimeter.onLine([(2, 2, 0), (0, 0, 0)], 1, 1))
-        self.assertFalse(perimeter.onLine([(2, 2, 0), (0, 0, 0)], 2, 1))
-        self.assertFalse(perimeter.onLine([(2, 2, 0), (0, 0, 0)], 1, 2))
-        self.assertTrue(perimeter.onLine([(0, 0, 0), (4, 2, 0)], 2, 1))
+        pixels = np.zeros((100, 100), dtype=bool)
+        # when z=133, x=55 at Eiffel_tower_sample.STL, resolution=100
+        lines = [
+            ((55.183775000510195, 42.91771076583979, 133.0), (54.664478438939994, 42.91190079807315, 133.0)),
+            ((55.05365382117602, 48.399582783540694, 133.0), (54.28259953472679, 48.399582783540694, 133.0)),
+            ((54.72938801464095, 51.1054056827822, 133.0), (55.21085292933077, 51.10540695761318, 133.0)),
+            ((55.17312327125145, 54.131620716008165, 133.0), (54.72938801464095, 54.13161531213461, 133.0)),
+            ((54.28259953472679, 48.399582783540694, 133.0), (55.05365382117602, 48.399582783540694, 133.0)),
+            ((55.05365382117602, 50.600419560857354, 133.0), (54.28259953472679, 50.600419560857354, 133.0)),
+            ((54.72938801464095, 44.868384133402195, 133.0), (55.21085292933077, 44.868386286857266, 133.0)),
+            ((55.183775000510195, 56.0822892341602, 133.0), (54.664478438939994, 56.088101893431286, 133.0)),
+            ((55.17312327125145, 47.89459328407937, 133.0), (54.72938801464095, 47.894596812904574, 133.0))
+        ]
+        x = 55
+        # have assert or Exception in paintYaxis()
+        perimeter.paintYaxis(lines, pixels, x)
 
 
 if __name__ == '__main__':

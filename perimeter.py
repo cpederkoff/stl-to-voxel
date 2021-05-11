@@ -1,13 +1,14 @@
+from functools import reduce
+
+
 def linesToVoxels(lineList, pixels):
     current_line_indices = set()
-    x = -1
+    x = 0
     for (event_x, status, line_ind) in generateEvents(lineList):
-        while event_x - x >= 1:
+        while event_x - x >= 0:
+            lines = reduce(lambda acc, cur: acc + [lineList[cur]], current_line_indices, [])
+            paintYaxis(lines, pixels, x)
             x += 1
-            lines = []
-            for cur_line_ind in current_line_indices:
-                lines.append(lineList[cur_line_ind])
-            paintPixels(lines, pixels, x)
 
         if status == 'start':
             assert line_ind not in current_line_indices
@@ -17,20 +18,45 @@ def linesToVoxels(lineList, pixels):
             current_line_indices.remove(line_ind)
 
 
-def paintPixels(lines, pixels, x):
-    isBlack = False
-    targetYs = list(map(lambda line: int(generateY(line, x)), lines))
-    for y in range(len(pixels[x])):
-        if isBlack:
-            pixels[x][y] = True
-        if y in targetYs:
-            for line in lines:
-                if onLine(line, x, y):
-                    isBlack = not isBlack
-                    pixels[x][y] = True
+def slope_intercept(p1, p2):
+    x1, y1 = p1[:2]
+    x2, y2 = p2[:2]
+    slope = (y2 - y1) / (x2 - x1)
+    intercept = y1 - slope * x1
+    return slope, intercept
 
-    if isBlack:
-        print("an error has occured at x%s" % (x))
+
+def generateY(p1, p2, x):
+    slope, intercept = slope_intercept(p1, p2)
+    y = slope * x + intercept
+    return y
+
+
+def paintYaxis(lines, pixels, x):
+    if len(lines) % 2:
+        print('[Warning] The number of lines is odd')
+        eq_coefficients = []
+        for line in lines:
+            eq_coefficient = slope_intercept(line[0], line[1])
+            if eq_coefficient in eq_coefficients:
+                lines.remove(line)
+                break
+            eq_coefficients.append(eq_coefficient)
+        else:
+            raise Exception('Not found the same line')
+
+    isBlack = False
+    targetYs = list(map(lambda line: int(generateY(line[0], line[1], x)), lines))
+    targetYs.sort()
+    yi = 0
+    for targetY in targetYs:
+        if isBlack:
+            for y in range(yi, targetY):
+                pixels[x][y] = True
+        pixels[x][targetYs] = True
+        isBlack = not isBlack
+        yi = targetY
+    assert isBlack is False, 'an error has occured at x%s' % x
 
 
 def generateEvents(lineList):
@@ -57,23 +83,3 @@ def isRelevantLines(line, x, pixels):
             pixels[x][y] = True
     else:
         return False
-
-
-def generateY(line, x):
-    if line[1][0] == line[0][0]:
-        return -1
-    ratio = (x - line[0][0]) / (line[1][0] - line[0][0])
-    ydist = line[1][1] - line[0][1]
-    newy = line[0][1] + ratio * ydist
-    return newy
-
-
-def onLine(line, x, y):
-    newy = generateY(line, x)
-    if int(newy) != y:
-        return False
-    if int(line[0][0]) != x and int(line[1][0]) != x and (max(line[0][0], line[1][0]) < x or min(line[0][0], line[1][0]) > x):
-        return False
-    if int(line[0][1]) != y and int(line[1][1]) != y and (max(line[0][1], line[1][1]) < y or min(line[0][1], line[1][1]) > y):
-        return False
-    return True
