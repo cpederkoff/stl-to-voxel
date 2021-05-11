@@ -1,21 +1,24 @@
 import math
 import perimeter
+import psutil
+import ray
 import numpy as np
 from functools import reduce
 
 
 def meshToPlane(mesh, bounding_box, pad):
-    # Note: vol should be addressed with vol[z][y][x]
-    pad_bounding_box = [size + (pad * 2) for size in bounding_box]
-    vol = np.zeros(pad_bounding_box[::-1], dtype=bool)
+    num_cpus = psutil.cpu_count(logical=False)
+    ray.init(num_cpus=num_cpus)
+
+    result_ids = []
 
     current_mesh_indices = set()
     z = 0
     for event_z, status, tri_ind in generateTriEvents(mesh):
         while event_z - z >= 0:
-            print('Processing layer %d/%d' % (z, bounding_box[2]))
             mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
-            paintZplane(mesh_subset, z, vol[z+pad, pad:-pad, pad:-pad])
+            result_id = paintZplane.remote(mesh_subset, z, bounding_box[:2])
+            result_ids.append(result_id)
             z += 1
 
         if status == 'start':
@@ -24,15 +27,33 @@ def meshToPlane(mesh, bounding_box, pad):
         elif status == 'end':
             assert tri_ind in current_mesh_indices
             current_mesh_indices.remove(tri_ind)
+    print('ray.remote()')
 
+    results = ray.get(result_ids)
+    print('ray.get()')
+
+    pad_bounding_box = [size + (pad * 2) for size in bounding_box]
+    # Note: vol should be addressed with vol[z][y][x]
+    vol = np.zeros(pad_bounding_box[::-1], dtype=bool)
+
+    for z, pixels in results:
+        vol[z+pad, pad:-pad, pad:-pad] = pixels
+    print('build volume')
+
+    ray.shutdown()
     return vol, pad_bounding_box
 
 
-def paintZplane(mesh, height, pixels):
+@ray.remote
+def paintZplane(mesh, height, plane_shape):
+    pixels = np.zeros(plane_shape, dtype=bool)
+
     lines = []
     for triangle in mesh:
         triangleToIntersectingLines(triangle, height, pixels, lines)
     perimeter.linesToVoxels(lines, pixels)
+
+    return height, pixels
 
 
 def linearInterpolation(p1, p2, distance):
@@ -132,7 +153,7 @@ def scaleAndShiftMesh(mesh, scale, shift):
                 newpt.append((p + sh) * sc)
             newTri.append(newpt)
         adjusted_mesh.append(newTri)
-    mins, maxs = calculateMinMax(adjusted_mesh)
+    calculateMinMax(adjusted_mesh)
     return adjusted_mesh
 
 

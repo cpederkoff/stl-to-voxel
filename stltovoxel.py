@@ -1,5 +1,5 @@
 import argparse
-import os.path
+import os
 import io
 import glob
 import xml.etree.cElementTree as ET
@@ -12,7 +12,7 @@ import stl_reader
 
 
 def doExport(inputFilePath, outputFilePath, resolution, pad):
-    mesh = list(stl_reader.read_stl_verticies(inputFilePath))
+    mesh = stl_reader.read_stl_verticies(inputFilePath)
     (scale, shift, bounding_box) = slice.calculateScaleAndShift(mesh, resolution)
     if not any(scale):
         print('Too small resolution: %d' % resolution)
