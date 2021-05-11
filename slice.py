@@ -1,15 +1,13 @@
 import math
 import perimeter
-import ray
 import numpy as np
-from util import removeDupsFromPointList
 from functools import reduce
 
 
-def meshToPlane(mesh, bounding_box):
-    ray.init()
-
-    result_ids = []
+def meshToPlane(mesh, bounding_box, pad):
+    # Note: vol should be addressed with vol[z][y][x]
+    pad_bounding_box = [size + (pad * 2) for size in bounding_box]
+    vol = np.zeros(pad_bounding_box[::-1], dtype=bool)
 
     current_mesh_indices = set()
     z = 0
@@ -17,8 +15,7 @@ def meshToPlane(mesh, bounding_box):
         while event_z - z >= 0:
             print('Processing layer %d/%d' % (z, bounding_box[2]))
             mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
-            result_id = paintZplane.remote(mesh_subset, z, bounding_box[:2])
-            result_ids.append(result_id)
+            paintZplane(mesh_subset, z, vol[z+pad, pad:-pad, pad:-pad])
             z += 1
 
         if status == 'start':
@@ -28,28 +25,14 @@ def meshToPlane(mesh, bounding_box):
             assert tri_ind in current_mesh_indices
             current_mesh_indices.remove(tri_ind)
 
-    results = ray.get(result_ids)
-
-    # Note: vol should be addressed with vol[z][x][y]
-    vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
-
-    for z, pixels in results:
-        vol[z, ...] = pixels
-
-    ray.shutdown()
-    return vol
+    return vol, pad_bounding_box
 
 
-@ray.remote
-def paintZplane(mesh, height, plane_shape):
-    pixels = np.zeros(plane_shape, dtype=bool)
-
+def paintZplane(mesh, height, pixels):
     lines = []
     for triangle in mesh:
         triangleToIntersectingLines(triangle, height, pixels, lines)
     perimeter.linesToVoxels(lines, pixels)
-
-    return height, pixels
 
 
 def linearInterpolation(p1, p2, distance):
@@ -89,7 +72,7 @@ def triangleToIntersectingLines(triangle, height, pixels, lines):
         else:
             x = int(same[0][0])
             y = int(same[0][1])
-            pixels[x][y] = True
+            pixels[y][x] = True
     else:
         crossLines = []
         for a in above:
@@ -111,13 +94,21 @@ def whereLineCrossesZ(p1, p2, z):
     return linearInterpolation(p1, p2, distance)
 
 
-def calculateScaleAndShift(mesh, resolution):
-    allPoints = [item for sublist in mesh for item in sublist]
+def calculateMinMax(mesh):
+    allPoints = [point for tri in mesh for point in tri]
     mins = [0, 0, 0]
     maxs = [0, 0, 0]
     for i in range(3):
         mins[i] = min(allPoints, key=lambda tri: tri[i])[i]
         maxs[i] = max(allPoints, key=lambda tri: tri[i])[i]
+
+    for i, axis in enumerate(['x', 'y', 'z']):
+        print(f'{axis}: {mins[i]} ~ {maxs[i]}')
+    return mins, maxs
+
+
+def calculateScaleAndShift(mesh, resolution):
+    mins, maxs = calculateMinMax(mesh)
     shift = [-min for min in mins]
     xyscale = float(resolution - 1) / (max(maxs[0] - mins[0], maxs[1] - mins[1]))
     # TODO: Change this to return one scale. If not, verify svx exporting still works.
@@ -132,15 +123,17 @@ def calculateScaleAndShift(mesh, resolution):
 
 
 def scaleAndShiftMesh(mesh, scale, shift):
+    adjusted_mesh = []
     for tri in mesh:
         newTri = []
         for pt in tri:
-            newpt = [0, 0, 0]
-            for i in range(3):
-                newpt[i] = (pt[i] + shift[i]) * scale[i]
-            newTri.append(tuple(newpt))
-        if len(removeDupsFromPointList(newTri)) == 3:
-            yield newTri
+            newpt = []
+            for p, sh, sc in zip(pt, shift, scale):
+                newpt.append((p + sh) * sc)
+            newTri.append(newpt)
+        adjusted_mesh.append(newTri)
+    mins, maxs = calculateMinMax(adjusted_mesh)
+    return adjusted_mesh
 
 
 def generateTriEvents(mesh):
