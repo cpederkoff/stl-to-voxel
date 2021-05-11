@@ -1,44 +1,26 @@
 import argparse
-import os.path
+import os
 import io
 import glob
 import xml.etree.cElementTree as ET
-from zipfile import ZipFile
 import zipfile
 
 from PIL import Image
-import numpy as np
 
 import slice
 import stl_reader
-from util import arrayToWhiteGreyscalePixel, padVoxelArray
-from functools import reduce
 
 
-def doExport(inputFilePath, outputFilePath, resolution):
-    mesh = list(stl_reader.read_stl_verticies(inputFilePath))
+def doExport(inputFilePath, outputFilePath, resolution, pad):
+    mesh = stl_reader.read_stl_verticies(inputFilePath)
     (scale, shift, bounding_box) = slice.calculateScaleAndShift(mesh, resolution)
-    mesh = list(slice.scaleAndShiftMesh(mesh, scale, shift))
-    # Note: vol should be addressed with vol[z][x][y]
-    vol = np.zeros((bounding_box[2], bounding_box[0], bounding_box[1]), dtype=bool)
+    if not any(scale):
+        print('Too small resolution: %d' % resolution)
+        return
+    mesh = slice.scaleAndShiftMesh(mesh, scale, shift)
 
-    current_mesh_indices = set()
-    slice_height = 0
-    for event_z, status, tri_ind in slice.generateEvents(mesh):
-        while event_z - slice_height >= 0:
-            print('Processing layer %d/%d' % (slice_height, bounding_box[2]))
-            mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
-            slice.paintZplane(mesh_subset, slice_height, vol[slice_height, ...])
-            slice_height += 1
+    vol, bounding_box = slice.meshToPlane(mesh, bounding_box, pad)
 
-        if status == 'start':
-            assert tri_ind not in current_mesh_indices
-            current_mesh_indices.add(tri_ind)
-        elif status == 'end':
-            assert tri_ind in current_mesh_indices
-            current_mesh_indices.remove(tri_ind)
-
-    vol, bounding_box = padVoxelArray(vol)
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
     if outputFileExtension == '.png':
         exportPngs(vol, bounding_box, outputFilePath)
@@ -61,9 +43,8 @@ def exportPngs(voxels, bounding_box, outputFilePath):
 
     size = str(len(str(bounding_box[2]))+1)
     for height in range(bounding_box[2]):
-        img = Image.new('L', (bounding_box[0], bounding_box[1]), 'black')  # create a new black image
-        pixels = img.load()
-        arrayToWhiteGreyscalePixel(voxels[height], pixels)
+        print('export png %d/%d' % (height, bounding_box[2]))
+        img = Image.fromarray(voxels[height])
         path = (outputFilePattern + "_%0" + size + "d.png") % height
         img.save(path)
 
@@ -71,9 +52,9 @@ def exportPngs(voxels, bounding_box, outputFilePath):
 def exportXyz(voxels, bounding_box, outputFilePath):
     output = open(outputFilePath, 'w')
     for z in range(bounding_box[2]):
-        for x in range(bounding_box[0]):
-            for y in range(bounding_box[1]):
-                if voxels[z][x][y]:
+        for y in range(bounding_box[1]):
+            for x in range(bounding_box[0]):
+                if voxels[z][y][x]:
                     output.write('%s %s %s\n' % (x, y, z))
     output.close()
 
@@ -81,20 +62,18 @@ def exportXyz(voxels, bounding_box, outputFilePath):
 def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
     size = str(len(str(bounding_box[2]))+1)
     root = ET.Element("grid", attrib={"gridSizeX": str(bounding_box[0]),
-                                      "gridSizeY": str(bounding_box[2]),
-                                      "gridSizeZ": str(bounding_box[1]),
+                                      "gridSizeY": str(bounding_box[1]),
+                                      "gridSizeZ": str(bounding_box[2]),
                                       "voxelSize": str(1.0/scale[0]/1000),  # STL is probably in mm, and svx needs meters
                                       "subvoxelBits": "8",
                                       "originX": str(-shift[0]),
-                                      "originY": str(-shift[2]),
-                                      "originZ": str(-shift[1]),
+                                      "originY": str(-shift[1]),
+                                      "originZ": str(-shift[2]),
                                       })
     manifest = ET.tostring(root)
-    with ZipFile(outputFilePath, 'w', zipfile.ZIP_DEFLATED) as zipFile:
+    with zipfile.ZipFile(outputFilePath, 'w', zipfile.ZIP_DEFLATED) as zipFile:
         for height in range(bounding_box[2]):
-            img = Image.new('L', (bounding_box[0], bounding_box[1]), 'black')  # create a new black image
-            pixels = img.load()
-            arrayToWhiteGreyscalePixel(voxels[height], pixels)
+            img = Image.fromarray(voxels[height])
             output = io.BytesIO()
             img.save(output, format="PNG")
             zipFile.writestr(("density/slice%0" + size + "d.png") % height, output.getvalue())
@@ -119,6 +98,7 @@ if __name__ == '__main__':
         type=lambda s: file_choices(('.png', '.xyz', '.svx'), s),
         help='path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
     parser.add_argument('resolution', nargs='?', type=int, default=100, help='number of voxels in both directions')
+    parser.add_argument('pad', nargs='?', type=int, default=1, help='number of padding bits')
 
     args = parser.parse_args()
-    doExport(args.input, args.output, args.resolution)
+    doExport(args.input, args.output, args.resolution, args.pad)
