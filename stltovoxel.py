@@ -98,7 +98,7 @@ if __name__ == '__main__':
         type=lambda s: file_choices(('.png', '.xyz', '.svx'), s),
         help='path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
     parser.add_argument('resolution', nargs='?', type=int, default=100, help='number of voxels in both directions')
-    parser.add_argument('pad', nargs='?', type=int, default=1, help='number of padding bits')
+    parser.add_argument('pad', nargs='?', type=int, default=1, help='number of padding pixels')
 
     args = parser.parse_args()
     doExport(args.input, args.output, args.resolution, args.pad)
