@@ -31,3 +31,5 @@ class TestStlToVoxel(unittest.TestCase):
             print('resolution:', i)
             with tempfile.TemporaryDirectory() as tmpDir:
                 doExport('data/Pyramid.stl', os.path.join(tmpDir, 'Pyramid.png'), i)
+                doExport('data/Menger_sponge_sample.stl', os.path.join(tmpDir, 'Menger_sponge_sample.stl'), i)
+                doExport('data/Eiffel_tower_sample.STL', os.path.join(tmpDir, 'Eiffel_tower_sample.png'), i)
