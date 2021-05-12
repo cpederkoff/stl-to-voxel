@@ -1,3 +1,4 @@
+import os
 import math
 import perimeter
 import psutil
@@ -7,8 +8,12 @@ from functools import reduce
 
 
 def meshToPlane(mesh, bounding_box, pad):
-    num_cpus = psutil.cpu_count(logical=False)
-    ray.init(num_cpus=num_cpus)
+    if os.getenv('DEBUG'):
+        # https://groups.google.com/g/ray-dev/c/7euaVHZNhEw
+        ray.init(local_mode=True)
+    else:
+        num_cpus = psutil.cpu_count(logical=False)
+        ray.init(num_cpus=num_cpus)
 
     result_ids = []
 
@@ -63,16 +68,7 @@ def linearInterpolation(p1, p2, distance):
     :param distance: Between 0 and 1, Lower numbers return points closer to p1.
     :return: A point on the line between p1 and p2
     '''
-    x1, y1, z1 = p1
-    x2, y2, z2 = p2
-    slopex = x1 - x2
-    slopey = y1 - y2
-    slopez = z1 - z2
-    return (
-        x1 - distance * slopex,
-        y1 - distance * slopey,
-        z1 - distance * slopez
-    )
+    return p1 * (1-distance) + p2 * distance
 
 
 def triangleToIntersectingLines(triangle, height, pixels, lines):
