@@ -26,7 +26,7 @@ class TestStlToVoxel(unittest.TestCase):
             # Provided by @silverscorpio in PR #18
             doExport('data/test2.stl', os.path.join(tmpDir, 'test2.png'), 100)
 
-    def test_resolution():
+    def test_resolution(self):
         for i in range(1, 100):
             print('resolution:', i)
             with tempfile.TemporaryDirectory() as tmpDir:
