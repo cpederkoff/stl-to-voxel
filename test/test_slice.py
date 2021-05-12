@@ -10,7 +10,8 @@ class TestSlice(unittest.TestCase):
         self.assertTrue((slice.whereLineCrossesZ(p1, p2, 1) == p1).all())
         self.assertTrue((slice.whereLineCrossesZ(p1, p2, 5) == p2).all())
         self.assertTrue((slice.whereLineCrossesZ(p1, p2, 3) == np.array([1.5, 3, 3])).all())
-        self.assertTrue((slice.whereLineCrossesZ(np.array([0, 0, 0]), np.array([0, 1, 1]), 0.5) == np.array([0.0, 0.5, 0.5])).all())
+        self.assertTrue((slice.whereLineCrossesZ(np.array([0, 0, 0]), np.array([0, 1, 1]), 0.5) ==
+                         np.array([0.0, 0.5, 0.5])).all())
 
     def test_linearInterpolation(self):
         p1 = np.array([2, 4, 1])
