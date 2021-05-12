@@ -81,8 +81,10 @@ def IsAsciiStl(fname):
 
 def read_stl_verticies(fname):
     if IsAsciiStl(fname):
-        mesh = [(tuple(i), tuple(j), tuple(k)) for (i, j, k) in AsciiSTL(fname)]
+        triangles = AsciiSTL(fname)
+        mesh = np.array(triangles)
     else:
         head, p, n, v1, v2, v3 = BinarySTL(fname)
-        mesh = [(tuple(i), tuple(j), tuple(k)) for i, j, k in zip(v1, v2, v3)]
+        mesh = np.hstack((v1[:, np.newaxis], v2[:, np.newaxis], v3[:, np.newaxis]))
+    # shape = (n, 3, 3)
     return mesh
