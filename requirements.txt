@@ -2,3 +2,4 @@ numpy
 Pillow
 matplotlib
 ray[default]
+psutil
