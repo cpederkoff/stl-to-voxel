@@ -81,9 +81,8 @@ def IsAsciiStl(fname):
 
 def read_stl_verticies(fname):
     if IsAsciiStl(fname):
-        for (i, j, k) in AsciiSTL(fname):
-            yield (tuple(i), tuple(j), tuple(k))
+        mesh = [(tuple(i), tuple(j), tuple(k)) for (i, j, k) in AsciiSTL(fname)]
     else:
         head, p, n, v1, v2, v3 = BinarySTL(fname)
-        for i, j, k in zip(v1, v2, v3):
-            yield (tuple(i), tuple(j), tuple(k))
+        mesh = [(tuple(i), tuple(j), tuple(k)) for i, j, k in zip(v1, v2, v3)]
+    return mesh
