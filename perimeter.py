@@ -48,8 +48,8 @@ def paintYaxis(lines, pixels, x):
     yi = 0
     for targetY in targetYs:
         if isBlack:
-            for y in range(yi, targetY):
-                pixels[y][x] = True
+            # Bulk assign all pixels between yi -> targetY
+            pixels[yi:targetY, x] = True
         pixels[targetY][x] = True
         isBlack = not isBlack
         yi = targetY
