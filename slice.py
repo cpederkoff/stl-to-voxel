@@ -1,4 +1,3 @@
-import os
 import math
 import perimeter
 import numpy as np
