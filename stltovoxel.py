@@ -11,15 +11,14 @@ import slice
 import stl_reader
 
 
-def doExport(inputFilePath, outputFilePath, resolution, pad):
-    mesh = stl_reader.read_stl_verticies(inputFilePath)
-    (scale, shift, bounding_box) = slice.calculateScaleAndShift(mesh, resolution)
-    if not any(scale):
+def doExport(inputFilePath, outputFilePath, resolution, pad, bounding_box=None):
+    org_mesh = stl_reader.read_stl_verticies(inputFilePath)
+    vol_mesh, scale, shift, bounding_box = slice.scaleAndShiftMesh(org_mesh, resolution)
+    if scale == 0:
         print('Too small resolution: %d' % resolution)
         return
-    mesh = slice.scaleAndShiftMesh(mesh, scale, shift)
 
-    vol, bounding_box = slice.meshToPlane(mesh, bounding_box, pad)
+    vol, bounding_box = slice.meshToPlane(vol_mesh, bounding_box, pad)
 
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
     if outputFileExtension == '.png':
@@ -64,7 +63,7 @@ def exportSvx(voxels, bounding_box, outputFilePath, scale, shift):
     root = ET.Element("grid", attrib={"gridSizeX": str(bounding_box[0]),
                                       "gridSizeY": str(bounding_box[1]),
                                       "gridSizeZ": str(bounding_box[2]),
-                                      "voxelSize": str(1.0/scale[0]/1000),  # STL is probably in mm, and svx needs meters
+                                      "voxelSize": str(1.0/scale/1000),  # STL is probably in mm, and svx needs meters
                                       "subvoxelBits": "8",
                                       "originX": str(-shift[0]),
                                       "originY": str(-shift[1]),
