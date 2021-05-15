@@ -1,19 +1,12 @@
 import os
 import math
 import perimeter
-import psutil
-import ray
 import numpy as np
-from functools import reduce
+import multiprocessing as mp
 
 
 def meshToPlane(mesh, bounding_box, pad):
-    if os.getenv('DEBUG'):
-        # https://groups.google.com/g/ray-dev/c/7euaVHZNhEw
-        ray.init(local_mode=True)
-    else:
-        num_cpus = psutil.cpu_count(logical=False)
-        ray.init(num_cpus=num_cpus)
+    pool = mp.Pool(mp.cpu_count())
 
     result_ids = []
 
@@ -21,8 +14,8 @@ def meshToPlane(mesh, bounding_box, pad):
     z = 0
     for event_z, status, tri_ind in generateTriEvents(mesh):
         while event_z - z >= 0:
-            mesh_subset = reduce(lambda acc, cur: acc + [mesh[cur]], current_mesh_indices, [])
-            result_id = paintZplane.remote(mesh_subset, z, bounding_box[:2])
+            mesh_subset = [mesh[ind] for ind in current_mesh_indices]
+            result_id = pool.apply_async(paintZplane, args=(mesh_subset, z, bounding_box[:2]))
             result_ids.append(result_id)
             z += 1
 
@@ -32,10 +25,8 @@ def meshToPlane(mesh, bounding_box, pad):
         elif status == 'end':
             assert tri_ind in current_mesh_indices
             current_mesh_indices.remove(tri_ind)
-    print('ray.remote()')
 
-    results = ray.get(result_ids)
-    print('ray.get()')
+    results = [r.get() for r in result_ids]
 
     pad_bounding_box = [size + (pad * 2) for size in bounding_box]
     # Note: vol should be addressed with vol[z][y][x]
@@ -45,11 +36,11 @@ def meshToPlane(mesh, bounding_box, pad):
         vol[z+pad, pad:-pad, pad:-pad] = pixels
     print('build volume')
 
-    ray.shutdown()
+    pool.close()
+    pool.join()
     return vol, pad_bounding_box
 
 
-@ray.remote
 def paintZplane(mesh, height, plane_shape):
     pixels = np.zeros(plane_shape, dtype=bool)
 
