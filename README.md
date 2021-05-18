@@ -7,11 +7,17 @@ Turn STL files into voxels, images, and videos
 
 ### How to run
 ```
-git clone https://github.com/cpederkoff/stl-to-voxel.git
+$ git clone https://github.com/cpederkoff/stl-to-voxel.git
 $ cd stl-to-voxel
-
 $ python3 stltovoxel.py data/Stanford_Bunny.stl data/Stanford_Bunny.png
 ```
+
+```
+$ pip install git+https://github.com/cpederkoff/stl-to-voxel.git
+>>> import stltovoxel
+>>> stltovoxel.doExport('data/Stanford_Bunny.stl', 'data/Stanford_Bunny.png')
+```
+
 <!--- https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl --->
 
 The resolution is optional and defaults to 100.
