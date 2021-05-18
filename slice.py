@@ -4,18 +4,27 @@ import numpy as np
 import multiprocessing as mp
 
 
-def meshToPlane(mesh, bounding_box, pad):
-    pool = mp.Pool(mp.cpu_count())
+def meshToPlane(mesh, bounding_box, pad, parallel):
+    if parallel:
+        pool = mp.Pool(mp.cpu_count())
+        result_ids = []
 
-    result_ids = []
+    pad_bounding_box = [size + (pad * 2) for size in bounding_box]
+    # Note: vol should be addressed with vol[z][y][x]
+    vol = np.zeros(pad_bounding_box[::-1], dtype=bool)
 
     current_mesh_indices = set()
     z = 0
     for event_z, status, tri_ind in generateTriEvents(mesh):
         while event_z - z >= 0:
             mesh_subset = [mesh[ind] for ind in current_mesh_indices]
-            result_id = pool.apply_async(paintZplane, args=(mesh_subset, z, bounding_box[:2]))
-            result_ids.append(result_id)
+            if parallel:
+                result_id = pool.apply_async(paintZplane, args=(mesh_subset, z, bounding_box[:2]))
+                result_ids.append(result_id)
+            else:
+                print('Processing layer %d/%d' % (z, bounding_box[2]))
+                _, pixels = paintZplane(mesh_subset, z, bounding_box[:2])
+                vol[z + pad, pad:-pad, pad:-pad] = pixels
             z += 1
 
         if status == 'start':
@@ -25,18 +34,15 @@ def meshToPlane(mesh, bounding_box, pad):
             assert tri_ind in current_mesh_indices
             current_mesh_indices.remove(tri_ind)
 
-    results = [r.get() for r in result_ids]
+    if parallel:
+        results = [r.get() for r in result_ids]
 
-    pad_bounding_box = [size + (pad * 2) for size in bounding_box]
-    # Note: vol should be addressed with vol[z][y][x]
-    vol = np.zeros(pad_bounding_box[::-1], dtype=bool)
+        for z, pixels in results:
+            vol[z+pad, pad:-pad, pad:-pad] = pixels
 
-    for z, pixels in results:
-        vol[z+pad, pad:-pad, pad:-pad] = pixels
-    print('build volume')
+        pool.close()
+        pool.join()
 
-    pool.close()
-    pool.join()
     return vol, pad_bounding_box
 
 

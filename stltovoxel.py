@@ -11,14 +11,14 @@ import slice
 import stl_reader
 
 
-def doExport(inputFilePath, outputFilePath, resolution, pad, bounding_box=None):
+def doExport(inputFilePath, outputFilePath, resolution=100, pad=1, parallel=False):
     org_mesh = stl_reader.read_stl_verticies(inputFilePath)
     vol_mesh, scale, shift, bounding_box = slice.scaleAndShiftMesh(org_mesh, resolution)
     if scale == 0:
         print('Too small resolution: %d' % resolution)
         return
 
-    vol, bounding_box = slice.meshToPlane(vol_mesh, bounding_box, pad)
+    vol, bounding_box = slice.meshToPlane(vol_mesh, bounding_box, pad, parallel)
 
     outputFilePattern, outputFileExtension = os.path.splitext(outputFilePath)
     if outputFileExtension == '.png':
@@ -90,6 +90,16 @@ def file_choices(choices, fname):
 
 
 if __name__ == '__main__':
+    def str2bool(v):
+        if isinstance(v, bool):
+            return v
+        if v.lower() in ('yes', 'true', 't', 'y', '1'):
+            return True
+        elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+            return False
+        else:
+            raise argparse.ArgumentTypeError('Boolean value expected.')
+
     parser = argparse.ArgumentParser(description='Convert STL files to voxels')
     parser.add_argument('input', nargs='?', type=lambda s: file_choices(('.stl', ), s), help='The input STL file')
     parser.add_argument(
@@ -98,6 +108,7 @@ if __name__ == '__main__':
         help='path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
     parser.add_argument('resolution', nargs='?', type=int, default=100, help='number of voxels in both directions')
     parser.add_argument('pad', nargs='?', type=int, default=1, help='number of padding pixels')
+    parser.add_argument('parallel', nargs='?', type=str2bool, default=True, help='parallel processing')
 
     args = parser.parse_args()
-    doExport(args.input, args.output, args.resolution, args.pad)
+    doExport(args.input, args.output, args.resolution, args.pad, args.parallel)
