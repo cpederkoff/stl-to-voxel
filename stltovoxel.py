@@ -4,15 +4,16 @@ import io
 import glob
 import xml.etree.cElementTree as ET
 import zipfile
-
+import numpy as np
+from stl import mesh
 from PIL import Image
 
 import slice
-import stl_reader
 
 
 def doExport(inputFilePath, outputFilePath, resolution=100, pad=1, parallel=False):
-    org_mesh = stl_reader.read_stl_verticies(inputFilePath)
+    mesh_obj = mesh.Mesh.from_file(inputFilePath)
+    org_mesh = np.hstack((mesh_obj.v0[:, np.newaxis], mesh_obj.v1[:, np.newaxis], mesh_obj.v2[:, np.newaxis]))
     vol_mesh, scale, shift, bounding_box = slice.scaleAndShiftMesh(org_mesh, resolution)
     if scale == 0:
         print('Too small resolution: %d' % resolution)
