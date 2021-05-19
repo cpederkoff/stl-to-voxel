@@ -15,7 +15,7 @@ $ python3 stltovoxel.py data/Stanford_Bunny.stl data/Stanford_Bunny.png
 ```
 $ pip install git+https://github.com/cpederkoff/stl-to-voxel.git
 >>> import stltovoxel
->>> stltovoxel.doExport('data/Stanford_Bunny.stl', 'data/Stanford_Bunny.png')
+>>> stltovoxel.do_export('data/Stanford_Bunny.stl', 'data/Stanford_Bunny.png')
 ```
 
 <!--- https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl --->

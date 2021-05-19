@@ -10,7 +10,7 @@ class PerimeterTest(unittest.TestCase):
                 [(3, 0, 0), (9, 9, 0)],
                 [(3, 9, 0), (0, 0, 0)]]
         actual = np.zeros((13, 13), dtype=bool)
-        perimeter.linesToVoxels(test, actual)
+        perimeter.lines_to_voxels(test, actual)
         expected = [
             [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -43,8 +43,8 @@ class PerimeterTest(unittest.TestCase):
             ((55.17312327125145, 47.89459328407937, 133.0), (54.72938801464095, 47.894596812904574, 133.0))
         ]
         x = 55
-        # have assert or Exception in paintYaxis()
-        perimeter.paintYaxis(lines, pixels, x)
+        # have assert or Exception in paint_y_axis()
+        perimeter.paint_y_axis(lines, pixels, x)
 
         pixels = np.zeros((512, 512), dtype=bool)
         # python stltovoxel.py data/Model.stl data/Model.png 512
@@ -56,8 +56,8 @@ class PerimeterTest(unittest.TestCase):
             ((162.922318771988, 177.86366465114196, 292.0), (164.23901942305332, 178.47337917148627, 292.0))
         ]
         x = 163
-        # have assert or Exception in paintYaxis()
-        perimeter.paintYaxis(lines, pixels, x)
+        # have assert or Exception in paint_y_axis()
+        perimeter.paint_y_axis(lines, pixels, x)
 
         pixels = np.zeros((1024, 1024), dtype=bool)
         # python stltovoxel.py data/Model.stl data/Model.png 1024
@@ -75,8 +75,8 @@ class PerimeterTest(unittest.TestCase):
             ((476.33245691945507, 647.8338656180929, 390.0), (477.3585664525454, 650.5878998039989, 390.0))
         ]
         x = 477
-        # have assert or Exception in paintYaxis()
-        perimeter.paintYaxis(lines, pixels, x)
+        # have assert or Exception in paint_y_axis()
+        perimeter.paint_y_axis(lines, pixels, x)
 
 
 if __name__ == '__main__':

@@ -1,13 +1,13 @@
 from functools import reduce
 
 
-def linesToVoxels(lineList, pixels):
+def lines_to_voxels(line_list, pixels):
     current_line_indices = set()
     x = 0
-    for (event_x, status, line_ind) in generateLineEvents(lineList):
+    for (event_x, status, line_ind) in generate_line_events(line_list):
         while event_x - x >= 0:
-            lines = reduce(lambda acc, cur: acc + [lineList[cur]], current_line_indices, [])
-            paintYaxis(lines, pixels, x)
+            lines = reduce(lambda acc, cur: acc + [line_list[cur]], current_line_indices, [])
+            paint_y_axis(lines, pixels, x)
             x += 1
 
         if status == 'start':
@@ -26,39 +26,39 @@ def slope_intercept(p1, p2):
     return slope, intercept
 
 
-def generateY(p1, p2, x):
+def generate_y(p1, p2, x):
     slope, intercept = slope_intercept(p1, p2)
     y = slope * x + intercept
     return y
 
 
-def paintYaxis(lines, pixels, x):
-    isBlack = False
-    targetYs = list(map(lambda line: int(generateY(line[0], line[1], x)), lines))
-    targetYs.sort()
-    if len(targetYs) % 2:
+def paint_y_axis(lines, pixels, x):
+    is_black = False
+    target_ys = list(map(lambda line: int(generate_y(line[0], line[1], x)), lines))
+    target_ys.sort()
+    if len(target_ys) % 2:
         print('[Warning] The number of lines is odd')
         distances = []
-        for i in range(len(targetYs) - 1):
-            distances.append(targetYs[i+1] - targetYs[i])
+        for i in range(len(target_ys) - 1):
+            distances.append(target_ys[i+1] - target_ys[i])
         # https://stackoverflow.com/a/17952763
         min_idx = -min((x, -i) for i, x in enumerate(distances))[1]
-        del targetYs[min_idx]
+        del target_ys[min_idx]
 
     yi = 0
-    for targetY in targetYs:
-        if isBlack:
-            # Bulk assign all pixels between yi -> targetY
-            pixels[yi:targetY, x] = True
-        pixels[targetY][x] = True
-        isBlack = not isBlack
-        yi = targetY
-    assert isBlack is False, 'an error has occured at x%s' % x
+    for target_y in target_ys:
+        if is_black:
+            # Bulk assign all pixels between yi -> target_y
+            pixels[yi:target_y, x] = True
+        pixels[target_y][x] = True
+        is_black = not is_black
+        yi = target_y
+    assert is_black is False, 'an error has occured at x%s' % x
 
 
-def generateLineEvents(lineList):
+def generate_line_events(line_list):
     events = []
-    for i, line in enumerate(lineList):
+    for i, line in enumerate(line_list):
         first, second = sorted(line, key=lambda pt: pt[0])
         events.append((first[0], 'start', i))
         events.append((second[0], 'end', i))
@@ -83,12 +83,12 @@ if __name__ == '__main__':
         ((476.33245691945507, 647.8338656180929, 390.0), (477.3585664525454, 650.5878998039989, 390.0))
     ]
     x = 477
-    targetYs = [684, 709, 704, 568, 643, 646, 574, 276, 727, 423, 649]
+    target_ys = [684, 709, 704, 568, 643, 646, 574, 276, 727, 423, 649]
     for (p1, p2) in lines:
         x_values = [p1[0], p2[0]]
         y_values = [p1[1], p2[1]]
 
         plt.plot(x_values, y_values)
-    for y in targetYs:
+    for y in target_ys:
         plt.plot(x, y, 'o')
     plt.show()
