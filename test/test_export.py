@@ -19,6 +19,16 @@ class TestStlToVoxel(unittest.TestCase):
             do_export('data/Star.stl', os.path.join(tmp_dir, 'Star.png'), 100, 1)
             do_export('data/Moon.stl', os.path.join(tmp_dir, 'Moon.png'), 100, 1)
 
+    def test_export_xyz(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl
+            do_export('data/Stanford_Bunny.stl', os.path.join(tmp_dir, 'stanford_bunny.xyz'), 100, 1)
+
+    def test_export_svx(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl
+            do_export('data/Stanford_Bunny.stl', os.path.join(tmp_dir, 'stanford_bunny.svx'), 100, 1)
+
     def test_issue_files(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             # Provided by @silverscorpio in issue #16
