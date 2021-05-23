@@ -62,6 +62,22 @@ class TestSlice(unittest.TestCase):
         ])
         self.assertTrue((expected == lines).all())
 
+    def test_triangle_to_intersecting_lines_three_point_same(self):
+        pixels = np.zeros((100, 100), dtype=bool)
+        lines = []
+        tri = np.array([
+            [2, 4, 3],
+            [3, 2, 3],
+            [1, 2, 3],
+        ])
+        slice.triangle_to_intersecting_lines(tri, 3, pixels, lines)
+        expected = np.array([
+            (tri[0], tri[1]),
+            (tri[0], tri[2]),
+            (tri[1], tri[2]),
+        ])
+        self.assertTrue((expected == lines).all())
+
     def test_triangle_to_intersecting_lines_intersect_one_point(self):
         pixels = np.zeros((100, 100), dtype=bool)
         lines = []
