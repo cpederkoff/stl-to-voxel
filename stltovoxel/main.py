@@ -11,8 +11,8 @@ import numpy as np
 from . import slice
 
 
-def convert_mesh(org_mesh, resolution, pad, parallel):
-    vol_mesh, scale, shift, bounding_box = slice.scale_and_shift_mesh(org_mesh, resolution)
+def convert_mesh(mesh, resolution=100, pad=1, parallel=True):
+    vol_mesh, scale, shift, bounding_box = slice.scale_and_shift_mesh(mesh, resolution)
     if scale == 0:
         print('Too small resolution: %d' % resolution)
         return

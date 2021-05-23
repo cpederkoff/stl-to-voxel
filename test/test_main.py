@@ -1,12 +1,13 @@
 import os
 import tempfile
 import unittest
+import numpy as np
 
 from .context import stltovoxel  # noqa: F401
 from stltovoxel import main
 
 
-class TestStlToVoxel(unittest.TestCase):
+class TestMain(unittest.TestCase):
     def test_sample(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             # https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl
@@ -57,3 +58,29 @@ class TestStlToVoxel(unittest.TestCase):
                 i += 1
                 main.convert_file('data/Eiffel_tower_sample.STL', os.path.join(tmp_dir, 'Eiffel_tower_sample.svx'), i, 1)
                 i += 1
+
+    def test_convert_mesh(self):
+        mesh = np.array([
+            [[30, 0, 25], [42, 11, 0], [18, 11, 0]],
+            [[30, 0, 25], [42, -13, 0], [42, 11, 0]],
+            [[30, 0, 25], [18, -13, 0], [42, -13, 0]],
+            [[42, -13, 0], [18, -13, 0], [42, 11, 0]],
+            [[18, -13, 0], [18, 11, 0], [42, 11, 0]],
+            [[30, 0, 25], [18, 11, 0], [18, -13, 0]],
+        ])
+        voxels = main.convert_mesh(mesh, resolution=10).astype(int)
+        expected = np.array([
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ])
+        self.assertTrue((expected == voxels[6]).all())

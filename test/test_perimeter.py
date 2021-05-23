@@ -5,7 +5,7 @@ from .context import stltovoxel  # noqa: F401
 from stltovoxel import perimeter
 
 
-class PerimeterTest(unittest.TestCase):
+class TestPerimeter(unittest.TestCase):
     def test_lines_to_pixels(self):
         test = [[(0, 0, 0), (3, 0, 0)],
                 [(9, 9, 0), (3, 9, 0)],
