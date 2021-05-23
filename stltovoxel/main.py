@@ -11,7 +11,17 @@ import numpy as np
 from . import slice
 
 
-def do_export(input_file_path, output_file_path, resolution=100, pad=1, parallel=False):
+def convert_mesh(org_mesh, resolution, pad, parallel):
+    vol_mesh, scale, shift, bounding_box = slice.scale_and_shift_mesh(org_mesh, resolution)
+    if scale == 0:
+        print('Too small resolution: %d' % resolution)
+        return
+
+    vol, _bounding_box = slice.mesh_to_plane(vol_mesh, bounding_box, pad, parallel)
+    return vol
+
+
+def convert_file(input_file_path, output_file_path, resolution=100, pad=1, parallel=False):
     mesh_obj = mesh.Mesh.from_file(input_file_path)
     org_mesh = np.hstack((mesh_obj.v0[:, np.newaxis], mesh_obj.v1[:, np.newaxis], mesh_obj.v2[:, np.newaxis]))
     vol_mesh, scale, shift, bounding_box = slice.scale_and_shift_mesh(org_mesh, resolution)
@@ -112,4 +122,4 @@ if __name__ == '__main__':
     parser.add_argument('parallel', nargs='?', type=str2bool, default=True, help='parallel processing')
 
     args = parser.parse_args()
-    do_export(args.input, args.output, args.resolution, args.pad, args.parallel)
+    convert_file(args.input, args.output, args.resolution, args.pad, args.parallel)
