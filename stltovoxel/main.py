@@ -51,7 +51,7 @@ def export_pngs(voxels, bounding_box, output_file_path):
         except Exception:
             print("Error while deleting file : ", file_path)
 
-    size = str(len(str(bounding_box[2]))+1)
+    size = str(len(str(bounding_box[2] + 1)))
     for height in range(bounding_box[2]):
         print('export png %d/%d' % (height, bounding_box[2]))
         img = Image.fromarray(voxels[height])
