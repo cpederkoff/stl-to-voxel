@@ -15,9 +15,14 @@ setup(
     url='https://github.com/cpederkoff/stl-to-voxel',
     download_url='https://github.com/cpederkoff/stl-to-voxel/releases',
     install_requires=['numpy', 'Pillow', 'matplotlib', 'numpy-stl'],
-    py_modules=['stltovoxel'],
+    packages=['stltovoxel'],
     python_requires='>=3',
     zip_safe=False,
+    entry_points={
+        'console_scripts': [
+            'stltovoxel = stltovoxel.main:main',
+        ],
+    },
     classifiers=[
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',

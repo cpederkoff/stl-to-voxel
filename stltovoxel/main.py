@@ -90,7 +90,7 @@ def export_svx(voxels, bounding_box, output_file_path, scale, shift):
         zip_file.writestr("manifest.xml", manifest)
 
 
-def file_choices(choices, fname):
+def file_choices(parser, choices, fname):
     filename, ext = os.path.splitext(fname)
     if ext == '' or ext.lower() not in choices:
         if len(choices) == 1:
@@ -100,26 +100,21 @@ def file_choices(choices, fname):
     return fname
 
 
-if __name__ == '__main__':
-    def str2bool(v):
-        if isinstance(v, bool):
-            return v
-        if v.lower() in ('yes', 'true', 't', 'y', '1'):
-            return True
-        elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-            return False
-        else:
-            raise argparse.ArgumentTypeError('Boolean value expected.')
-
+def main():
     parser = argparse.ArgumentParser(description='Convert STL files to voxels')
-    parser.add_argument('input', nargs='?', type=lambda s: file_choices(('.stl', ), s), help='The input STL file')
+    parser.add_argument('input', type=lambda s: file_choices(parser, ('.stl'), s), help='Input STL file')
     parser.add_argument(
-        'output', nargs='?',
-        type=lambda s: file_choices(('.png', '.xyz', '.svx'), s),
-        help='path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
-    parser.add_argument('resolution', nargs='?', type=int, default=100, help='number of voxels in both directions')
-    parser.add_argument('pad', nargs='?', type=int, default=1, help='number of padding pixels')
-    parser.add_argument('parallel', nargs='?', type=str2bool, default=True, help='parallel processing')
+        'output',
+        type=lambda s: file_choices(parser, ('.png', '.xyz', '.svx'), s),
+        help='Path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
+    parser.add_argument('--resolution', type=int, default=100, help='Number of voxels in both directions')
+    parser.add_argument('--pad', type=int, default=1, help='Number of padding pixels')
+    parser.add_argument('--no-parallel', dest='parallel', action='store_false', help='Disable parallel processing')
+    parser.set_defaults(parallel=True)
 
     args = parser.parse_args()
     convert_file(args.input, args.output, args.resolution, args.pad, args.parallel)
+
+
+if __name__ == '__main__':
+    main()
