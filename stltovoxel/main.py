@@ -1,14 +1,14 @@
 import argparse
-import os
 import io
 import glob
+import os
+from PIL import Image
+from stl import mesh
 import xml.etree.cElementTree as ETree
 import zipfile
 import numpy as np
-from stl import mesh
-from PIL import Image
 
-import slice
+from . import slice
 
 
 def do_export(input_file_path, output_file_path, resolution=100, pad=1, parallel=False):

@@ -1,7 +1,8 @@
 import math
-import perimeter
 import numpy as np
 import multiprocessing as mp
+
+from . import perimeter
 
 
 def mesh_to_plane(mesh, bounding_box, pad, parallel):

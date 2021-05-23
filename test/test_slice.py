@@ -1,6 +1,8 @@
-import slice
-import unittest
 import numpy as np
+import unittest
+
+from .context import stltovoxel  # noqa: F401
+from stltovoxel import slice
 
 
 class TestSlice(unittest.TestCase):

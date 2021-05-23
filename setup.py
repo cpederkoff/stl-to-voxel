@@ -15,7 +15,7 @@ setup(
     url='https://github.com/cpederkoff/stl-to-voxel',
     download_url='https://github.com/cpederkoff/stl-to-voxel/releases',
     install_requires=['numpy', 'Pillow', 'matplotlib', 'numpy-stl'],
-    py_modules=['perimeter', 'slice', 'stltovoxel'],
+    py_modules=['stltovoxel'],
     python_requires='>=3',
     zip_safe=False,
     classifiers=[
