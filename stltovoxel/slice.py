@@ -10,9 +10,8 @@ def mesh_to_plane(mesh, bounding_box, pad, parallel):
         pool = mp.Pool(mp.cpu_count())
         result_ids = []
 
-    pad_bounding_box = [size + (pad * 2) for size in bounding_box]
     # Note: vol should be addressed with vol[z][y][x]
-    vol = np.zeros(pad_bounding_box[::-1], dtype=bool)
+    vol = np.zeros(bounding_box[::-1], dtype=bool)
 
     current_mesh_indices = set()
     z = 0
@@ -25,7 +24,7 @@ def mesh_to_plane(mesh, bounding_box, pad, parallel):
             else:
                 print('Processing layer %d/%d' % (z, bounding_box[2]))
                 _, pixels = paint_z_plane(mesh_subset, z, bounding_box[:2])
-                vol[z + pad, pad:-pad, pad:-pad] = pixels
+                vol[z] = pixels
             z += 1
 
         if status == 'start':
@@ -39,11 +38,13 @@ def mesh_to_plane(mesh, bounding_box, pad, parallel):
         results = [r.get() for r in result_ids]
 
         for z, pixels in results:
-            vol[z+pad, pad:-pad, pad:-pad] = pixels
+            vol[z] = pixels
 
         pool.close()
         pool.join()
 
+    vol = np.pad(vol, pad)
+    pad_bounding_box = list(reversed(vol.shape))
     return vol, pad_bounding_box
 
 
@@ -117,12 +118,9 @@ def scale_and_shift_mesh(mesh, resolution):
     for i, shift in enumerate(v_min):
         mesh[..., i] = (mesh[..., i] - shift) * xy_scale
 
-    z_resolution = amplitude[2] * xy_scale
-    if z_resolution == math.ceil(z_resolution):
-        z_resolution += 1
-    else:
-        z_resolution = math.ceil(z_resolution)
-    bounding_box = [resolution, resolution, int(z_resolution)]
+    z_resolution = mesh.max(axis=(0, 1))[2]
+    z_resolution = math.floor(z_resolution) + 1
+    bounding_box = [resolution, resolution, z_resolution]
 
     return mesh, xy_scale, -v_min, bounding_box
 
