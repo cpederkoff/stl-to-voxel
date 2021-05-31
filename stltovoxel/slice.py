@@ -120,7 +120,7 @@ def scale_and_shift_mesh(mesh, resolution):
     z_resolution = math.floor(z_resolution) + 1
     bounding_box = [resolution, resolution, z_resolution]
 
-    return mesh, xy_scale, -v_min, bounding_box
+    return mesh, xy_scale, v_min, bounding_box
 
 
 def generate_tri_events(mesh):

@@ -12,7 +12,7 @@ from . import slice
 
 
 def convert_mesh(mesh, resolution=100, pad=1, parallel=True):
-    vol_mesh, scale, shift, bounding_box = slice.scale_and_shift_mesh(mesh, resolution)
+    vol_mesh, scale, _shift, bounding_box = slice.scale_and_shift_mesh(mesh, resolution)
     if scale == 0:
         print('Too small resolution: %d' % resolution)
         return
@@ -32,13 +32,13 @@ def convert_file(input_file_path, output_file_path, resolution=100, pad=1, paral
         return
 
     vol = slice.mesh_to_plane(vol_mesh, bounding_box, parallel)
-    vol = np.pad(vol, pad)
 
     output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
     if output_file_extension == '.png':
+        vol = np.pad(vol, pad)
         export_pngs(vol, output_file_path)
     elif output_file_extension == '.xyz':
-        export_xyz(vol, output_file_path)
+        export_xyz(vol, output_file_path, scale, shift)
     elif output_file_extension == '.svx':
         export_svx(vol, output_file_path, scale, shift)
 
@@ -64,13 +64,14 @@ def export_pngs(voxels, output_file_path):
         img.save(path)
 
 
-def export_xyz(voxels, output_file_path):
+def export_xyz(voxels, output_file_path, scale, shift):
     output = open(output_file_path, 'w')
     for z in range(voxels.shape[0]):
         for y in range(voxels.shape[1]):
             for x in range(voxels.shape[2]):
                 if voxels[z][y][x]:
-                    output.write('%s %s %s\n' % (x, y, z))
+                    point = (np.array([x, y, z]) / scale) + shift
+                    output.write('%s %s %s\n' % tuple(point))
     output.close()
 
 
@@ -82,9 +83,9 @@ def export_svx(voxels, output_file_path, scale, shift):
                                          "gridSizeZ": str(z_size),
                                          "voxelSize": str(1.0/scale/1000),  # STL is probably in mm, and svx needs meters
                                          "subvoxelBits": "8",
-                                         "originX": str(-shift[0]),
-                                         "originY": str(-shift[1]),
-                                         "originZ": str(-shift[2]),
+                                         "originX": str(shift[0]),
+                                         "originY": str(shift[1]),
+                                         "originZ": str(shift[2]),
                                          })
     manifest = ETree.tostring(root)
     with zipfile.ZipFile(output_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
@@ -114,7 +115,7 @@ def main():
         type=lambda s: file_choices(parser, ('.png', '.xyz', '.svx'), s),
         help='Path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
     parser.add_argument('--resolution', type=int, default=100, help='Number of voxels in both directions')
-    parser.add_argument('--pad', type=int, default=1, help='Number of padding pixels')
+    parser.add_argument('--pad', type=int, default=1, help='Number of padding pixels. Only used during .png output.')
     parser.add_argument('--no-parallel', dest='parallel', action='store_false', help='Disable parallel processing')
     parser.set_defaults(parallel=True)
 
