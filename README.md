@@ -17,6 +17,12 @@ $ pip install git+https://github.com/cpederkoff/stl-to-voxel.git
 >>> stltovoxel.convert_file('my_input_file.stl', 'my_output_files.png')
 ```
 
+```
+$ git clone https://github.com/cpederkoff/stl-to-voxel.git
+$ cd stl-to-voxel
+$ python3 -m stltovoxel.main my_input_file.stl my_output_files.png
+```
+
 <!--- https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl --->
 
 The resolution is optional and defaults to 100.
