@@ -5,7 +5,7 @@ import multiprocessing as mp
 from . import perimeter
 
 
-def mesh_to_plane(mesh, bounding_box, pad, parallel):
+def mesh_to_plane(mesh, bounding_box, parallel):
     if parallel:
         pool = mp.Pool(mp.cpu_count())
         result_ids = []
@@ -43,9 +43,7 @@ def mesh_to_plane(mesh, bounding_box, pad, parallel):
         pool.close()
         pool.join()
 
-    vol = np.pad(vol, pad)
-    pad_bounding_box = list(reversed(vol.shape))
-    return vol, pad_bounding_box
+    return vol
 
 
 def paint_z_plane(mesh, height, plane_shape):

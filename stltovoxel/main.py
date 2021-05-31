@@ -17,7 +17,9 @@ def convert_mesh(mesh, resolution=100, pad=1, parallel=True):
         print('Too small resolution: %d' % resolution)
         return
 
-    vol, _bounding_box = slice.mesh_to_plane(vol_mesh, bounding_box, pad, parallel)
+    vol = slice.mesh_to_plane(vol_mesh, bounding_box, parallel)
+    vol = np.pad(vol, pad)
+
     return vol
 
 
@@ -29,18 +31,19 @@ def convert_file(input_file_path, output_file_path, resolution=100, pad=1, paral
         print('Too small resolution: %d' % resolution)
         return
 
-    vol, bounding_box = slice.mesh_to_plane(vol_mesh, bounding_box, pad, parallel)
+    vol = slice.mesh_to_plane(vol_mesh, bounding_box, parallel)
+    vol = np.pad(vol, pad)
 
     output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
     if output_file_extension == '.png':
-        export_pngs(vol, bounding_box, output_file_path)
+        export_pngs(vol, output_file_path)
     elif output_file_extension == '.xyz':
-        export_xyz(vol, bounding_box, output_file_path)
+        export_xyz(vol, output_file_path)
     elif output_file_extension == '.svx':
-        export_svx(vol, bounding_box, output_file_path, scale, shift)
+        export_svx(vol, output_file_path, scale, shift)
 
 
-def export_pngs(voxels, bounding_box, output_file_path):
+def export_pngs(voxels, output_file_path):
     output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
 
     # delete the previous output files
@@ -51,29 +54,32 @@ def export_pngs(voxels, bounding_box, output_file_path):
         except Exception:
             print("Error while deleting file : ", file_path)
 
-    size = str(len(str(bounding_box[2] + 1)))
-    for height in range(bounding_box[2]):
-        print('export png %d/%d' % (height, bounding_box[2]))
+    z_size = voxels.shape[0]
+
+    size = str(len(str(z_size + 1)))
+    for height in range(z_size):
+        print('export png %d/%d' % (height, z_size))
         img = Image.fromarray(voxels[height])
         path = (output_file_pattern + "_%0" + size + "d.png") % height
         img.save(path)
 
 
-def export_xyz(voxels, bounding_box, output_file_path):
+def export_xyz(voxels, output_file_path):
     output = open(output_file_path, 'w')
-    for z in range(bounding_box[2]):
-        for y in range(bounding_box[1]):
-            for x in range(bounding_box[0]):
+    for z in range(voxels.shape[0]):
+        for y in range(voxels.shape[1]):
+            for x in range(voxels.shape[2]):
                 if voxels[z][y][x]:
                     output.write('%s %s %s\n' % (x, y, z))
     output.close()
 
 
-def export_svx(voxels, bounding_box, output_file_path, scale, shift):
-    size = str(len(str(bounding_box[2]))+1)
-    root = ETree.Element("grid", attrib={"gridSizeX": str(bounding_box[0]),
-                                         "gridSizeY": str(bounding_box[1]),
-                                         "gridSizeZ": str(bounding_box[2]),
+def export_svx(voxels, output_file_path, scale, shift):
+    z_size, y_size, x_size = voxels.shape
+    size = str(len(str(z_size))+1)
+    root = ETree.Element("grid", attrib={"gridSizeX": str(x_size),
+                                         "gridSizeY": str(y_size),
+                                         "gridSizeZ": str(z_size),
                                          "voxelSize": str(1.0/scale/1000),  # STL is probably in mm, and svx needs meters
                                          "subvoxelBits": "8",
                                          "originX": str(-shift[0]),
@@ -82,7 +88,7 @@ def export_svx(voxels, bounding_box, output_file_path, scale, shift):
                                          })
     manifest = ETree.tostring(root)
     with zipfile.ZipFile(output_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        for height in range(bounding_box[2]):
+        for height in range(z_size):
             img = Image.fromarray(voxels[height])
             output = io.BytesIO()
             img.save(output, format="PNG")
