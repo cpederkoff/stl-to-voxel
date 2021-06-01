@@ -107,20 +107,23 @@ def where_line_crosses_z(p1, p2, z):
     return linear_interpolation(p1, p2, distance)
 
 
-def scale_and_shift_mesh(mesh, resolution):
-    v_min = mesh.min(axis=(0, 1))
-    v_max = mesh.max(axis=(0, 1))
-    amplitude = v_max - v_min
+def calculate_scale_shift(meshes, resolution):
+    mesh_min = meshes[0].min(axis=(0, 1))
+    mesh_max = meshes[0].max(axis=(0, 1))
+    for mesh in meshes[1:]:
+        mesh_min = np.minimum(mesh_min, mesh.min(axis=(0, 1)))
+        mesh_max = np.maximum(mesh_max, mesh.max(axis=(0, 1)))
+
+    amplitude = mesh_max - mesh_min
     xy_scale = float(resolution - 1) / max(amplitude[:2])
-
-    for i, shift in enumerate(v_min):
-        mesh[..., i] = (mesh[..., i] - shift) * xy_scale
-
-    z_resolution = mesh.max(axis=(0, 1))[2]
+    z_resolution = amplitude[2] * xy_scale 
     z_resolution = math.floor(z_resolution) + 1
     bounding_box = [resolution, resolution, z_resolution]
+    return xy_scale, mesh_min, bounding_box
 
-    return mesh, xy_scale, v_min, bounding_box
+
+def scale_and_shift_mesh(mesh, scale, shift):
+    return (mesh - shift) * scale
 
 
 def generate_tri_events(mesh):
