@@ -1,26 +1,38 @@
 # stl-to-voxel
 Turn STL files into voxels, images, and videos
-### Main Features
+## Main Features
 * Convert stl files into a voxel representation
 * Output to (a series of) .pngs, .xyz, .svx
 * Command line interface
 
-### How to run
+## How to run
+### Run in command line
 ```
 $ pip install git+https://github.com/cpederkoff/stl-to-voxel.git
-$ stltovoxel my_input_file.stl my_output_files.png
+$ stltovoxel input.stl output.png
 ```
 
+### Multiple materials
+```
+$ stltovoxel input1.stl input2.stl output.png --colors "red,green"
+```
+Hex color values are also supported
+```
+$ stltovoxel input1.stl input2.stl output.png --colors "#FF0000,#00FF00"
+```
+
+### Integrate into your code
 ```
 $ pip install git+https://github.com/cpederkoff/stl-to-voxel.git
 >>> import stltovoxel
->>> stltovoxel.convert_file('my_input_file.stl', 'my_output_files.png')
+>>> stltovoxel.convert_file('input.stl', 'output.png')
 ```
 
+### Run manually for testing
 ```
 $ git clone https://github.com/cpederkoff/stl-to-voxel.git
 $ cd stl-to-voxel
-$ python3 -m stltovoxel.main my_input_file.stl my_output_files.png
+$ python3 -m stltovoxel.main input.stl output.png
 ```
 
 <!--- https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl --->

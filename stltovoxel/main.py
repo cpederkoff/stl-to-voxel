@@ -75,6 +75,7 @@ def export_pngs(voxels, output_file_path, colors):
 
 
 def export_xyz(voxels, output_file_path, scale, shift):
+    voxels = voxels.astype(bool)
     output = open(output_file_path, 'w')
     for z in range(voxels.shape[0]):
         for y in range(voxels.shape[1]):
@@ -129,7 +130,7 @@ def main():
     parser.add_argument('--resolution', type=int, default=100, help='Number of voxels in both directions')
     parser.add_argument('--pad', type=int, default=1, help='Number of padding pixels. Only used during .png output.')
     parser.add_argument('--no-parallel', dest='parallel', action='store_false', help='Disable parallel processing')
-    parser.add_argument('--colors', type=str, default="#FFFFFF", help='Output png colors')
+    parser.add_argument('--colors', type=str, default="#FFFFFF", help='Output png colors. Ex red,#FF0000')
 
     parser.set_defaults(parallel=True)
 
