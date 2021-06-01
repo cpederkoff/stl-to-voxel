@@ -115,8 +115,11 @@ def calculate_scale_shift(meshes, resolution):
         mesh_max = np.maximum(mesh_max, mesh.max(axis=(0, 1)))
 
     amplitude = mesh_max - mesh_min
-    xy_scale = float(resolution - 1) / max(amplitude[:2])
-    z_resolution = amplitude[2] * xy_scale
+    # Floating point errors can creep in here. Ex: 25 * 1.16 = 28.999999999999996
+    # Need to be careful about when numbers are divided.
+    xy_scale = (resolution - 1) / max(amplitude[:2])
+    z_resolution = amplitude[2] * (resolution - 1) / max(amplitude[:2])
+
     z_resolution = math.floor(z_resolution) + 1
     bounding_box = [resolution, resolution, z_resolution]
     return xy_scale, mesh_min, bounding_box

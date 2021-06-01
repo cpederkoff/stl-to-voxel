@@ -11,6 +11,10 @@ import numpy as np
 from . import slice
 
 
+def convert_mesh(mesh, resolution=100, parallel=True):
+    return convert_meshes([mesh], resolution, parallel)
+
+
 def convert_meshes(meshes, resolution=100, parallel=True):
     scale, shift, shape = slice.calculate_scale_shift(meshes, resolution)
     vol = np.zeros(shape[::-1])
@@ -22,6 +26,10 @@ def convert_meshes(meshes, resolution=100, parallel=True):
     return vol, scale, shift
 
 
+def convert_file(input_file_path, output_file_path, resolution=100, pad=1, parallel=False):
+    convert_files([input_file_path], output_file_path, resolution=resolution, pad=pad, parallel=parallel)
+
+
 def convert_files(input_file_paths, output_file_path, colors=[(0, 0, 0)], resolution=100, pad=1, parallel=False):
     meshes = []
     for input_file_path in input_file_paths:
@@ -29,7 +37,6 @@ def convert_files(input_file_paths, output_file_path, colors=[(0, 0, 0)], resolu
         org_mesh = np.hstack((mesh_obj.v0[:, np.newaxis], mesh_obj.v1[:, np.newaxis], mesh_obj.v2[:, np.newaxis]))
         meshes.append(org_mesh)
 
-    scale, shift, shape = slice.calculate_scale_shift(meshes, resolution)
     vol, scale, shift = convert_meshes(meshes, resolution, parallel)
 
     output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
@@ -79,6 +86,8 @@ def export_xyz(voxels, output_file_path, scale, shift):
 
 
 def export_svx(voxels, output_file_path, scale, shift):
+    # Collapse all materials into one
+    voxels = voxels.astype(bool)
     z_size, y_size, x_size = voxels.shape
     size = str(len(str(z_size))+1)
     root = ETree.Element("grid", attrib={"gridSizeX": str(x_size),
