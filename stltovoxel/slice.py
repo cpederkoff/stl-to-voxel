@@ -116,7 +116,7 @@ def calculate_scale_shift(meshes, resolution):
 
     amplitude = mesh_max - mesh_min
     xy_scale = float(resolution - 1) / max(amplitude[:2])
-    z_resolution = amplitude[2] * xy_scale 
+    z_resolution = amplitude[2] * xy_scale
     z_resolution = math.floor(z_resolution) + 1
     bounding_box = [resolution, resolution, z_resolution]
     return xy_scale, mesh_min, bounding_box

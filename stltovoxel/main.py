@@ -14,12 +14,13 @@ from . import slice
 def convert_meshes(meshes, resolution=100, parallel=True):
     scale, shift, shape = slice.calculate_scale_shift(meshes, resolution)
     vol = np.zeros(shape[::-1])
-    
+
     for mesh_ind, org_mesh in enumerate(meshes):
         vol_mesh = slice.scale_and_shift_mesh(org_mesh, scale, shift)
         cur_vol = slice.mesh_to_plane(vol_mesh, shape, parallel)
         vol[cur_vol] = mesh_ind + 1
     return vol, scale, shift
+
 
 def convert_files(input_file_paths, output_file_path, colors=[(0, 0, 0)], resolution=100, pad=1, parallel=False):
     meshes = []
@@ -30,7 +31,7 @@ def convert_files(input_file_paths, output_file_path, colors=[(0, 0, 0)], resolu
 
     scale, shift, shape = slice.calculate_scale_shift(meshes, resolution)
     vol, scale, shift = convert_meshes(meshes, resolution, parallel)
-    
+
     output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
     if output_file_extension == '.png':
         vol = np.pad(vol, pad)
@@ -56,7 +57,7 @@ def export_pngs(voxels, output_file_path, colors):
 
     size = str(len(str(z_size + 1)))
     # Black background
-    colors = [(0,0,0)] + colors
+    colors = [(0, 0, 0)] + colors
     palette = [channel for color in colors for channel in color]
     for height in range(z_size):
         print('export png %d/%d' % (height, z_size))
@@ -118,7 +119,7 @@ def main():
         help='Path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
     parser.add_argument('--resolution', type=int, default=100, help='Number of voxels in both directions')
     parser.add_argument('--pad', type=int, default=1, help='Number of padding pixels. Only used during .png output.')
-    parser.add_argument('--no-parallel', dest='parallel', action='store_false', help='Disable parallel processing') 
+    parser.add_argument('--no-parallel', dest='parallel', action='store_false', help='Disable parallel processing')
     parser.add_argument('--colors', type=str, default="#FFFFFF", help='Output png colors')
 
     parser.set_defaults(parallel=True)
@@ -127,10 +128,9 @@ def main():
     colors = args.colors.split(",")
     if os.path.splitext(args.output)[1] == '.png' and len(colors) < len(args.input):
         raise argparse.ArgumentTypeError('Must specify enough colors')
-    
+
     color_tuples = [ImageColor.getcolor(color, "RGB") for color in colors]
     convert_files(args.input, args.output, color_tuples, args.resolution, args.pad, args.parallel)
-
 
 
 if __name__ == '__main__':
