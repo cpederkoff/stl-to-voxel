@@ -126,7 +126,8 @@ def calculate_scale_shift(meshes, resolution):
 
 
 def scale_and_shift_mesh(mesh, scale, shift):
-    return (mesh - shift) * scale
+    for i, dim_shift in enumerate(shift):
+        mesh[..., i] = (mesh[..., i] - dim_shift) * scale
 
 
 def generate_tri_events(mesh):

@@ -68,8 +68,7 @@ class TestMain(unittest.TestCase):
             [[18, -13, 0], [18, 11, 0], [42, 11, 0]],
             [[30, 0, 25], [18, 11, 0], [18, -13, 0]],
         ])
-        voxels, _scale, _shift = main.convert_mesh(mesh, resolution=10)
-        voxels = voxels.astype(int)
+        voxels, _scale, _shift = main.convert_mesh(mesh, resolution=10).astype(int)
         expected = np.array([
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

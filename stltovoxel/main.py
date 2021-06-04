@@ -20,8 +20,8 @@ def convert_meshes(meshes, resolution=100, parallel=True):
     vol = np.zeros(shape[::-1])
 
     for mesh_ind, org_mesh in enumerate(meshes):
-        vol_mesh = slice.scale_and_shift_mesh(org_mesh, scale, shift)
-        cur_vol = slice.mesh_to_plane(vol_mesh, shape, parallel)
+        slice.scale_and_shift_mesh(org_mesh, scale, shift)
+        cur_vol = slice.mesh_to_plane(org_mesh, shape, parallel)
         vol[cur_vol] = mesh_ind + 1
     return vol, scale, shift
 
