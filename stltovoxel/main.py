@@ -65,10 +65,15 @@ def export_pngs(voxels, output_file_path, colors):
     # Black background
     colors = [(0, 0, 0)] + colors
     palette = [channel for color in colors for channel in color]
+    # Special case when white on black.
     for height in range(z_size):
         print('export png %d/%d' % (height, z_size))
-        img = Image.fromarray(voxels[height].astype('uint8'), mode='P')
-        img.putpalette(palette)
+        if colors == [(0, 0, 0), (255, 255, 255)]:
+            img = Image.fromarray(voxels[height].astype('bool'))
+        else:
+            img = Image.fromarray(voxels[height].astype('uint8'), mode='P')
+            img.putpalette(palette)
+
         path = (output_file_pattern + "_%0" + size + "d.png") % height
         img.save(path)
 
