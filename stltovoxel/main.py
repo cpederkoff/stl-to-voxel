@@ -38,7 +38,6 @@ def convert_files(input_file_paths, output_file_path, colors=[(0, 0, 0)], resolu
         meshes.append(org_mesh)
 
     vol, scale, shift = convert_meshes(meshes, resolution, parallel)
-
     output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
     if output_file_extension == '.png':
         vol = np.pad(vol, pad)
