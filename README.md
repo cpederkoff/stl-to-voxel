@@ -42,3 +42,8 @@ The resolution is optional and defaults to 100.
 ### Example: 
 ![alt text](https://github.com/rcpedersen/stl-to-voxel/raw/master/data/stanford_bunny.png "STL version of the stanford bunny")
 ![alt text](https://github.com/rcpedersen/stl-to-voxel/raw/master/data/stanford_bunny.gif "voxel version of the stanford bunny")
+### Multi-color Example:
+![alt text](https://github.com/rcpedersen/stl-to-voxel/raw/master/data/traffic_cone_1.png "STL version of the orange part of the model")
+![alt text](https://github.com/rcpedersen/stl-to-voxel/raw/master/data/traffic_cone_2.png "STL version of the white part of the model")
+![alt text](https://github.com/rcpedersen/stl-to-voxel/raw/master/data/traffic_cone.gif "voxel version of the traffic cone")
+Credit to https://www.thingiverse.com/thing:21773/files for the model
