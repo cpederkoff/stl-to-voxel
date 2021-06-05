@@ -17,7 +17,7 @@ def convert_mesh(mesh, resolution=100, parallel=True):
 
 def convert_meshes(meshes, resolution=100, parallel=True):
     scale, shift, shape = slice.calculate_scale_shift(meshes, resolution)
-    vol = np.zeros(shape[::-1])
+    vol = np.zeros(shape[::-1], dtype=np.int8)
 
     for mesh_ind, org_mesh in enumerate(meshes):
         slice.scale_and_shift_mesh(org_mesh, scale, shift)
