@@ -1,6 +1,8 @@
-from .main import convert_files, convert_meshes
+from .main import convert_file, convert_files, convert_mesh, convert_meshes
 
 __all__ = [
+    'convert_file',
     'convert_files',
+    'convert_mesh',
     'convert_meshes',
 ]
