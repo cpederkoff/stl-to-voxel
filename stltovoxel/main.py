@@ -30,7 +30,7 @@ def convert_file(input_file_path, output_file_path, resolution=100, pad=1, paral
     convert_files([input_file_path], output_file_path, resolution=resolution, pad=pad, parallel=parallel)
 
 
-def convert_files(input_file_paths, output_file_path, colors=[(0, 0, 0)], resolution=100, pad=1, parallel=False):
+def convert_files(input_file_paths, output_file_path, colors=[(255, 255, 255)], resolution=100, pad=1, parallel=False):
     meshes = []
     for input_file_path in input_file_paths:
         mesh_obj = mesh.Mesh.from_file(input_file_path)
