@@ -91,19 +91,19 @@ def export_xyz(voxels, output_file_path, scale, shift):
                     output.write('%s %s %s\n' % tuple(point))
     output.close()
 
+
 def export_npy(voxels, output_file_path, scale, shift):
-    output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
     voxels = voxels.astype(bool)
     out = []
-    print (np.shape(out))
     for z in range(voxels.shape[0]):
         for y in range(voxels.shape[1]):
             for x in range(voxels.shape[2]):
                 if voxels[z][y][x]:
-                    point = (np.array([x, y, z]) / scale) + shift                    
-                    out.append(point)                    
-    np.save(output_file_pattern,out)    
-    
+                    point = (np.array([x, y, z]) / scale) + shift
+                    out.append(point)
+    np.save(output_file_path, out)
+
+
 def export_svx(voxels, output_file_path, scale, shift):
     # Collapse all materials into one
     voxels = voxels.astype(bool)
@@ -143,7 +143,7 @@ def main():
     parser.add_argument('input', nargs='+', type=lambda s: file_choices(parser, ('.stl'), s), help='Input STL file')
     parser.add_argument(
         'output',
-        type=lambda s: file_choices(parser, ('.png', '.xyz', '.svx'), s),
+        type=lambda s: file_choices(parser, ('.png', '.npy', '.svx', '.xyz'), s),
         help='Path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
     parser.add_argument('--resolution', type=int, default=100, help='Number of voxels in both directions')
     parser.add_argument('--pad', type=int, default=1, help='Number of padding pixels. Only used during .png output.')
