@@ -46,6 +46,8 @@ def convert_files(input_file_paths, output_file_path, colors=[(255, 255, 255)], 
         export_xyz(vol, output_file_path, scale, shift)
     elif output_file_extension == '.svx':
         export_svx(vol, output_file_path, scale, shift)
+    elif output_file_extension == '.npy':
+        export_npy(vol, output_file_path, scale, shift)
 
 
 def export_pngs(voxels, output_file_path, colors):
@@ -89,7 +91,19 @@ def export_xyz(voxels, output_file_path, scale, shift):
                     output.write('%s %s %s\n' % tuple(point))
     output.close()
 
-
+def export_npy(voxels, output_file_path, scale, shift):
+    output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
+    voxels = voxels.astype(bool)
+    out = []
+    print (np.shape(out))
+    for z in range(voxels.shape[0]):
+        for y in range(voxels.shape[1]):
+            for x in range(voxels.shape[2]):
+                if voxels[z][y][x]:
+                    point = (np.array([x, y, z]) / scale) + shift                    
+                    out.append(point)                    
+    np.save(output_file_pattern,out)    
+    
 def export_svx(voxels, output_file_path, scale, shift):
     # Collapse all materials into one
     voxels = voxels.astype(bool)
