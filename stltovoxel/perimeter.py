@@ -18,17 +18,12 @@ def lines_to_voxels(line_list, pixels):
             current_line_indices.remove(line_ind)
 
 
-def slope_intercept(p1, p2):
+def generate_y(p1, p2, x):
     x1, y1 = p1[:2]
     x2, y2 = p2[:2]
-    slope = (y2 - y1) / (x2 - x1)
-    intercept = y1 - slope * x1
-    return slope, intercept
-
-
-def generate_y(p1, p2, x):
-    slope, intercept = slope_intercept(p1, p2)
-    y = slope * x + intercept
+    dy = (y2 - y1)
+    dx = (x2 - x1)
+    y = dy * (x - x1) / dx + y1
     return y
 
 
