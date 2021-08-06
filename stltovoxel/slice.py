@@ -18,11 +18,11 @@ def mesh_to_plane(mesh, bounding_box, parallel):
         while event_z - z >= 0:
             mesh_subset = [mesh[ind] for ind in current_mesh_indices]
             if parallel:
-                result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, bounding_box[:2]))
+                result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, bounding_box[1::-1]))
                 result_ids.append(result_id)
             else:
                 print('Processing layer %d/%d' % (z, bounding_box[2]))
-                _, pixels = paint_z_plane(mesh_subset, z, vol.shape[1:])
+                _, pixels = paint_z_plane(mesh_subset, z, bounding_box[1::-1])
                 vol[z] = pixels
             z += 1
 
@@ -106,7 +106,7 @@ def where_line_crosses_z(p1, p2, z):
     return linear_interpolation(p1, p2, distance)
 
 
-def calculate_scale_shift(meshes, resolution):
+def calculate_scale_shift(meshes, resolution_x, resolution_y, resolution_z):
     mesh_min = meshes[0].min(axis=(0, 1))
     mesh_max = meshes[0].max(axis=(0, 1))
     for mesh in meshes[1:]:
@@ -116,10 +116,20 @@ def calculate_scale_shift(meshes, resolution):
     bounding_box = mesh_max - mesh_min
     # Floating point errors can creep in here. Ex: 25 * 1.16 = 28.999999999999996
     # Need to be careful about when numbers are divided.
-    scale = (resolution - 1) / max(bounding_box)
-    new_resolution = bounding_box * scale
-    new_resolution = np.floor(new_resolution).astype(int) + 1
-    return scale, mesh_min, new_resolution
+
+    xy_scale=min(((resolution_x - 1) /(amplitude[0])),((resolution_y-1) /(amplitude[1])))
+    
+    if resolution_z==0:   #executed when z resolution is not provided by the user
+        resolution_z = amplitude[2] * (xy_scale)
+        resolution_z = math.floor(resolution_z) + 1
+        bounding_box = [resolution_x, resolution_y, resolution_z]
+        return xy_scale, mesh_min, bounding_box
+
+    else:    #executed when z resolution is provided by the user
+        scale=min(xy_scale,(resolution_z-1)/amplitude[2])
+        bounding_box = [resolution_x, resolution_y, resolution_z]
+        return scale, mesh_min, bounding_box
+       
 
 
 def scale_and_shift_mesh(mesh, scale, shift):
