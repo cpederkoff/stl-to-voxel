@@ -1,4 +1,3 @@
-import math
 import numpy as np
 import multiprocessing as mp
 
@@ -23,7 +22,7 @@ def mesh_to_plane(mesh, bounding_box, parallel):
                 result_ids.append(result_id)
             else:
                 print('Processing layer %d/%d' % (z, bounding_box[2]))
-                _, pixels = paint_z_plane(mesh_subset, z, bounding_box[:2])
+                _, pixels = paint_z_plane(mesh_subset, z, vol.shape[1:])
                 vol[z] = pixels
             z += 1
 
@@ -114,15 +113,13 @@ def calculate_scale_shift(meshes, resolution):
         mesh_min = np.minimum(mesh_min, mesh.min(axis=(0, 1)))
         mesh_max = np.maximum(mesh_max, mesh.max(axis=(0, 1)))
 
-    amplitude = mesh_max - mesh_min
+    bounding_box = mesh_max - mesh_min
     # Floating point errors can creep in here. Ex: 25 * 1.16 = 28.999999999999996
     # Need to be careful about when numbers are divided.
-    xy_scale = (resolution - 1) / max(amplitude[:2])
-    z_resolution = amplitude[2] * (resolution - 1) / max(amplitude[:2])
-
-    z_resolution = math.floor(z_resolution) + 1
-    bounding_box = [resolution, resolution, z_resolution]
-    return xy_scale, mesh_min, bounding_box
+    scale = (resolution - 1) / max(bounding_box)
+    new_resolution = bounding_box * scale
+    new_resolution = np.floor(new_resolution).astype(int) + 1
+    return scale, mesh_min, new_resolution
 
 
 def scale_and_shift_mesh(mesh, scale, shift):

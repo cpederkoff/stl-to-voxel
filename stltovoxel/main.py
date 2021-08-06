@@ -145,7 +145,7 @@ def main():
         'output',
         type=lambda s: file_choices(parser, ('.png', '.npy', '.svx', '.xyz'), s),
         help='Path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
-    parser.add_argument('--resolution', type=int, default=100, help='Number of voxels in both directions')
+    parser.add_argument('--resolution', type=int, default=100, help='Number of voxels in the largest dimension')
     parser.add_argument('--pad', type=int, default=1, help='Number of padding pixels. Only used during .png output.')
     parser.add_argument('--no-parallel', dest='parallel', action='store_false', help='Disable parallel processing')
     parser.add_argument('--colors', type=str, default="#FFFFFF", help='Output png colors. Ex red,#FF0000')
