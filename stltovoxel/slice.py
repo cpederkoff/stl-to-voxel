@@ -1,6 +1,6 @@
+import math
 import numpy as np
 import multiprocessing as mp
-
 from . import perimeter
 
 
@@ -113,7 +113,7 @@ def calculate_scale_shift(meshes, resolution_x, resolution_y, resolution_z):
         mesh_min = np.minimum(mesh_min, mesh.min(axis=(0, 1)))
         mesh_max = np.maximum(mesh_max, mesh.max(axis=(0, 1)))
 
-    bounding_box = mesh_max - mesh_min
+    amplitude = mesh_max - mesh_min
     # Floating point errors can creep in here. Ex: 25 * 1.16 = 28.999999999999996
     # Need to be careful about when numbers are divided.
 
