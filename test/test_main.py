@@ -52,11 +52,13 @@ class TestMain(unittest.TestCase):
         while i < 100:
             with tempfile.TemporaryDirectory() as tmp_dir:
                 main.convert_file('data/Cube_3d_printing_sample.stl',
-                                  os.path.join(tmp_dir, 'Cube_3d_printing_sample.xyz'), i, 1)
+                                  os.path.join(tmp_dir, 'Cube_3d_printing_sample.xyz'), [i, i+1, i+2], 1)
                 i += 1
-                main.convert_file('data/Menger_sponge_sample.stl', os.path.join(tmp_dir, 'Menger_sponge_sample.svx'), i, 1)
+                main.convert_file('data/Menger_sponge_sample.stl',
+                                  os.path.join(tmp_dir, 'Menger_sponge_sample.svx'), [i, i+1, i+2], 1)
                 i += 1
-                main.convert_file('data/Eiffel_tower_sample.STL', os.path.join(tmp_dir, 'Eiffel_tower_sample.svx'), i, 1)
+                main.convert_file('data/Eiffel_tower_sample.STL',
+                                  os.path.join(tmp_dir, 'Eiffel_tower_sample.svx'), [i, i+1, i+2], 1)
                 i += 1
 
     def test_convert_mesh(self):
@@ -71,14 +73,15 @@ class TestMain(unittest.TestCase):
         voxels, _scale, _shift = main.convert_mesh(mesh, resolution=10)
         voxels = voxels.astype(int)
         expected = np.array([
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 1, 1, 1, 0, 0, 0],
-            [0, 0, 0, 1, 1, 1, 0, 0, 0],
-            [0, 0, 0, 1, 1, 1, 0, 0, 0],
-            [0, 0, 0, 1, 1, 1, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         ])
         self.assertTrue((expected == voxels[6]).all())

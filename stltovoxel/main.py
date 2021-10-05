@@ -11,12 +11,12 @@ import numpy as np
 from . import slice
 
 
-def convert_mesh(mesh,resolution_x=100,resolution_y=100,resolution_z=0, parallel=True):
-    return convert_meshes([mesh], resolution_x=resolution_x,resolution_y=resolution_y, resolution_z=resolution_z, parallel=parallel)
+def convert_mesh(mesh, resolution=100, parallel=True):
+    return convert_meshes([mesh], resolution, parallel)
 
 
-def convert_meshes(meshes ,resolution_x, resolution_y, resolution_z, parallel=True):
-    scale, shift, shape = slice.calculate_scale_shift(meshes,resolution_x, resolution_y, resolution_z)
+def convert_meshes(meshes, resolution=100, parallel=True):
+    scale, shift, shape = slice.calculate_scale_shift(meshes, resolution)
     vol = np.zeros(shape[::-1], dtype=np.int8)
 
     for mesh_ind, org_mesh in enumerate(meshes):
@@ -26,18 +26,18 @@ def convert_meshes(meshes ,resolution_x, resolution_y, resolution_z, parallel=Tr
     return vol, scale, shift
 
 
-def convert_file(input_file_path, output_file_path, resolution_x=100, resolution_y=100, resolution_z=0, pad=1, parallel=False):
-    convert_files([input_file_path], output_file_path, resolution_x=resolution_x, resolution_y=resolution_y, resolution_z=resolution_z , pad=pad, parallel=parallel)
+def convert_file(input_file_path, output_file_path, resolution=100, pad=1, parallel=False):
+    convert_files([input_file_path], output_file_path, resolution=resolution, pad=pad, parallel=parallel)
 
 
-def convert_files(input_file_paths, output_file_path, resolution_x , resolution_y, resolution_z,colors=[(255, 255, 255)], pad=1, parallel=False):
+def convert_files(input_file_paths, output_file_path, colors=[(255, 255, 255)], resolution=100, pad=1, parallel=False):
     meshes = []
     for input_file_path in input_file_paths:
         mesh_obj = mesh.Mesh.from_file(input_file_path)
         org_mesh = np.hstack((mesh_obj.v0[:, np.newaxis], mesh_obj.v1[:, np.newaxis], mesh_obj.v2[:, np.newaxis]))
         meshes.append(org_mesh)
 
-    vol, scale, shift = convert_meshes(meshes,resolution_x,resolution_y,resolution_z,parallel)
+    vol, scale, shift = convert_meshes(meshes, resolution, parallel)
     output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
     if output_file_extension == '.png':
         vol = np.pad(vol, pad)
@@ -145,12 +145,14 @@ def main():
         'output',
         type=lambda s: file_choices(parser, ('.png', '.npy', '.svx', '.xyz'), s),
         help='Path to output files. The export data type is chosen by file extension. Possible are .png, .xyz and .svx')
-    parser.add_argument('--resolution_x', type=int, default=100, help='Number of voxels in x direction')
-    parser.add_argument('--resolution_y', type=int, default=100, help='Number of voxels in y direction')
-    parser.add_argument('--resolution_z', type=int, default=0, help='Number of voxels in z direction, this is auto calculated if not provided by the user')
     parser.add_argument('--pad', type=int, default=1, help='Number of padding pixels. Only used during .png output.')
     parser.add_argument('--no-parallel', dest='parallel', action='store_false', help='Disable parallel processing')
     parser.add_argument('--colors', type=str, default="#FFFFFF", help='Output png colors. Ex red,#FF0000')
+    # Only one resolution argument may be set
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--resolution', type=int, default=100, help='Number of voxels in z direction')
+    group.add_argument('--resolution-xyz', type=int, default=[100, 100, 100], nargs=3, dest='resolution',
+                       help='Number of voxels in x, y, and z direction.')
 
     parser.set_defaults(parallel=True)
 
