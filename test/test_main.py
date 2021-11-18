@@ -3,7 +3,6 @@ import tempfile
 import unittest
 import numpy as np
 
-from .context import stltovoxel  # noqa: F401
 from stltovoxel.convert import convert_file, convert_mesh
 
 
