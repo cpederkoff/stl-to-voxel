@@ -20,7 +20,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'stltovoxel = stltovoxel.main:main',
+            'stltovoxel = stltovoxel.__main__:main',
         ],
     },
     classifiers=[
@@ -28,5 +28,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
 )
