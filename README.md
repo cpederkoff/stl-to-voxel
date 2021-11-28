@@ -31,14 +31,14 @@ stltovoxel.convert_file('input.stl', 'output.png')
 ```bash
 git clone https://github.com/cpederkoff/stl-to-voxel.git
 cd stl-to-voxel
-python3 -m stltovoxel.main input.stl output.png
+python3 -m stltovoxel input.stl output.png
 ```
 
 <!--- https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl --->
 
 The resolution is optional and defaults to 100.
 
-### Example: 
+### Example:
 ![alt text](https://github.com/cpederkoff/stl-to-voxel/raw/master/data/stanford_bunny.png "STL version of the stanford bunny")
 ![alt text](https://github.com/cpederkoff/stl-to-voxel/raw/master/data/stanford_bunny.gif "voxel version of the stanford bunny")
 ### Multi-color Example:
