@@ -8,7 +8,7 @@ Turn STL files into voxels, images, and videos
 ## How to run
 ### Run in command line
 ```
-pip install git+https://github.com/cpederkoff/stl-to-voxel.git
+pip install stl-to-voxel
 stltovoxel input.stl output.png
 ```
 
