@@ -106,7 +106,7 @@ def where_line_crosses_z(p1, p2, z):
     return linear_interpolation(p1, p2, distance)
 
 
-def calculate_scale_shift(meshes, resolution):
+def calculate_scale_shift(meshes, resolution, voxel_size):
     mesh_min = meshes[0].min(axis=(0, 1))
     mesh_max = meshes[0].max(axis=(0, 1))
     for mesh in meshes[1:]:
@@ -114,11 +114,13 @@ def calculate_scale_shift(meshes, resolution):
         mesh_max = np.maximum(mesh_max, mesh.max(axis=(0, 1)))
 
     bounding_box = mesh_max - mesh_min
-
-    if isinstance(resolution, int):
-        resolution = resolution * bounding_box / bounding_box[2]
+    if voxel_size is not None:
+        resolution = bounding_box / voxel_size
     else:
-        resolution = np.array(resolution)
+        if isinstance(resolution, int):
+            resolution = resolution * bounding_box / bounding_box[2]
+        else:
+            resolution = np.array(resolution)
 
     scale = (resolution - 1) / bounding_box
     new_resolution = np.floor(resolution).astype(int) + 1

@@ -14,8 +14,8 @@ def convert_mesh(mesh, resolution=100, parallel=True):
     return convert_meshes([mesh], resolution, parallel)
 
 
-def convert_meshes(meshes, resolution=100, parallel=True):
-    scale, shift, shape = slice.calculate_scale_shift(meshes, resolution)
+def convert_meshes(meshes, resolution=100, voxel_size=None, parallel=True):
+    scale, shift, shape = slice.calculate_scale_shift(meshes, resolution, voxel_size)
     vol = np.zeros(shape[::-1], dtype=np.int8)
 
     for mesh_ind, org_mesh in enumerate(meshes):
@@ -25,18 +25,20 @@ def convert_meshes(meshes, resolution=100, parallel=True):
     return vol, scale, shift
 
 
-def convert_file(input_file_path, output_file_path, resolution=100, pad=1, parallel=False):
-    convert_files([input_file_path], output_file_path, resolution=resolution, pad=pad, parallel=parallel)
+def convert_file(input_file_path, output_file_path, resolution=100, voxel_size=None, pad=1, parallel=False):
+    convert_files([input_file_path], output_file_path, resolution=resolution,
+                  voxel_size=voxel_size, pad=pad, parallel=parallel)
 
 
-def convert_files(input_file_paths, output_file_path, colors=[(255, 255, 255)], resolution=100, pad=1, parallel=False):
+def convert_files(input_file_paths, output_file_path, colors=[(255, 255, 255)],
+                  resolution=100, voxel_size=None, pad=1, parallel=False):
     meshes = []
     for input_file_path in input_file_paths:
         mesh_obj = mesh.Mesh.from_file(input_file_path)
         org_mesh = np.hstack((mesh_obj.v0[:, np.newaxis], mesh_obj.v1[:, np.newaxis], mesh_obj.v2[:, np.newaxis]))
         meshes.append(org_mesh)
 
-    vol, scale, shift = convert_meshes(meshes, resolution, parallel)
+    vol, scale, shift = convert_meshes(meshes, resolution, voxel_size, parallel)
     output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
     if output_file_extension == '.png':
         vol = np.pad(vol, pad)

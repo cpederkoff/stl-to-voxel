@@ -12,6 +12,16 @@ pip install stl-to-voxel
 stltovoxel input.stl output.png
 ```
 
+### Generating a higher resolution
+```bash
+stltovoxel input.stl output.png --resolution 200
+```
+
+### Specifying voxel size
+```bash
+stltovoxel input.stl output.png --voxel-size 1
+```
+
 ### Multiple materials
 ```bash
 stltovoxel input1.stl input2.stl output.png --colors "red,green"
@@ -32,6 +42,9 @@ stltovoxel.convert_file('input.stl', 'output.png')
 git clone https://github.com/cpederkoff/stl-to-voxel.git
 cd stl-to-voxel
 python3 -m stltovoxel input.stl output.png
+```
+
+### Manually running unit tests
 ```
 
 <!--- https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl --->
