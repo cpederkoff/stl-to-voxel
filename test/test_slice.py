@@ -90,3 +90,7 @@ class TestSlice(unittest.TestCase):
         slice.triangle_to_intersecting_lines(tri, 5, pixels, lines)
         expected = []
         self.assertEqual(expected, lines)
+
+
+if __name__ == '__main__':
+    unittest.main()

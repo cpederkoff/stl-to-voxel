@@ -84,3 +84,7 @@ class TestMain(unittest.TestCase):
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         ])
         self.assertTrue((expected == voxels[6]).all())
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -19,7 +19,7 @@ stltovoxel input.stl output.png --resolution 200
 
 ### Specifying voxel size
 ```bash
-stltovoxel input.stl output.png --voxel-size 1
+stltovoxel input.stl output.png --voxel-size .5
 ```
 
 ### Multiple materials
@@ -37,14 +37,16 @@ import stltovoxel
 stltovoxel.convert_file('input.stl', 'output.png')
 ```
 
-### Run manually for testing
+### Run for development
 ```bash
-git clone https://github.com/cpederkoff/stl-to-voxel.git
 cd stl-to-voxel
 python3 -m stltovoxel input.stl output.png
 ```
 
-### Manually running unit tests
+### Run unit tests
+```bash
+cd stl-to-voxel
+PYTHONPATH=./ python3 test/test_slice.py
 ```
 
 <!--- https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl --->
