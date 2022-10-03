@@ -10,8 +10,8 @@ import numpy as np
 from . import slice
 
 
-def convert_mesh(mesh, resolution=100, parallel=True):
-    return convert_meshes([mesh], resolution, parallel)
+def convert_mesh(mesh, resolution=100, voxel_size=None, parallel=True):
+    return convert_meshes([mesh], resolution, voxel_size, parallel)
 
 
 def convert_meshes(meshes, resolution=100, voxel_size=None, parallel=True):

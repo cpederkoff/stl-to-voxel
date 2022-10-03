@@ -83,6 +83,7 @@ class TestMain(unittest.TestCase):
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         ])
+        self.assertEqual(expected.shape, voxels[6].shape)
         self.assertTrue((expected == voxels[6]).all())
 
 
