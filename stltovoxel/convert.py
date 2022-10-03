@@ -1,7 +1,7 @@
 import io
 import glob
 import os
-from PIL import Image
+from PIL import Image, ImageOps
 from stl import mesh
 import xml.etree.cElementTree as ETree
 import zipfile
@@ -68,15 +68,18 @@ def export_pngs(voxels, output_file_path, colors):
     # Black background
     colors = [(0, 0, 0)] + colors
     palette = [channel for color in colors for channel in color]
-    # Special case when white on black.
     for height in range(z_size):
         print('export png %d/%d' % (height, z_size))
+        # Special case when white on black.
         if colors == [(0, 0, 0), (255, 255, 255)]:
             img = Image.fromarray(voxels[height].astype('bool'))
         else:
             img = Image.fromarray(voxels[height].astype('uint8'), mode='P')
             img.putpalette(palette)
 
+        # Pillow puts (0,0) in the upper left corner, but 3D viewing coordinate systems put (0,0) in the lower left.
+        # Fliping image vertically (top to bottom) makes the lower left corner (0,0) which is appropriate for this application.
+        img = ImageOps.flip(img)
         path = (output_file_pattern + "_%0" + size + "d.png") % height
         img.save(path)
 
@@ -123,6 +126,7 @@ def export_svx(voxels, output_file_path, scale, shift):
     with zipfile.ZipFile(output_file_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         for height in range(z_size):
             img = Image.fromarray(voxels[height])
+            img = ImageOps.flip(img)
             output = io.BytesIO()
             img.save(output, format="PNG")
             zip_file.writestr(("density/slice%0" + size + "d.png") % height, output.getvalue())
