@@ -22,12 +22,11 @@ repository = "https://github.com/cpederkoff/stl-to-voxel"
 
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.8"
 matplotlib = "^3.6"
 numpy = "^1.13"
 Pillow = "^9.3"
 numpy-stl = "^2.17"
-poetry = "^1.2.2"
 
 [tool.poetry.scripts]
 stltovoxel = "stltovoxel.__main__:main"
