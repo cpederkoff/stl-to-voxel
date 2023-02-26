@@ -11,7 +11,6 @@ def mesh_to_plane(mesh, bounding_box, parallel):
 
     # Note: vol should be addressed with vol[z][y][x]
     vol = np.zeros(bounding_box[::-1], dtype=bool)
-
     current_mesh_indices = set()
     z = 0
     for event_z, status, tri_ind in generate_tri_events(mesh):
@@ -21,7 +20,6 @@ def mesh_to_plane(mesh, bounding_box, parallel):
                 result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, vol.shape[1:]))
                 result_ids.append(result_id)
             else:
-                print('Processing layer %d/%d' % (z, bounding_box[2]))
                 _, pixels = paint_z_plane(mesh_subset, z, vol.shape[1:])
                 vol[z] = pixels
             z += 1
@@ -46,6 +44,8 @@ def mesh_to_plane(mesh, bounding_box, parallel):
 
 
 def paint_z_plane(mesh, height, plane_shape):
+    print('Processing layer %d' % (height))
+
     pixels = np.zeros(plane_shape, dtype=bool)
 
     lines = []
@@ -72,11 +72,13 @@ def triangle_to_intersecting_lines(triangle, height, pixels, lines):
     below = list(filter(lambda pt: pt[2] < height, triangle))
     same = list(filter(lambda pt: pt[2] == height, triangle))
     if len(same) == 3:
-        for i in range(0, len(same) - 1):
-            for j in range(i + 1, len(same)):
-                lines.append((same[i], same[j]))
+        for i in range(3):
+            lines.append((triangle[i], triangle[(i+1)%3]))
     elif len(same) == 2:
-        lines.append((same[0], same[1]))
+        for i in range(3):
+            if triangle[i][2] == height and triangle[(i+1)%3][2] == height:
+                lines.append((triangle[i], triangle[(i+1)%3]))
+                break
     elif len(same) == 1:
         if above and below:
             side1 = where_line_crosses_z(above[0], below[0], height)
@@ -86,10 +88,19 @@ def triangle_to_intersecting_lines(triangle, height, pixels, lines):
             y = int(same[0][1])
             pixels[y][x] = True
     else:
+        # Need to start above and then go around the triangle to preserve orientation
+        # Get any triangle index of a point above the Z plane
+        top_ind = next(filter(lambda i: triangle[i][2] > height, range(3)))
         cross_lines = []
-        for a in above:
-            for b in below:
-                cross_lines.append((b, a))
+        for i in range(top_ind, top_ind + 3):
+            # Iterate around triangle
+            pt1 = triangle[i%3]
+            pt2 = triangle[(i+1)%3]
+            # This line crosses the Z plane iff the points are different wrt top/bottom
+            is_cross = (pt1[2] > height) != (pt2[2] > height)
+            if is_cross:
+                cross_lines.append((pt1, pt2))
+        assert len(cross_lines) == 2
         side1 = where_line_crosses_z(cross_lines[0][0], cross_lines[0][1], height)
         side2 = where_line_crosses_z(cross_lines[1][0], cross_lines[1][1], height)
         lines.append((side1, side2))

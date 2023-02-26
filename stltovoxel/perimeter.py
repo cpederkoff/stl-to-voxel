@@ -1,21 +1,16 @@
 from functools import reduce
-
+from . import winding_query
+import math
 
 def lines_to_voxels(line_list, pixels):
-    current_line_indices = set()
-    x = 0
-    for (event_x, status, line_ind) in generate_line_events(line_list):
-        while event_x - x >= 0:
-            lines = reduce(lambda acc, cur: acc + [line_list[cur]], current_line_indices, [])
-            paint_y_axis(lines, pixels, x)
-            x += 1
-
-        if status == 'start':
-            assert line_ind not in current_line_indices
-            current_line_indices.add(line_ind)
-        elif status == 'end':
-            assert line_ind in current_line_indices
-            current_line_indices.remove(line_ind)
+    wq = winding_query.WindingQuery(line_list)
+    size_y, size_x = pixels.shape
+    for y in range(size_y):
+        for x in range(size_x):
+            if wq.query_winding((x,y)) > math.pi:
+                pixels[y][x] = True
+            else: 
+                pixels[y][x] = False
 
 
 def generate_y(p1, p2, x):
