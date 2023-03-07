@@ -51,7 +51,7 @@ def paint_z_plane(mesh, height, plane_shape):
     lines = []
     for triangle in mesh:
         triangle_to_intersecting_lines(triangle, height, pixels, lines)
-    perimeter.lines_to_voxels(lines, pixels)
+    perimeter.repaired_lines_to_voxels(lines, pixels)
 
     return height, pixels
 
@@ -96,7 +96,6 @@ def triangle_to_intersecting_lines(triangle, height, pixels, lines):
             # Iterate around triangle
             pt1 = triangle[i%3]
             pt2 = triangle[(i+1)%3]
-            # This line crosses the Z plane iff the points are different wrt top/bottom
             is_cross = (pt1[2] > height) != (pt2[2] > height)
             if is_cross:
                 cross_lines.append((pt1, pt2))
