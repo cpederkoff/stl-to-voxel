@@ -119,9 +119,8 @@ class WindingQuery():
 
   def repair_all(self):
     while self.segments:
-      self.repair_segment()
       old_seg_length = len(self.segments)
-      self.collapse_segments()
+      self.repair_segment()
       assert old_seg_length - 1 == len(self.segments)
     assert len(self.segments) == 0
 
@@ -130,9 +129,20 @@ class WindingQuery():
     start = self.segments[0][-1]
     # Search will conclude when it finds the beginning of any polyline (including itself)
     endpoints = [polyline[0] for polyline in self.segments]
-    end = self.a_star(start, endpoints)
-    new_segment = (start, end)
-    self.original_segments.append(new_segment)
+    next_start = self.a_star(start, endpoints)
+    front_half = self.segments.pop(0)
+
+    for i in range(len(self.segments)):
+      segment = self.segments[i]
+      if next_start == segment[0]:
+        del self.segments[i]
+        back_half = segment
+        new_segment = front_half + back_half
+        if new_segment[0] == new_segment[-1]:
+          self.loops.append(new_segment)
+        else:
+          self.segments.append(new_segment)
+        break
   
   def a_star(self, start, goals):
     frontier = PriorityQueue()
