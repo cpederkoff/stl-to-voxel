@@ -3,7 +3,7 @@ from . import winding_query
 import pdb
 
 def repaired_lines_to_voxels(line_list, pixels):
-    wq = winding_query.WindingQuery(line_list)
+    wq = winding_query.WindingQuery([[tuple(pt.tolist())[:2] for pt in seg] for seg in line_list])
     wq.repair_all()
     for polyline in wq.loops:
         new_line_list = []

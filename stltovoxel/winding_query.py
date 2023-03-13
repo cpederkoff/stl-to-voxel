@@ -52,10 +52,10 @@ def find_polylines(segments):
       next_points = segment_backward_dict[start]
       end = next_points[0]
 
-      segment_backward_dict.get(start).remove(end)
+      segment_backward_dict[start].remove(end)
       if len(segment_backward_dict[start]) == 0:
         del segment_backward_dict[start]
-      segment_forward_dict.get(end).remove(start)
+      segment_forward_dict[end].remove(start)
       if len(segment_forward_dict[end]) == 0:
         del segment_forward_dict[end]
 
@@ -74,7 +74,7 @@ class WindingQuery():
     # Populate initially
     self.segments = []
     # pdb.set_trace()
-    self.original_segments = [[tuple(pt.tolist())[:2] for pt in seg] for seg in segments]
+    self.original_segments = segments
     self.collapse_segments()
     
   def collapse_segments(self):
@@ -175,27 +175,27 @@ class WindingQuery():
     # self.chart_self(path)
     return path[-1]
 
-
-  def repair_segment(self, start):
+  def repair_segment(self):
     endpoints = []
+    # Search starts at the end of a polyline
+    start = self.segments[0][-1]
     for polyline in self.segments:
+      # Search will conclude when it finds the beginning of a polyline
       endpoints.append(polyline[0])
-      endpoints.append(polyline[-1])
-    endpoints.remove(start)
     def heuristic(next_point, goals):
       return abs(min([self.dist(next_point, goal) for goal in goals]))
-    return self.astar(start, endpoints, heuristic)
+    return start, self.astar(start, endpoints, heuristic)
   
   def repair_all(self):
     while len(self.segments) > 0:
-      # Find the point after the segment end (will be in the list of endpoints)
-      start = self.segments[0][-1]
-      end = self.repair_segment(start)
-      self.original_segments.append((start, end))
+      new_segment = self.repair_segment()
+      self.original_segments.append(new_segment)
+      old_seg_length = len(self.segments)
       self.collapse_segments()
+      assert old_seg_length - 1 == len(self.segments)
     assert len(self.segments) == 0
 
-  # @functools.cache
+  @functools.cache
   def getLines(self, polyline):
     start = np.array(polyline[0])
     end = np.array(polyline[-1])
@@ -221,7 +221,7 @@ class WindingQuery():
 
   def winding_segment(self, polyline, point):
     collapsed = (polyline[0], polyline[-1])
-    inner_line, outer_line = self.getLines(polyline)
+    inner_line, outer_line = self.getLines(tuple(polyline))
 
     if len(polyline) == 2:
       # This is the actual segment so okay to be behind it.
