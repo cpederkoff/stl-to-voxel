@@ -7,46 +7,84 @@ import pdb
 import matplotlib.pyplot as plt
 import time
 
+def find_polylines(segments):
+  polylines = []
+  segment_forward_dict = {}
+  segment_backward_dict = {}
+
+  # create a dictionary where each endpoint is a key, and the value is a list of segments
+  for segment in segments:
+      start, end = segment
+      if start not in segment_forward_dict:
+        segment_forward_dict[start] = []
+      segment_forward_dict[start].append(end)
+      if end not in segment_backward_dict:
+        segment_backward_dict[end] = []
+      segment_backward_dict[end].append(start)
+  # loop through each segment, and recursively add connected segments to form polylines
+  while len(segment_forward_dict) > 0:
+    start = list(segment_forward_dict.keys())[0]
+    polyline = [start]
+
+    # Iterate through forward dict 
+    while True:
+      if start not in segment_forward_dict:
+        break
+      next_points = segment_forward_dict[start]
+      end = next_points[0]
+
+      segment_forward_dict[start].remove(end)
+      if len(segment_forward_dict[start]) == 0:
+        del segment_forward_dict[start]
+      segment_backward_dict[end].remove(start)
+      if len(segment_backward_dict[end]) == 0:
+        del segment_backward_dict[end]
+      # Append points to the end of the list
+      polyline.append(end)
+      start = end
+
+    # Reset the start point
+    start = polyline[0]
+    # Iterate through backward dict 
+    while True:
+      if start not in segment_backward_dict:
+        break
+      next_points = segment_backward_dict[start]
+      end = next_points[0]
+
+      segment_backward_dict.get(start).remove(end)
+      if len(segment_backward_dict[start]) == 0:
+        del segment_backward_dict[start]
+      segment_forward_dict.get(end).remove(start)
+      if len(segment_forward_dict[end]) == 0:
+        del segment_forward_dict[end]
+
+      # Insert points at the front of the list
+      polyline.insert(0, end)
+      start = end
+    polylines.append(polyline)
+
+  return polylines
+
 class WindingQuery():
   def __init__(self, segments):
     self.atans = 0
     # Maps endpoints to the polygon they form
-    self.segments = []
     self.loops = []
     # Populate initially
-    for segment in segments:
-      # Segments come in as a numpy array of:
-      # length = 3 numpy arrays 
-      start, end = segment
-      segment = (tuple(start[:2]), tuple(end[:2]))
-      self.segments.append(segment)
-
+    self.segments = []
+    # pdb.set_trace()
+    self.original_segments = [[tuple(pt.tolist())[:2] for pt in seg] for seg in segments]
     self.collapse_segments()
-
+    
   def collapse_segments(self):
-    while self.collapse_segment():
-      pass
-
-  def collapse_segment(self):
-    for polyline in self.segments:
+    self.loops = []
+    self.segments = []
+    for polyline in find_polylines(self.original_segments):
       if polyline[0] == polyline[-1]:
-        self.segments.remove(polyline)
         self.loops.append(polyline)
-        return True
-    for polyline1 in self.segments:
-      for polyline2 in self.segments:
-        if polyline1 == polyline2:
-          continue
-        start1, end1 = polyline1[0], polyline1[-1]
-        start2, end2 = polyline2[0], polyline2[-1]
-        if end1 == start2:
-          # These segments butt up against eachother
-          self.segments.remove(polyline1)
-          self.segments.remove(polyline2)
-          # Create segment with the new endpoints
-          self.segments.append(polyline1[:-1] + polyline2)
-          return True
-    return False
+      else:
+        self.segments.append(polyline)
 
   def normalize(self, num): 
     return ((num + math.pi) % (2*math.pi)) - math.pi
@@ -151,13 +189,13 @@ class WindingQuery():
   def repair_all(self):
     while len(self.segments) > 0:
       # Find the point after the segment end (will be in the list of endpoints)
-      next_point = self.repair_segment(self.segments[0][-1])
-      self.segments[0] += tuple([next_point])
+      start = self.segments[0][-1]
+      end = self.repair_segment(start)
+      self.original_segments.append((start, end))
       self.collapse_segments()
     assert len(self.segments) == 0
-    # assert len(self.loops) > 0
 
-  @functools.cache
+  # @functools.cache
   def getLines(self, polyline):
     start = np.array(polyline[0])
     end = np.array(polyline[-1])
