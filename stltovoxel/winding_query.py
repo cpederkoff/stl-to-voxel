@@ -138,10 +138,9 @@ class WindingQuery():
         return goal
     return False
 
-  def astar(self, start, goals, heuristic):
+  def astar(self, start, goals):
     frontier = PriorityQueue()
     frontier.put((0, start))
-    came_from = {start: None}
     cost_so_far = {start: 0}
 
     current = None
@@ -149,31 +148,22 @@ class WindingQuery():
       score, current = frontier.get()
       close_goal = self.close_to_goal(current, goals)
       if close_goal:
-        came_from[close_goal] = current
         current = close_goal
         break
 
       for dx in range(-1,2):
         for dy in range(-1,2):
           next_point = (current[0] + dx, current[1] + dy)
+          heuristic_cost = abs(min([self.dist(next_point, goal) for goal in goals]))
           new_cost = cost_so_far[current] + abs(self.query_winding(next_point) - math.pi) * 100
 
           if next_point not in cost_so_far or new_cost < cost_so_far[next_point]:
             cost_so_far[next_point] = new_cost
-            priority = new_cost + heuristic(next_point, goals)
+            priority = new_cost + heuristic_cost
             frontier.put((priority, next_point))
-            came_from[next_point] = current
 
-    path = []
-    # Current is now one of the goals
     assert current is not None
-    while current != start:
-      path.append(current)
-      current = came_from[current]
-    path.append(start)
-    path.reverse()
-    # self.chart_self(path)
-    return path[-1]
+    return current
 
   def repair_segment(self):
     endpoints = []
@@ -182,9 +172,8 @@ class WindingQuery():
     for polyline in self.segments:
       # Search will conclude when it finds the beginning of a polyline
       endpoints.append(polyline[0])
-    def heuristic(next_point, goals):
-      return abs(min([self.dist(next_point, goal) for goal in goals]))
-    return start, self.astar(start, endpoints, heuristic)
+   
+    return start, self.astar(start, endpoints)
   
   def repair_all(self):
     while len(self.segments) > 0:
