@@ -66,14 +66,42 @@ def find_polylines(segments):
 
   return polylines
 
+def closest_distance(point, goals):
+  return min([dist(point, goal) for goal in goals])
+
+def dist(p1, p2):
+  x1, y1 = p1
+  x2, y2 = p2
+  return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
+
+def normalize(num): 
+  return ((num + math.pi) % (2*math.pi)) - math.pi
+
+def signedPointLineDist(line, point):
+  a, b = line
+  x1, y1 = a
+  x2, y2 = b
+  x0, y0 = point
+  num = ((x2 - x1)*(y1 - y0) - (x1 - x0)*(y2 - y1)) 
+  # return num
+  # Not needed
+  denom = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+  return num / denom
+
+def close_to_goal(start, goals):
+  sx, sy = start
+  for goal in goals:
+    gx, gy = goal
+    if abs(sx-gx) <= 1 and abs(sy-gy) <= 1:
+      return goal
+  return False
+
 class WindingQuery():
   def __init__(self, segments):
-    self.atans = 0
     # Maps endpoints to the polygon they form
     self.loops = []
     # Populate initially
     self.segments = []
-    # pdb.set_trace()
     self.original_segments = segments
     self.collapse_segments()
     
@@ -85,60 +113,28 @@ class WindingQuery():
         self.loops.append(polyline)
       else:
         self.segments.append(polyline)
-
-  def normalize(self, num): 
-    return ((num + math.pi) % (2*math.pi)) - math.pi
-
-  def winding(self, segment, point):
-    i,j = point
-
-    start, end = segment
-
-    start = np.array(list(start))
-    end = np.array(list(end))
-    me = np.array(point)
-    
-    # Side 1
-    me_offset = me - start
-    my_ang1 = math.atan2(me_offset[1], me_offset[0])
-    # Side 2
-    me_offset = me - end
-    my_ang2 = math.atan2(me_offset[1], me_offset[0])
-    self.atans += 2
-    # 180 - other angles gives us angle seen by point
-    return self.normalize(my_ang2 - my_ang1)
-
-  def signedPointLineDist(self, line, point):
-    a, b = line
-    x1, y1 = a
-    x2, y2 = b
-    x0, y0 = point
-    num = ((x2 - x1)*(y1 - y0) - (x1 - x0)*(y2 - y1)) 
-    # return num
-    # Not needed
-    denom = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-    return num / denom
   
-  def query_winding(self, point):
-    total = 0
-    for polyline in self.segments:
-      total += self.winding_segment(polyline, point)
-    return total
+  def collapse_inline(self, next_point):
+    pass
 
-  def dist(self, p1, p2):
-    x1, y1 = p1
-    x2, y2 = p2
-    return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
+  def repair_all(self):
+    while self.segments:
+      self.repair_segment()
+      old_seg_length = len(self.segments)
+      self.collapse_segments()
+      assert old_seg_length - 1 == len(self.segments)
+    assert len(self.segments) == 0
 
-  def close_to_goal(self, start, goals):
-    sx, sy = start
-    for goal in goals:
-      gx, gy = goal
-      if abs(sx-gx) <= 1 and abs(sy-gy) <= 1:
-        return goal
-    return False
-
-  def astar(self, start, goals):
+  def repair_segment(self):
+    # Search starts at the end of a polyline
+    start = self.segments[0][-1]
+    # Search will conclude when it finds the beginning of any polyline (including itself)
+    endpoints = [polyline[0] for polyline in self.segments]
+    end = self.a_star(start, endpoints)
+    new_segment = (start, end)
+    self.original_segments.append(new_segment)
+  
+  def a_star(self, start, goals):
     frontier = PriorityQueue()
     frontier.put((0, start))
     cost_so_far = {start: 0}
@@ -146,7 +142,7 @@ class WindingQuery():
     current = None
     while not frontier.empty():
       score, current = frontier.get()
-      close_goal = self.close_to_goal(current, goals)
+      close_goal = close_to_goal(current, goals)
       if close_goal:
         current = close_goal
         break
@@ -154,7 +150,7 @@ class WindingQuery():
       for dx in range(-1,2):
         for dy in range(-1,2):
           next_point = (current[0] + dx, current[1] + dy)
-          heuristic_cost = abs(min([self.dist(next_point, goal) for goal in goals]))
+          heuristic_cost = closest_distance(next_point, goals)
           new_cost = cost_so_far[current] + abs(self.query_winding(next_point) - math.pi) * 100
 
           if next_point not in cost_so_far or new_cost < cost_so_far[next_point]:
@@ -164,28 +160,46 @@ class WindingQuery():
 
     assert current is not None
     return current
-
-  def repair_segment(self):
-    endpoints = []
-    # Search starts at the end of a polyline
-    start = self.segments[0][-1]
-    for polyline in self.segments:
-      # Search will conclude when it finds the beginning of a polyline
-      endpoints.append(polyline[0])
-   
-    return start, self.astar(start, endpoints)
   
-  def repair_all(self):
-    while len(self.segments) > 0:
-      new_segment = self.repair_segment()
-      self.original_segments.append(new_segment)
-      old_seg_length = len(self.segments)
-      self.collapse_segments()
-      assert old_seg_length - 1 == len(self.segments)
-    assert len(self.segments) == 0
+  def query_winding(self, point):
+    total = 0
+    for polyline in self.segments:
+      total += self.winding_segment(polyline, point)
+    return total
+
+  def winding_segment(self, polyline, point):
+    collapsed = (polyline[0], polyline[-1])
+    inner_line, outer_line = self.get_lines(tuple(polyline))
+
+    if len(polyline) == 2:
+      # This is the actual segment so okay to be behind it.
+      return self.winding(collapsed, point)
+    elif signedPointLineDist(inner_line, point) < 0:
+      # We are inside and beyond any concavity
+      return self.winding(collapsed, point)
+    elif signedPointLineDist(outer_line, point) > 0:
+      # We are outside beyond any convexity
+      return self.winding(collapsed, point)
+    else:
+      split = int(len(polyline) / 2)
+      # Otherwise, split the segment
+      return self.winding_segment(polyline[:split+1], point) + self.winding_segment(polyline[split:], point)
+    
+  def winding(self, segment, point):
+    start, end = segment
+    start = np.array(start)
+    end = np.array(end)
+    point = np.array(point)
+    # Side 1
+    offset = point - start
+    ang1 = math.atan2(offset[1], offset[0])
+    # Side 2
+    offset = point - end
+    ang2 = math.atan2(offset[1], offset[0])
+    return normalize(ang2 - ang1)
 
   @functools.cache
-  def getLines(self, polyline):
+  def get_lines(self, polyline):
     start = np.array(polyline[0])
     end = np.array(polyline[-1])
     slope = end - start
@@ -195,7 +209,7 @@ class WindingQuery():
     furthest_out = 0
     outermost = polyline[0]
     for pt in polyline:
-      dist = self.signedPointLineDist((polyline[0], polyline[-1]), pt)
+      dist = signedPointLineDist((polyline[0], polyline[-1]), pt)
       if dist < furthest_in:
         innermost = pt
         furthest_in = dist
@@ -208,54 +222,3 @@ class WindingQuery():
     outer_line = (outermost, outermost + slope)
     return inner_line, outer_line
 
-  def winding_segment(self, polyline, point):
-    collapsed = (polyline[0], polyline[-1])
-    inner_line, outer_line = self.getLines(tuple(polyline))
-
-    if len(polyline) == 2:
-      # This is the actual segment so okay to be behind it.
-      return self.winding(collapsed, point)
-    elif self.signedPointLineDist(inner_line, point) < 0:
-      # We are inside and beyond any concavity
-      return self.winding(collapsed, point)
-    elif self.signedPointLineDist(outer_line, point) > 0:
-      # We are outside beyond any convexity
-      return self.winding(collapsed, point)
-    else:
-      split = int(len(polyline) / 2)
-      # Otherwise, split the segment
-      return self.winding_segment(polyline[:split+1], point) + self.winding_segment(polyline[split:], point)
-
-if __name__ == "__main__":
-  segments3 = [
-  [(10,10), (20,10)],
-  [(20,10), (30,10)],
-  # [(30,10), (40,10)],
-  [(40,10), (30,20)],
-  [(30,20), (40,40)],
-  # [(40,40), (10,40)],
-  [(10,40), (10,10)],
-]
-  quer = WindingQuery(segments3)
-
-  quer.repair_all()
-
-  # Create a new figure
-  fig = plt.figure()
-
-  # Add a subplot to the figure
-  ax = fig.add_subplot(1, 1, 1)
-
-  # Plot the polyline using the x and y coordinates
-  for loop in quer.loops:
-    ax.plot(*zip(*loop))
-
-  # Add labels and title to the plot
-  ax.set_xlabel('X-axis')
-  ax.set_ylabel('Y-axis')
-  ax.set_title('Polyline Plot')
-
-  # Display the plot
-  plt.show()
-
-  
