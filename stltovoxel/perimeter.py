@@ -1,15 +1,69 @@
 from functools import reduce
 from . import winding_query
 import pdb
+import matplotlib.pyplot as plt
+
+
+def plot_line_segments(line_segments):
+    """
+    Plots a list of line segments using pyplot.
+    
+    Parameters:
+    line_segments (list): A list of tuples, where each tuple represents a line segment.
+                          Each tuple should contain four floats representing the x and y
+                          coordinates of the start and end points of the line segment.
+                          
+    Returns:
+    None
+    """
+    # Create a new figure
+    fig, ax = plt.subplots()
+    
+    # Loop over each line segment and plot it using the plot function
+    for p1, p2 in line_segments:
+        x1, y1, _ = p1
+        x2, y2, _ = p2
+        ax.plot([x1, x2], [y1, y2])
+    
+    # Show the plot
+    plt.show()
+
+def plot_polyline(polylines):
+    """
+    Plots a polyline using pyplot.
+    
+    Parameters:
+    polyline (list): A list of (x,y) tuples representing the vertices of the polyline.
+                          
+    Returns:
+    None
+    """
+    # Create a new figure
+    fig, ax = plt.subplots()
+    for polyline in polylines:
+        # Extract the x and y coordinates from the polyline
+        x_coords, y_coords = zip(*polyline)
+    
+        # Plot the polyline using the plot function
+        ax.plot(x_coords, y_coords)
+    
+    # Show the plot
+    plt.show()
+
 
 def repaired_lines_to_voxels(line_list, pixels):
+    if not line_list:
+        return
     wq = winding_query.WindingQuery([[tuple(pt.tolist())[:2] for pt in seg] for seg in line_list])
     wq.repair_all()
+    if line_list[0][0][2] > 80:
+        plot_polyline(wq.loops)
+        pdb.set_trace()
+    new_line_list = []
     for polyline in wq.loops:
-        new_line_list = []
         for i in range(len(polyline) - 1):
             new_line_list.append((polyline[i], polyline[i+1]))
-        lines_to_voxels(new_line_list, pixels)
+    lines_to_voxels(new_line_list, pixels)
 
 def lines_to_voxels(line_list, pixels):
     current_line_indices = set()

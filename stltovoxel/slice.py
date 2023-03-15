@@ -51,6 +51,7 @@ def paint_z_plane(mesh, height, plane_shape):
     lines = []
     for triangle in mesh:
         triangle_to_intersecting_lines(triangle, height, pixels, lines)
+    
     perimeter.repaired_lines_to_voxels(lines, pixels)
 
     return height, pixels
@@ -80,6 +81,10 @@ def triangle_to_intersecting_lines(triangle, height, pixels, lines):
                 lines.append((triangle[i], triangle[(i+1)%3]))
                 break
     elif len(same) == 1:
+        for i in range(3):
+            if triangle[i][2] != height and triangle[(i+1)%3] != height:
+                
+        print('here')
         if above and below:
             side1 = where_line_crosses_z(above[0], below[0], height)
             lines.append((side1, same[0]))

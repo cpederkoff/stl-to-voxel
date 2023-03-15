@@ -1,11 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 import functools
 from queue import PriorityQueue
-import pdb
-import matplotlib.pyplot as plt
-import time
 
 def find_polylines(segments):
   polylines = []
@@ -101,33 +97,35 @@ class WindingQuery():
     # Maps endpoints to the polygon they form
     self.loops = []
     # Populate initially
-    self.segments = []
+    self.polylines = []
     self.original_segments = segments
     self.collapse_segments()
     
   def collapse_segments(self):
     self.loops = []
-    self.segments = []
+    self.polylines = []
     for polyline in find_polylines(self.original_segments):
       if polyline[0] == polyline[-1]:
         self.loops.append(polyline)
       else:
-        self.segments.append(polyline)
+        self.polylines.append(polyline)
   
   def repair_all(self):
-    while self.segments:
+    while self.polylines:
       self.repair_segment()
-      old_seg_length = len(self.segments)
+      old_seg_length = len(self.polylines)
       self.collapse_segments()
-      assert old_seg_length - 1 == len(self.segments)
-    assert len(self.segments) == 0
+      assert old_seg_length - 1 == len(self.polylines)
+    assert len(self.polylines) == 0
 
   def repair_segment(self):
     # Search starts at the end of a polyline
-    start = self.segments[0][-1]
+    start = self.polylines[0][-1]
+
     # Search will conclude when it finds the beginning of any polyline (including itself)
-    endpoints = [polyline[0] for polyline in self.segments]
+    endpoints = [polyline[0] for polyline in self.polylines]
     end = self.a_star(start, endpoints)
+
     new_segment = (start, end)
     self.original_segments.append(new_segment)
   
@@ -160,7 +158,7 @@ class WindingQuery():
   
   def query_winding(self, point):
     total = 0
-    for polyline in self.segments:
+    for polyline in self.polylines:
       total += self.winding_segment(polyline, point)
     return total
 
