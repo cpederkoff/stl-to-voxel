@@ -1,5 +1,6 @@
 import numpy as np
 import multiprocessing as mp
+import pdb
 
 from . import perimeter
 
@@ -50,8 +51,20 @@ def paint_z_plane(mesh, height, plane_shape):
 
     lines = []
     for triangle in mesh:
-        triangle_to_intersecting_lines(triangle, height, pixels, lines)
-    
+        points = triangle_to_intersecting_points(triangle, height)
+        if len(points) == 1:
+            pt = points[0]
+            x,y,_ = pt
+            x = int(x)
+            y = int(y)
+            pixels[y][x] = True
+        if len(points) == 2:
+            lines.append(tuple(points))
+        if len(points) == 3:
+            for i in range(3):
+                pt = points[i]
+                pt2 = points[(i+1)%3]
+                lines.append((pt, pt2))
     perimeter.repaired_lines_to_voxels(lines, pixels)
 
     return height, pixels
@@ -67,48 +80,25 @@ def linear_interpolation(p1, p2, distance):
     return p1 * (1-distance) + p2 * distance
 
 
-def triangle_to_intersecting_lines(triangle, height, pixels, lines):
+def triangle_to_intersecting_points(triangle, height):
     assert (len(triangle) == 3)
-    above = list(filter(lambda pt: pt[2] > height, triangle))
-    below = list(filter(lambda pt: pt[2] < height, triangle))
-    same = list(filter(lambda pt: pt[2] == height, triangle))
-    if len(same) == 3:
-        for i in range(3):
-            lines.append((triangle[i], triangle[(i+1)%3]))
-    elif len(same) == 2:
-        for i in range(3):
-            if triangle[i][2] == height and triangle[(i+1)%3][2] == height:
-                lines.append((triangle[i], triangle[(i+1)%3]))
-                break
-    elif len(same) == 1:
-        for i in range(3):
-            if triangle[i][2] != height and triangle[(i+1)%3] != height:
-                
-        print('here')
-        if above and below:
-            side1 = where_line_crosses_z(above[0], below[0], height)
-            lines.append((side1, same[0]))
-        else:
-            x = int(same[0][0])
-            y = int(same[0][1])
-            pixels[y][x] = True
-    else:
-        # Need to start above and then go around the triangle to preserve orientation
-        # Get any triangle index of a point above the Z plane
-        top_ind = next(filter(lambda i: triangle[i][2] > height, range(3)))
-        cross_lines = []
-        for i in range(top_ind, top_ind + 3):
-            # Iterate around triangle
-            pt1 = triangle[i%3]
-            pt2 = triangle[(i+1)%3]
-            is_cross = (pt1[2] > height) != (pt2[2] > height)
-            if is_cross:
-                cross_lines.append((pt1, pt2))
-        assert len(cross_lines) == 2
-        side1 = where_line_crosses_z(cross_lines[0][0], cross_lines[0][1], height)
-        side2 = where_line_crosses_z(cross_lines[1][0], cross_lines[1][1], height)
-        lines.append((side1, side2))
-
+    points = []
+    # Find the pt index with the greatest z, start there
+    start_index = max(range(3), key=lambda i: triangle[i][2])
+    if triangle[(start_index+1)%3][2] == height:
+        # Corner-case where there is a tie for highest point. 
+        # The later point in the rotation should be chosen
+        start_index = (start_index+1)%3
+    for i in range(start_index, start_index + 3):
+        pt = triangle[i%3]
+        pt2 = triangle[(i+1)%3]
+        if pt[2] == height:
+            points.append(pt)
+        elif (pt[2] < height and pt2[2] > height) or (pt[2] > height and pt2[2] < height):
+            intersection = where_line_crosses_z(pt, pt2, height)
+            points.append(intersection)
+    
+    return points
 
 def where_line_crosses_z(p1, p2, z):
     if (p1[2] > p2[2]):

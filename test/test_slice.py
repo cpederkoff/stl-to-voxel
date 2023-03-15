@@ -29,7 +29,7 @@ class TestSlice(unittest.TestCase):
             [1, 2, 5],
             [3, 2, 3]
         ])
-        slice.triangle_to_intersecting_lines(tri, 4, pixels, lines)
+        slice.triangle_to_intersecting_points(tri, 4, pixels, lines)
         expected = np.array([
             ((1.25, 2.5, 4.0), (2.0, 2.0, 4.0)),
         ])
@@ -43,7 +43,7 @@ class TestSlice(unittest.TestCase):
             (1, 2, 5),
             (3, 2, 3)
         ])
-        slice.triangle_to_intersecting_lines(tri, 3, pixels, lines)
+        slice.triangle_to_intersecting_points(tri, 3, pixels, lines)
         expected = np.array([
             ((1.5, 3, 3), (3, 2, 3)),
         ])
@@ -57,7 +57,7 @@ class TestSlice(unittest.TestCase):
             [3, 2, 3],
             [1, 2, 5],
         ])
-        slice.triangle_to_intersecting_lines(tri, 3, pixels, lines)
+        slice.triangle_to_intersecting_points(tri, 3, pixels, lines)
         expected = np.array([
             (tri[0], tri[1]),
         ])
@@ -71,7 +71,7 @@ class TestSlice(unittest.TestCase):
             [3, 2, 3],
             [1, 2, 3],
         ])
-        slice.triangle_to_intersecting_lines(tri, 3, pixels, lines)
+        slice.triangle_to_intersecting_points(tri, 3, pixels, lines)
         expected = np.array([
             (tri[0], tri[1]),
             (tri[0], tri[2]),
@@ -87,7 +87,7 @@ class TestSlice(unittest.TestCase):
             [3, 2, 3],
             [1, 2, 5],
         ])
-        slice.triangle_to_intersecting_lines(tri, 5, pixels, lines)
+        slice.triangle_to_intersecting_points(tri, 5, pixels, lines)
         expected = []
         self.assertEqual(expected, lines)
 

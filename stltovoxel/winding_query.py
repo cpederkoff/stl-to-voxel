@@ -2,6 +2,7 @@ import numpy as np
 import math
 import functools
 from queue import PriorityQueue
+import pdb
 
 def find_polylines(segments):
   polylines = []
@@ -79,10 +80,10 @@ def signedPointLineDist(line, point):
   x2, y2 = b
   x0, y0 = point
   num = ((x2 - x1)*(y1 - y0) - (x1 - x0)*(y2 - y1)) 
-  # return num
+  return num
   # Not needed
-  denom = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-  return num / denom
+  # denom = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+  # return num / denom
 
 def close_to_goal(start, goals):
   sx, sy = start
@@ -146,13 +147,13 @@ class WindingQuery():
         for dy in range(-1,2):
           next_point = (current[0] + dx, current[1] + dy)
           heuristic_cost = closest_distance(next_point, goals)
-          new_cost = cost_so_far[current] + abs(self.query_winding(next_point) - math.pi) * 100
+          new_cost = cost_so_far[current] + abs(self.query_winding(next_point) - math.pi) * 200
 
           if next_point not in cost_so_far or new_cost < cost_so_far[next_point]:
             cost_so_far[next_point] = new_cost
             priority = new_cost + heuristic_cost
             frontier.put((priority, next_point))
-
+    print(frontier.qsize())
     assert current is not None
     return current
   
