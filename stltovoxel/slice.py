@@ -52,12 +52,7 @@ def paint_z_plane(mesh, height, plane_shape):
     lines = []
     for triangle in mesh:
         points = triangle_to_intersecting_points(triangle, height)
-        if len(points) == 1:
-            pt = points[0]
-            x,y,_ = pt
-            x = int(x)
-            y = int(y)
-            pixels[y][x] = True
+        # Ignore when len(points) == 1, shape will be captured by the line segments.
         if len(points) == 2:
             lines.append(tuple(points))
         if len(points) == 3:
