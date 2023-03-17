@@ -1,7 +1,7 @@
-from functools import reduce
 from . import winding_query
 import pdb
 import matplotlib.pyplot as plt
+import math
 
 
 def plot_line_segments(line_segments):
@@ -21,14 +21,47 @@ def plot_line_segments(line_segments):
     
     # Loop over each line segment and plot it using the plot function
     for p1, p2 in line_segments:
-        x1, y1, _ = p1
-        x2, y2, _ = p2
+        x1, y1 = p1[:2]
+        x2, y2 = p2[:2]
         dx = x2 - x1
         dy = y2 - y1
         ax.plot([x1, x2], [y1, y2])
-        ax.arrow(x1+dx/2, y1+dy/2, dx/2, dy/2, head_width=0.1, head_length=0.1, fc='k', ec='k')
+        ax.arrow(x1, y1, dx/2, dy/2, head_width=0.1, head_length=0.1, fc='k', ec='k')
 
+def plot_line_segments_pixels(line_segments, pixels):
+    """
+    Plots a list of line segments using pyplot.
     
+    Parameters:
+    line_segments (list): A list of tuples, where each tuple represents a line segment.
+                          Each tuple should contain four floats representing the x and y
+                          coordinates of the start and end points of the line segment.
+                          
+    Returns:
+    None
+    """
+    # Create a new figure
+    fig, ax = plt.subplots()
+    
+    # Loop over each line segment and plot it using the plot function
+    for p1, p2 in line_segments:
+        x1, y1 = p1[:2]
+        x2, y2 = p2[:2]
+        dx = x2 - x1
+        dy = y2 - y1
+        ax.plot([x1, x2], [y1, y2])
+        ax.arrow(x1, y1, dx/2, dy/2, head_width=0.1, head_length=0.1, fc='k', ec='k')
+    for y in range(pixels.shape[0]):
+        for x in range(pixels.shape[1]):
+            xoff = -.5
+            yoff = .5
+            plt.gca().add_patch(plt.Rectangle((x + xoff,y + yoff), 1, 1, fill=False))
+            if pixels[y][x]:
+                plt.plot(x + .5 + xoff, y + .5+ yoff, 'ro')
+            else:
+                plt.plot(x + .5 + xoff, y + .5+ yoff, 'bo')
+
+
     # Show the plot
     plt.show()
 
@@ -61,7 +94,7 @@ def plot_polylines(polylines):
         x2, y2 = polyline[middle_ind+1]
         dx = x2 - x1
         dy = y2 - y1
-        ax.arrow(x1+dx/2, y1+dy/2, dx/2, dy/2, head_width=0.5, head_length=0.5, fc='k', ec='k')
+        ax.arrow(x1, y1, dx/2, dy/2, head_width=0.1, head_length=0.1, fc='k', ec='k')
     
     # Show the plot
     plt.show()
@@ -81,60 +114,78 @@ def repaired_lines_to_voxels(line_list, pixels):
 def lines_to_voxels(line_list, pixels):
     current_line_indices = set()
     x = 0
-    for (event_x, status, line_ind) in generate_line_events(line_list):
-        while event_x >= x:
-            lines = reduce(lambda acc, cur: acc + [line_list[cur]], current_line_indices, [])
+    i = 0
+    events = generate_line_events(line_list)
+    while i < len(events):
+        event_x, status, line_ind = events[i]
+        if event_x <= x and status == 'begin':
+            # If the events are behind our current x, process them
+            assert line_ind not in current_line_indices
+            current_line_indices.add(line_ind)
+            i += 1
+        elif event_x <= x and status == 'end':
+            # Process end statuses so that vertical lines are not given to paint_y_axis
+            assert line_ind in current_line_indices
+            current_line_indices.remove(line_ind)
+            i += 1
+        elif event_x > x:
+            # If the events are ahead of our current x, paint lines
+            lines = [line_list[ind] for ind in current_line_indices]
             paint_y_axis(lines, pixels, x)
             x += 1
 
-        if status == 'start':
-            assert line_ind not in current_line_indices
-            current_line_indices.add(line_ind)
-        elif status == 'end':
-            assert line_ind in current_line_indices
-            current_line_indices.remove(line_ind)
+    
 
 
 def generate_y(p1, p2, x):
     x1, y1 = p1[:2]
     x2, y2 = p2[:2]
+    assert x1 != x2
+
     dy = (y2 - y1)
     dx = (x2 - x1)
     y = dy * (x - x1) / dx + y1
-    return y
+
+    inside_change = 0
+    if x1 > x2:
+        inside_change = -1
+    elif x1 < x2:
+        inside_change = 1
+    return y, inside_change
 
 
 def paint_y_axis(lines, pixels, x):
-    is_black = False
-    target_ys = list(map(lambda line: int(generate_y(line[0], line[1], x)), lines))
+    # Counting the number of times we enter the inside of a part helps properly handle parts with multiple shells
+    # If we enter the inside of a part twice, we must exit the part twice before we stop adding white pixels.
+    inside = 0
+    target_ys = [generate_y(line[0], line[1], x) for line in lines]
     target_ys.sort()
-    if len(target_ys) % 2:
-        print('[Warning] The number of lines is odd')
-        distances = []
-        for i in range(len(target_ys) - 1):
-            distances.append(target_ys[i+1] - target_ys[i])
-        # https://stackoverflow.com/a/17952763
-        min_idx = -min((x, -i) for i, x in enumerate(distances))[1]
-        del target_ys[min_idx]
+    assert len(target_ys) % 2 == 0
 
     yi = 0
-    for target_y in target_ys:
-        if is_black:
+    for target_y, inside_change in target_ys:
+        print(target_y)
+        target_y = math.ceil(target_y) - 1
+        if inside > 0:
             # Bulk assign all pixels between yi -> target_y
             pixels[yi:target_y, x] = True
-        pixels[target_y][x] = True
-        is_black = not is_black
+
+        inside += inside_change
         yi = target_y
-    assert is_black is False, 'an error has occured at x%s' % x
+    assert inside == 0, 'an error has occured at x%s inside:%s lines:%s' % (x, inside, lines)
 
 
 def generate_line_events(line_list):
     events = []
     for i, line in enumerate(line_list):
         first, second = sorted(line, key=lambda pt: pt[0])
-        events.append((first[0], 'start', i))
+        if first[0] == second[0]:
+            # Ignore vertical lines
+            continue
+        events.append((first[0], 'begin', i))
         events.append((second[0], 'end', i))
-    return sorted(events, key=lambda tup: tup[0])
+    # Sorting by x value, then put all begin events before end events
+    return sorted(events)
 
 
 if __name__ == '__main__':

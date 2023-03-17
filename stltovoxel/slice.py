@@ -14,8 +14,10 @@ def mesh_to_plane(mesh, bounding_box, parallel):
     vol = np.zeros(bounding_box[::-1], dtype=bool)
     current_mesh_indices = set()
     z = 0
+    events = generate_tri_events(mesh)
+
     for event_z, status, tri_ind in generate_tri_events(mesh):
-        while event_z - z >= 0:
+        while event_z >= z:
             mesh_subset = [mesh[ind] for ind in current_mesh_indices]
             if parallel:
                 result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, vol.shape[1:]))
@@ -122,8 +124,8 @@ def calculate_scale_shift(meshes, resolution, voxel_size):
         else:
             resolution = np.array(resolution)
 
-    scale = (resolution - 1) / bounding_box
-    new_resolution = np.floor(resolution).astype(int) + 1
+    scale = resolution / bounding_box
+    new_resolution = np.floor(resolution).astype(int)
     return scale, mesh_min, new_resolution
 
 
