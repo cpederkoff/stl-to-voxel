@@ -14,10 +14,21 @@ def mesh_to_plane(mesh, bounding_box, parallel):
     vol = np.zeros(bounding_box[::-1], dtype=bool)
     current_mesh_indices = set()
     z = 0
+    i = 0
     events = generate_tri_events(mesh)
-
-    for event_z, status, tri_ind in generate_tri_events(mesh):
-        while event_z >= z:
+    while i < len(events):
+        event_z, status, tri_ind = events[i]
+        if event_z <= z and status == 'begin':
+            # If the events are behind our current x, process them
+            assert tri_ind not in current_mesh_indices
+            current_mesh_indices.add(tri_ind)
+            i += 1
+        elif event_z <= z and status == 'end':
+            # Process end statuses so that vertical lines are not given to paint_y_axis
+            assert tri_ind in current_mesh_indices
+            current_mesh_indices.remove(tri_ind)
+            i += 1
+        elif event_z > z:
             mesh_subset = [mesh[ind] for ind in current_mesh_indices]
             if parallel:
                 result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, vol.shape[1:]))
@@ -26,13 +37,6 @@ def mesh_to_plane(mesh, bounding_box, parallel):
                 _, pixels = paint_z_plane(mesh_subset, z, vol.shape[1:])
                 vol[z] = pixels
             z += 1
-
-        if status == 'start':
-            assert tri_ind not in current_mesh_indices
-            current_mesh_indices.add(tri_ind)
-        elif status == 'end':
-            assert tri_ind in current_mesh_indices
-            current_mesh_indices.remove(tri_ind)
 
     if parallel:
         results = [r.get() for r in result_ids]
@@ -125,7 +129,8 @@ def calculate_scale_shift(meshes, resolution, voxel_size):
             resolution = np.array(resolution)
 
     scale = resolution / bounding_box
-    new_resolution = np.floor(resolution).astype(int)
+    # If the bounding box
+    new_resolution = np.ceil(resolution).astype(int)
     return scale, mesh_min, new_resolution
 
 
@@ -133,12 +138,11 @@ def scale_and_shift_mesh(mesh, scale, shift):
     for i in range(3):
         mesh[..., i] = (mesh[..., i] - shift[i]) * scale[i]
 
-
 def generate_tri_events(mesh):
     # Create data structure for plane sweep
     events = []
     for i, tri in enumerate(mesh):
         bottom, middle, top = sorted(tri, key=lambda pt: pt[2])
-        events.append((bottom[2], 'start', i))
+        events.append((bottom[2], 'begin', i))
         events.append((top[2], 'end', i))
     return sorted(events, key=lambda tup: tup[0])

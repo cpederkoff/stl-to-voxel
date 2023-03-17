@@ -2,6 +2,7 @@ from . import winding_query
 import pdb
 import matplotlib.pyplot as plt
 import math
+import time
 
 
 def plot_line_segments(line_segments):
@@ -88,8 +89,6 @@ def plot_polylines(polylines):
 
         if len(polyline) <= middle_ind+1:
             middle_ind = 0
-        print('len is ')
-        print(len(polyline))
         x1, y1 = polyline[middle_ind]
         x2, y2 = polyline[middle_ind+1]
         dx = x2 - x1
@@ -133,9 +132,8 @@ def lines_to_voxels(line_list, pixels):
             lines = [line_list[ind] for ind in current_line_indices]
             paint_y_axis(lines, pixels, x)
             x += 1
-
-    
-
+    plot_line_segments_pixels(line_list, pixels)
+    time.sleep(2)
 
 def generate_y(p1, p2, x):
     x1, y1 = p1[:2]
@@ -164,8 +162,8 @@ def paint_y_axis(lines, pixels, x):
 
     yi = 0
     for target_y, inside_change in target_ys:
-        print(target_y)
-        target_y = math.ceil(target_y) - 1
+        target_y = int(target_y)
+        assert target_y >= 0
         if inside > 0:
             # Bulk assign all pixels between yi -> target_y
             pixels[yi:target_y, x] = True
@@ -173,7 +171,6 @@ def paint_y_axis(lines, pixels, x):
         inside += inside_change
         yi = target_y
     assert inside == 0, 'an error has occured at x%s inside:%s lines:%s' % (x, inside, lines)
-
 
 def generate_line_events(line_list):
     events = []
