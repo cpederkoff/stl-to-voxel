@@ -35,11 +35,6 @@ def lines_to_voxels(line_list, pixels):
             assert line_ind in current_line_indices
             current_line_indices.remove(line_ind)
             i += 1
-    # print('foo')
-    # import pdb
-    # pdb.set_trace()
-    # from . import visualization
-    # visualization.plot_line_segments_pixels(lines, pixels)
 
 
 def generate_y(p1, p2, x):
