@@ -35,8 +35,11 @@ def lines_to_voxels(line_list, pixels):
             assert line_ind in current_line_indices
             current_line_indices.remove(line_ind)
             i += 1
-    # plot_line_segments_pixels(line_list, pixels)
-    # time.sleep(2)
+    # print('foo')
+    # import pdb
+    # pdb.set_trace()
+    # from . import visualization
+    # visualization.plot_line_segments_pixels(lines, pixels)
 
 
 def generate_y(p1, p2, x):
@@ -57,7 +60,6 @@ def generate_y(p1, p2, x):
 
 
 def paint_y_axis(lines, pixels, x):
-
     # Counting the number of times we enter the inside of a part helps properly handle parts with multiple shells
     # If we enter twice, we will continue to be "inside" until we exit twice.
     inside = 0
