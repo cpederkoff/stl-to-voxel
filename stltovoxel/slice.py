@@ -29,13 +29,14 @@ def mesh_to_plane(mesh, bounding_box, parallel):
             current_mesh_indices.remove(tri_ind)
             i += 1
         elif event_z > z:
+            print(event_z, z)
             mesh_subset = [mesh[ind] for ind in current_mesh_indices]
             if parallel:
                 result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, vol.shape[1:]))
                 result_ids.append(result_id)
             else:
                 _, pixels = paint_z_plane(mesh_subset, z, vol.shape[1:])
-                vol[z] = pixels
+                vol[z-1] = pixels
             z += 1
 
     if parallel:
@@ -111,14 +112,15 @@ def where_line_crosses_z(p1, p2, z):
         distance = (z - p1[2]) / (p2[2] - p1[2])
     return linear_interpolation(p1, p2, distance)
 
-
-def calculate_scale_shift(meshes, resolution, voxel_size):
+def calculate_mesh_limits(meshes):
     mesh_min = meshes[0].min(axis=(0, 1))
     mesh_max = meshes[0].max(axis=(0, 1))
     for mesh in meshes[1:]:
         mesh_min = np.minimum(mesh_min, mesh.min(axis=(0, 1)))
         mesh_max = np.maximum(mesh_max, mesh.max(axis=(0, 1)))
+    return mesh_min, mesh_max
 
+def calculate_scale_and_shift(mesh_min, mesh_max, resolution, voxel_size):
     bounding_box = mesh_max - mesh_min
     if voxel_size is not None:
         resolution = bounding_box / voxel_size
@@ -127,11 +129,14 @@ def calculate_scale_shift(meshes, resolution, voxel_size):
             resolution = resolution * bounding_box / bounding_box[2]
         else:
             resolution = np.array(resolution)
-
+    # Want to use all of the voxels we allocate space for. 
+    # Takes one voxel to start rendering
     scale = resolution / bounding_box
     # If the bounding box
-    new_resolution = np.ceil(resolution).astype(int)
-    return scale, mesh_min, new_resolution
+    int_resolution = np.ceil(resolution).astype(int)
+    centering_offset = (int_resolution - resolution) / (2 * scale)
+    shift = mesh_min - centering_offset
+    return scale, shift, int_resolution
 
 
 def scale_and_shift_mesh(mesh, scale, shift):

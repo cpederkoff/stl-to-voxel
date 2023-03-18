@@ -15,9 +15,10 @@ def convert_mesh(mesh, resolution=100, voxel_size=None, parallel=True):
 
 
 def convert_meshes(meshes, resolution=100, voxel_size=None, parallel=True):
-    scale, shift, shape = slice.calculate_scale_shift(meshes, resolution, voxel_size)
+    mesh_min, mesh_max = slice.calculate_mesh_limits(meshes)
+    scale, shift, shape = slice.calculate_scale_and_shift(mesh_min, mesh_max, resolution, voxel_size)
     vol = np.zeros(shape[::-1], dtype=np.int8)
-
+    print(shape[::-1])
     for mesh_ind, org_mesh in enumerate(meshes):
         slice.scale_and_shift_mesh(org_mesh, scale, shift)
         cur_vol = slice.mesh_to_plane(org_mesh, shape, parallel)

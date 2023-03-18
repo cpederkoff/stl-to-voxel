@@ -54,8 +54,8 @@ def plot_line_segments_pixels(line_segments, pixels):
         ax.arrow(x1, y1, dx/2, dy/2, head_width=0.1, head_length=0.1, fc='k', ec='k')
     for y in range(pixels.shape[0]):
         for x in range(pixels.shape[1]):
-            xoff = -.5
-            yoff = .5
+            xoff =  0
+            yoff = 0
             plt.gca().add_patch(plt.Rectangle((x + xoff,y + yoff), 1, 1, fill=False))
             if pixels[y][x]:
                 plt.plot(x + .5 + xoff, y + .5+ yoff, 'ro')
@@ -112,12 +112,17 @@ def repaired_lines_to_voxels(line_list, pixels):
 
 def lines_to_voxels(line_list, pixels):
     current_line_indices = set()
-    x = 0
+    x = 0.5
     i = 0
     events = generate_line_events(line_list)
     while i < len(events):
         event_x, status, line_ind = events[i]
-        if event_x <= x and status == 'begin':
+        if event_x > x:
+            # If the events are ahead of our current x, paint lines
+            lines = [line_list[ind] for ind in current_line_indices]
+            paint_y_axis(lines, pixels, x)
+            x += 1
+        elif event_x <= x and status == 'begin':
             # If the events are behind our current x, process them
             assert line_ind not in current_line_indices
             current_line_indices.add(line_ind)
@@ -127,11 +132,6 @@ def lines_to_voxels(line_list, pixels):
             assert line_ind in current_line_indices
             current_line_indices.remove(line_ind)
             i += 1
-        elif event_x > x:
-            # If the events are ahead of our current x, paint lines
-            lines = [line_list[ind] for ind in current_line_indices]
-            paint_y_axis(lines, pixels, x)
-            x += 1
     plot_line_segments_pixels(line_list, pixels)
     time.sleep(2)
 
@@ -153,6 +153,9 @@ def generate_y(p1, p2, x):
 
 
 def paint_y_axis(lines, pixels, x):
+    pdb.set_trace()
+    plot_line_segments_pixels(lines, pixels)
+
     # Counting the number of times we enter the inside of a part helps properly handle parts with multiple shells
     # If we enter the inside of a part twice, we must exit the part twice before we stop adding white pixels.
     inside = 0
@@ -162,11 +165,12 @@ def paint_y_axis(lines, pixels, x):
 
     yi = 0
     for target_y, inside_change in target_ys:
-        target_y = int(target_y)
+        # Round causes the center of the voxel to be considered.
+        target_y = round(target_y)
         assert target_y >= 0
         if inside > 0:
             # Bulk assign all pixels between yi -> target_y
-            pixels[yi:target_y, x] = True
+            pixels[yi:target_y, int(x)] = True
 
         inside += inside_change
         yi = target_y
