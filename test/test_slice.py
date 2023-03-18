@@ -13,7 +13,7 @@ class TestSlice(unittest.TestCase):
 
         scale, shift, res = slice.calculate_scale_and_shift(np.array([0, 0, 0]), np.array([20.5, 20.5, 20]), 20, None)
         np.testing.assert_array_equal([1, 1, 1], scale)
-        np.testing.assert_array_equal([-0.25 ,-0.25 , 0 ], shift)
+        np.testing.assert_array_equal([-0.25, -0.25, 0], shift)
         np.testing.assert_array_equal([21, 21, 20], res)
 
         scale, shift, res = slice.calculate_scale_and_shift(np.array([0, 0, 0]), np.array([20.125, 20.125, 20]), 10, None)
@@ -46,13 +46,14 @@ class TestSlice(unittest.TestCase):
             [3, 2, 3]
         ])
         expected = np.array([
-            [2.0, 2.0, 4.0], 
+            [2.0, 2.0, 4.0],
             [1.25, 2.5, 4.0],
         ])
         np.testing.assert_array_equal(
-            slice.triangle_to_intersecting_points(tri, 4), 
+            slice.triangle_to_intersecting_points(tri, 4),
             expected
         )
+
     def test_triangle_to_intersecting_lines_one_point_same(self):
         tri = np.array([
             [2, 4, 1],
@@ -65,7 +66,6 @@ class TestSlice(unittest.TestCase):
         ])
         np.testing.assert_array_equal(slice.triangle_to_intersecting_points(tri, 3), expected)
 
-
     def test_triangle_to_intersecting_lines_two_point_same(self):
         tri = np.array([
             [2, 4, 3],
@@ -73,7 +73,7 @@ class TestSlice(unittest.TestCase):
             [1, 2, 5],
         ])
         expected = np.array([
-            tri[0], 
+            tri[0],
             tri[1],
         ])
         np.testing.assert_array_equal(slice.triangle_to_intersecting_points(tri, 3), expected)
@@ -85,9 +85,9 @@ class TestSlice(unittest.TestCase):
             [1, 2, 3],
         ])
         expected = np.array([
-            tri[1], 
-            tri[2], 
-            tri[0], 
+            tri[1],
+            tri[2],
+            tri[0],
         ])
         np.testing.assert_array_equal(slice.triangle_to_intersecting_points(tri, 3), expected)
 
@@ -98,10 +98,9 @@ class TestSlice(unittest.TestCase):
             [1, 2, 5],
         ]
         expected = np.array([[
-            1,2,5
+            1, 2, 5
         ]])
         np.testing.assert_array_equal(slice.triangle_to_intersecting_points(tri, 5), expected)
-
 
 
 if __name__ == '__main__':

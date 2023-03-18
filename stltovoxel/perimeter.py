@@ -1,5 +1,6 @@
 from . import winding_query
 
+
 def repaired_lines_to_voxels(line_list, pixels):
     if not line_list:
         return
@@ -10,6 +11,7 @@ def repaired_lines_to_voxels(line_list, pixels):
         for i in range(len(polyline) - 1):
             new_line_list.append((polyline[i], polyline[i+1]))
     lines_to_voxels(new_line_list, pixels)
+
 
 def lines_to_voxels(line_list, pixels):
     current_line_indices = set()
@@ -55,7 +57,7 @@ def generate_y(p1, p2, x):
 
 
 def paint_y_axis(lines, pixels, x):
-    
+
     # Counting the number of times we enter the inside of a part helps properly handle parts with multiple shells
     # If we enter twice, we will continue to be "inside" until we exit twice.
     inside = 0
@@ -75,6 +77,7 @@ def paint_y_axis(lines, pixels, x):
         inside += inside_change
         yi = target_y
     assert inside == 0, 'an error has occured at x%s inside:%s lines:%s' % (x, inside, lines)
+
 
 def generate_line_events(line_list):
     events = []
