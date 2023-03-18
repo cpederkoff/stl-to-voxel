@@ -12,7 +12,7 @@ class TestMain(unittest.TestCase):
             # https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl
             convert_file('data/Stanford_Bunny.stl', os.path.join(tmp_dir, 'stanford_bunny.png'), 100, 1)
             # https://ozeki.hu/p_1116-sample-stl-files-you-can-use-for-testing.html
-            convert_file('data/Cube.stl', os.path.join(tmp_dir, 'Cube.png'), 100, 1)
+            convert_file('data/cube.stl', os.path.join(tmp_dir, 'cube.png'), 100, 1)
             convert_file('data/Menger_sponge_sample.stl', os.path.join(tmp_dir, 'Menger_sponge_sample.png'), 100, 1)
             convert_file('data/Eiffel_tower_sample.STL', os.path.join(tmp_dir, 'Eiffel_tower_sample.png'), 100, 1)
             # https://reprap.org/forum/read.php?88,6830
@@ -51,8 +51,8 @@ class TestMain(unittest.TestCase):
         i = 1
         while i < 100:
             with tempfile.TemporaryDirectory() as tmp_dir:
-                convert_file('data/Cube.stl',
-                             os.path.join(tmp_dir, 'Cube.xyz'), [i, i+1, i+2], 1)
+                convert_file('data/cube.stl',
+                             os.path.join(tmp_dir, 'cube.xyz'), [i, i+1, i+2], 1)
                 i += 1
                 convert_file('data/Menger_sponge_sample.stl',
                              os.path.join(tmp_dir, 'Menger_sponge_sample.svx'), [i, i+1, i+2], 1)
