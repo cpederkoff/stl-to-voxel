@@ -197,7 +197,7 @@ class WindingQuery():
         ang2 = math.atan2(offset[1], offset[0])
         return normalize(ang2 - ang1)
 
-    @functools.cache
+    @functools.lru_cache(maxsize=None)
     def get_lines(self, polyline):
         start = np.array(polyline[0])
         end = np.array(polyline[-1])
