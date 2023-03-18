@@ -6,7 +6,7 @@ from .convert import convert_files
 
 
 def file_choices(parser, choices, fname):
-    filename, ext = os.path.splitext(fname)
+    _filename, ext = os.path.splitext(fname)
     if ext == '' or ext.lower() not in choices:
         if len(choices) == 1:
             parser.error('%s doesn\'t end with %s' % (fname, choices))

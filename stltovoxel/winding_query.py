@@ -80,10 +80,8 @@ def signedPointLineDist(line, point):
   x2, y2 = b
   x0, y0 = point
   num = ((x2 - x1)*(y1 - y0) - (x1 - x0)*(y2 - y1)) 
-  return num
-  # Not needed
-  # denom = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-  # return num / denom
+  denom = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+  return num / denom
 
 def close_to_goal(start, goals):
   sx, sy = start
@@ -153,7 +151,6 @@ class WindingQuery():
             cost_so_far[next_point] = new_cost
             priority = new_cost + heuristic_cost
             frontier.put((priority, next_point))
-    print(frontier.qsize())
     assert current is not None
     return current
   

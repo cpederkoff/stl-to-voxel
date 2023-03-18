@@ -18,7 +18,16 @@ def mesh_to_plane(mesh, bounding_box, parallel):
     events = generate_tri_events(mesh)
     while i < len(events):
         event_z, status, tri_ind = events[i]
-        if event_z <= z and status == 'begin':
+        if event_z > z:
+            mesh_subset = [mesh[ind] for ind in current_mesh_indices]
+            if parallel:
+                result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, vol.shape[1:]))
+                result_ids.append(result_id)
+            else:
+                _, pixels = paint_z_plane(mesh_subset, z, vol.shape[1:])
+                vol[z] = pixels
+            z += 1
+        elif event_z <= z and status == 'begin':
             # If the events are behind our current x, process them
             assert tri_ind not in current_mesh_indices
             current_mesh_indices.add(tri_ind)
@@ -28,16 +37,6 @@ def mesh_to_plane(mesh, bounding_box, parallel):
             assert tri_ind in current_mesh_indices
             current_mesh_indices.remove(tri_ind)
             i += 1
-        elif event_z > z:
-            print(event_z, z)
-            mesh_subset = [mesh[ind] for ind in current_mesh_indices]
-            if parallel:
-                result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, vol.shape[1:]))
-                result_ids.append(result_id)
-            else:
-                _, pixels = paint_z_plane(mesh_subset, z, vol.shape[1:])
-                vol[z-1] = pixels
-            z += 1
 
     if parallel:
         results = [r.get() for r in result_ids]
@@ -67,6 +66,7 @@ def paint_z_plane(mesh, height, plane_shape):
                 pt = points[i]
                 pt2 = points[(i+1)%3]
                 lines.append((pt, pt2))
+    
     perimeter.repaired_lines_to_voxels(lines, pixels)
 
     return height, pixels
