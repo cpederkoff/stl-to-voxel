@@ -7,9 +7,9 @@ from stltovoxel import slice
 class TestSlice(unittest.TestCase):
     def test_calculate_scale_and_shift(self):
         scale, shift, res = slice.calculate_scale_and_shift(np.array([0, 0, 0]), np.array([21, 21, 20]), 10, None)
-        self.assertEqual([0.5, 0.5, 0.5], scale)
-        self.assertEqual([-0.5, -0.5, 0], shift)
-        self.assertEqual([11, 11, 10], res)
+        np.testing.assert_array_equal([0.5, 0.5, 0.5], scale)
+        np.testing.assert_array_equal([-0.5, -0.5, 0], shift)
+        np.testing.assert_array_equal([11, 11, 10], res)
 
         scale, shift, res = slice.calculate_scale_and_shift(np.array([0, 0, 0]), np.array([20.5, 20.5, 20]), 20, None)
         np.testing.assert_array_equal([1, 1, 1], scale)
