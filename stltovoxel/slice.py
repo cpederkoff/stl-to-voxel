@@ -11,27 +11,31 @@ def mesh_to_plane(mesh, bounding_box, parallel):
 
     # Note: vol should be addressed with vol[z][y][x]
     vol = np.zeros(bounding_box[::-1], dtype=bool)
-
     current_mesh_indices = set()
     z = 0
-    for event_z, status, tri_ind in generate_tri_events(mesh):
-        while event_z - z >= 0:
+    i = 0
+    events = generate_tri_events(mesh)
+    while i < len(events):
+        event_z, status, tri_ind = events[i]
+        if event_z > z:
             mesh_subset = [mesh[ind] for ind in current_mesh_indices]
             if parallel:
                 result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, vol.shape[1:]))
                 result_ids.append(result_id)
             else:
-                print('Processing layer %d/%d' % (z, bounding_box[2]))
                 _, pixels = paint_z_plane(mesh_subset, z, vol.shape[1:])
                 vol[z] = pixels
             z += 1
-
-        if status == 'start':
+        elif event_z <= z and status == 'begin':
+            # If the events are behind our current x, process them
             assert tri_ind not in current_mesh_indices
             current_mesh_indices.add(tri_ind)
-        elif status == 'end':
+            i += 1
+        elif event_z <= z and status == 'end':
+            # Process end statuses so that vertical lines are not given to paint_y_axis
             assert tri_ind in current_mesh_indices
             current_mesh_indices.remove(tri_ind)
+            i += 1
 
     if parallel:
         results = [r.get() for r in result_ids]
@@ -46,12 +50,23 @@ def mesh_to_plane(mesh, bounding_box, parallel):
 
 
 def paint_z_plane(mesh, height, plane_shape):
+    print('Processing layer %d' % (height))
+
     pixels = np.zeros(plane_shape, dtype=bool)
 
     lines = []
     for triangle in mesh:
-        triangle_to_intersecting_lines(triangle, height, pixels, lines)
-    perimeter.lines_to_voxels(lines, pixels)
+        points = triangle_to_intersecting_points(triangle, height)
+        # Ignore when len(points) == 1, shape will be captured by the line segments.
+        if len(points) == 2:
+            lines.append(tuple(points))
+        if len(points) == 3:
+            for i in range(3):
+                pt = points[i]
+                pt2 = points[(i + 1) % 3]
+                lines.append((pt, pt2))
+
+    perimeter.repaired_lines_to_voxels(lines, pixels)
 
     return height, pixels
 
@@ -66,33 +81,25 @@ def linear_interpolation(p1, p2, distance):
     return p1 * (1-distance) + p2 * distance
 
 
-def triangle_to_intersecting_lines(triangle, height, pixels, lines):
+def triangle_to_intersecting_points(triangle, height):
     assert (len(triangle) == 3)
-    above = list(filter(lambda pt: pt[2] > height, triangle))
-    below = list(filter(lambda pt: pt[2] < height, triangle))
-    same = list(filter(lambda pt: pt[2] == height, triangle))
-    if len(same) == 3:
-        for i in range(0, len(same) - 1):
-            for j in range(i + 1, len(same)):
-                lines.append((same[i], same[j]))
-    elif len(same) == 2:
-        lines.append((same[0], same[1]))
-    elif len(same) == 1:
-        if above and below:
-            side1 = where_line_crosses_z(above[0], below[0], height)
-            lines.append((side1, same[0]))
-        else:
-            x = int(same[0][0])
-            y = int(same[0][1])
-            pixels[y][x] = True
-    else:
-        cross_lines = []
-        for a in above:
-            for b in below:
-                cross_lines.append((b, a))
-        side1 = where_line_crosses_z(cross_lines[0][0], cross_lines[0][1], height)
-        side2 = where_line_crosses_z(cross_lines[1][0], cross_lines[1][1], height)
-        lines.append((side1, side2))
+    points = []
+    # Find the pt index with the greatest z, start there
+    start_index = max(range(3), key=lambda i: triangle[i][2])
+    if triangle[(start_index+1) % 3][2] == height:
+        # Corner-case where there is a tie for highest point.
+        # The later point in the rotation should be chosen
+        start_index = (start_index+1) % 3
+    for i in range(start_index, start_index + 3):
+        pt = triangle[i % 3]
+        pt2 = triangle[(i+1) % 3]
+        if pt[2] == height:
+            points.append(pt)
+        elif (pt[2] < height and pt2[2] > height) or (pt[2] > height and pt2[2] < height):
+            intersection = where_line_crosses_z(pt, pt2, height)
+            points.append(intersection)
+
+    return points
 
 
 def where_line_crosses_z(p1, p2, z):
@@ -106,13 +113,16 @@ def where_line_crosses_z(p1, p2, z):
     return linear_interpolation(p1, p2, distance)
 
 
-def calculate_scale_shift(meshes, resolution, voxel_size):
+def calculate_mesh_limits(meshes):
     mesh_min = meshes[0].min(axis=(0, 1))
     mesh_max = meshes[0].max(axis=(0, 1))
     for mesh in meshes[1:]:
         mesh_min = np.minimum(mesh_min, mesh.min(axis=(0, 1)))
         mesh_max = np.maximum(mesh_max, mesh.max(axis=(0, 1)))
+    return mesh_min, mesh_max
 
+
+def calculate_scale_and_shift(mesh_min, mesh_max, resolution, voxel_size):
     bounding_box = mesh_max - mesh_min
     if voxel_size is not None:
         resolution = bounding_box / voxel_size
@@ -121,10 +131,14 @@ def calculate_scale_shift(meshes, resolution, voxel_size):
             resolution = resolution * bounding_box / bounding_box[2]
         else:
             resolution = np.array(resolution)
-
-    scale = (resolution - 1) / bounding_box
-    new_resolution = np.floor(resolution).astype(int) + 1
-    return scale, mesh_min, new_resolution
+    # Want to use all of the voxels we allocate space for.
+    # Takes one voxel to start rendering
+    scale = resolution / bounding_box
+    # If the bounding box
+    int_resolution = np.ceil(resolution).astype(int)
+    centering_offset = (int_resolution - resolution) / (2 * scale)
+    shift = mesh_min - centering_offset
+    return scale, shift, int_resolution
 
 
 def scale_and_shift_mesh(mesh, scale, shift):
@@ -137,6 +151,6 @@ def generate_tri_events(mesh):
     events = []
     for i, tri in enumerate(mesh):
         bottom, middle, top = sorted(tri, key=lambda pt: pt[2])
-        events.append((bottom[2], 'start', i))
+        events.append((bottom[2], 'begin', i))
         events.append((top[2], 'end', i))
     return sorted(events, key=lambda tup: tup[0])

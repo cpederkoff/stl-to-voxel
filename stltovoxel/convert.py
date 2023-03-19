@@ -15,9 +15,9 @@ def convert_mesh(mesh, resolution=100, voxel_size=None, parallel=True):
 
 
 def convert_meshes(meshes, resolution=100, voxel_size=None, parallel=True):
-    scale, shift, shape = slice.calculate_scale_shift(meshes, resolution, voxel_size)
+    mesh_min, mesh_max = slice.calculate_mesh_limits(meshes)
+    scale, shift, shape = slice.calculate_scale_and_shift(mesh_min, mesh_max, resolution, voxel_size)
     vol = np.zeros(shape[::-1], dtype=np.int8)
-
     for mesh_ind, org_mesh in enumerate(meshes):
         slice.scale_and_shift_mesh(org_mesh, scale, shift)
         cur_vol = slice.mesh_to_plane(org_mesh, shape, parallel)
@@ -39,7 +39,7 @@ def convert_files(input_file_paths, output_file_path, colors=[(255, 255, 255)],
         meshes.append(org_mesh)
 
     vol, scale, shift = convert_meshes(meshes, resolution, voxel_size, parallel)
-    output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
+    _output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
     if output_file_extension == '.png':
         vol = np.pad(vol, pad)
         export_pngs(vol, output_file_path, colors)
@@ -52,7 +52,7 @@ def convert_files(input_file_paths, output_file_path, colors=[(255, 255, 255)],
 
 
 def export_pngs(voxels, output_file_path, colors):
-    output_file_pattern, output_file_extension = os.path.splitext(output_file_path)
+    output_file_pattern, _output_file_extension = os.path.splitext(output_file_path)
 
     # delete the previous output files
     file_list = glob.glob(output_file_pattern + '_*.png')
