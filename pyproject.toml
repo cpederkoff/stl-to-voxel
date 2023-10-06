@@ -25,7 +25,7 @@ repository = "https://github.com/cpederkoff/stl-to-voxel"
 python = "^3.8"
 matplotlib = "^3.6"
 numpy = "^1.13"
-Pillow = "^9.3"
+Pillow = ">=10.0.1"
 numpy-stl = "^2.17"
 
 [tool.poetry.group.dev]
