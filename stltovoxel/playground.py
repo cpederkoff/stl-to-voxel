@@ -23,8 +23,6 @@ def negatan(f1):
 # calculate baseline from angle of last two line segments of all incomplete loops
 ## Find a more pleasing way to represent baseline. Angles are good, but the asymmetry is uncomfortable.
 # Look at neighbors distance and angle, incorporate baseline, decide who to connect to.
-
-# 
 # 
 def is_right(line, point):
     a, b = line
@@ -34,11 +32,15 @@ def is_right(line, point):
     num = ((x2 - x1)*(y1 - y0) - (x1 - x0)*(y2 - y1))
     return num > 0
 
-def corners(segs):
-    im = np.zeros((100,100))
+def corners(segs, pt, step_towards):
+    x, y = pt
+    # Without a small movement toward the other point the value is undefined
+    # because we are at the center of a sweep
+    dx, dy = step_towards
+    x += dx/1000
+    y += dy/1000
+    ret = 0
     for i in range(len(segs) - 1):
-        # pdb.set_trace()
-
         s1 = segs[i]
         s2 = segs[i+1]
         assert s1[1] == s2[0]
@@ -47,26 +49,22 @@ def corners(segs):
         c = np.array(list(s2[1]))
         l1 = a - b
         l2 = b - c
-        # pdb.set_trace()
         
         ang = math.atan2(*atandiff((l2[1], l2[0]), (l1[1], l1[0])))
         
-        for x in range(-50, 50):
-            for y in range(-50, 50):
-                
-                if ang < 0 : 
-                    # Concave case 
-                    if not is_right((a, b), (x,y)) and not is_right((c, b), (x,y)):
-                        im[y+50][x+50] += ang + 2 * math.pi
-                    else: 
-                        im[y+50][x+50] += ang 
-                else :
-                    # Convex case (normal)
-                    if is_right((a, b), (x,y)) and is_right((c, b), (x,y)):
-                        im[y+50][x+50] += ang - 2 * math.pi
-                    else: 
-                        im[y+50][x+50] += ang 
-    return im
+        if ang < 0 : 
+            # Concave case 
+            if not is_right((a, b), (x,y)) and not is_right((c, b), (x,y)):
+                ret += ang + 2 * math.pi
+            else: 
+                ret += ang 
+        else :
+            # Convex case (normal)
+            if is_right((a, b), (x,y)) and is_right((c, b), (x,y)):
+                ret += ang - 2 * math.pi
+            else: 
+                ret += ang 
+    return ret
 
 
 def edge_start(me_seg, them_pt):
@@ -84,7 +82,12 @@ def edge_end(me_seg, them_pt):
     angle = (s1[1] - s2[1], s1[0] - s2[0])
     p1 = (start[1] - them_pt[1], start[0] - them_pt[0])
     return math.atan2(*atansum(p1, negatan(angle)))
-    
+
+def edge_end_baseline(me_seg):
+    s1, s2 = me_seg
+    start = s2
+    angle = (s1[1] - s2[1], s1[0] - s2[0])
+    return math.atan2(*angle)
 
 def line(segs, inc):
     im = np.zeros((100,100))
@@ -95,18 +98,10 @@ def line(segs, inc):
                 x1, y1 = p1
                 x2, y2 = p2
                 angle = (y2 - y1, x2 - x1)
-                # angle = (0,0)
                 p1 = (y-y1, x-x1)
-                   
                 p2 = (y-y2, x-x2)
                 answers.append(atansum(negatan(p1), angle))
                 answers.append(atansum(p2, negatan(angle)))
-                # answers.append(atansum(
-                #     atansum(p1, negatan(angle)),
-                #     atansum(negatan(p2), angle),
-                #     )
-                # )
-                # answers.append(-normalize(math.atan2(y-y2, x-x2) - angle))
             accum = 0
             for i in inc:
                 accum += math.atan2(*answers[i])
@@ -114,74 +109,118 @@ def line(segs, inc):
             im[y+50][x+50] = accum
     return im
 
-def grad(x, y):
-    dist2 = (x**2 + y**2)
-    if dist2 == 0:
-        return np.array([0,0])
-    dx = -y/dist2
-    dy = x/dist2
-    return np.array([dx, dy])
 
-def vecs(segs):
-    Xs = np.zeros((100,100))
-    Ys = np.zeros((100,100))
-    for x in range(-50, 50):
-        for y in range(-50, 50):
-            answers = []
-            for p1, p2 in segs:
-                x1, y1 = p1
-                x2, y2 = p2
-                angle = grad(y2-y1, x2-x1)
-                answers.append(grad(y-y1, x-x1)-angle)
-                # answers.append(-grad(y-y2, x-x2)-angle)
-            for i in range(len(answers)):
-                # pdb.set_trace()
-                # print(answers[i])
-                dx, dy = answers[i].tolist()
-                Xs[y+50][x+50] += dx
-                Ys[y+50][x+50] += dy
+def get_direction(pos, segs, dangling_end):
+    x, y = pos
+    accum = 0
+    for seg in segs:
+        accum += edge_start(seg, pos)
+        accum += edge_end(seg, pos)
+    # accum += edge_start(dangling_end, pos)
 
-    return Xs, Ys
-    
+    base = edge_end_baseline(dangling_end)
+    return -accum + base 
+
+
+def angle_to_delta(theta):
+    delta_x = math.cos(theta)
+    delta_y = math.sin(theta)
+    return np.array([delta_x, delta_y])
 
 segs = [
-    ((-30,0),(-10,-10)),
-    ((-10,-10), (10,-15)),
-    ((10,-15), (0,-30)),
-    # ((20,-10), (40,-10))
-    # ((0,20), (30,20)),
+    ((0,0),(5,-5)),
+    ((10,10),(-10,10)),
+    ((5,-5), (10,0)),
+    ((-10,8), (-10,2)),
 ]
-fig, axs = plt.subplots(2, 4)
-print(edge_start(segs[0], segs[-1][-1]))
-print(edge_end(segs[-1], segs[0][0]))
 
-axs[0,0].imshow(line(segs, [0]), origin='lower', vmin=-math.pi, vmax=2*math.pi)
-axs[0,1].imshow(line(segs, [5]), origin='lower', vmin=-math.pi, vmax=2*math.pi)
-axs[0,2].imshow(line(segs, [1,2,3,4]), origin='lower', vmin=-math.pi, vmax=2*math.pi)
-axs[0,3].imshow(line(segs, [0,1,2,3,4,5]), origin='lower', vmin=-math.pi, vmax=2*math.pi)
-axs[1,2].imshow(corners(segs), origin='lower', vmin=-math.pi, vmax=2*math.pi)
-axs[1,3].imshow(corners(segs) + line(segs, [0,-1]), origin='lower', vmin=-math.pi, vmax=2*math.pi)
-# axs[0,1].imshow(line(antiseg, [0,1]), origin='lower', vmin=-math.pi, vmax=2*math.pi)
-# axs[1,0].imshow(line(segs, [0,1,2,3,4,5]) - line(segs, [0,5]), origin='lower', vmin=-math.pi, vmax=2*math.pi)
-# axs[1,1].imshow(line(segs, [0,1]), origin='lower', vmin=-math.pi, vmax=2*math.pi)
-# gx, gy = np.gradient(line(segs, [0,1,2,3]))
-# plt.quiver(gx, gy)
+def find_polyline_endpoints(segs):
+    start_to_end = dict()
+    end_to_start = dict()
 
-# axs[1, 0].imshow(line(segs, [2,3]), origin='lower', vmin=-math.pi, vmax=math.pi)
-# axs[2, 0].imshow(line(segs, [4,5]), origin='lower', vmin=-math.pi, vmax=math.pi)
+    for start, end in segs:
+        # Update connections for the new segment
+        actual_start = end_to_start.get(start, start)
+        actual_end = start_to_end.get(end, end)
 
-# axs[0, 1].imshow(line(segs, [0, 5]), origin='lower', vmin=-math.pi, vmax=math.pi)
-# axs[1, 1].imshow(line(segs, [1, 2]), origin='lower', vmin=-math.pi, vmax=math.pi)
-# axs[2, 1].imshow(line(segs, [3, 4]), origin='lower', vmin=-math.pi, vmax=math.pi)
+        # Check for loops or redundant segments
+        if actual_start == actual_end:
+            del end_to_start[actual_start]
+            del start_to_end[actual_start]
+            continue  # This segment forms a loop or is redundant, so skip it
 
-# axs[0, 2].imshow(line(segs, [0,1,2,3]), origin='lower', vmin=-math.pi, vmax=math.pi)
+        # Merge polylines or add new segment
+        start_to_end[actual_start] = actual_end
+        end_to_start[actual_end] = actual_start
 
-# axs[0, 2].imshow(line(segs, [1,2,3]), origin='lower', vmin=-math.pi, vmax=math.pi)
-# axs[1, 2].imshow(line(segs, [0,1,2]), origin='lower', vmin=-math.pi, vmax=math.pi)
-# axs[2, 2].imshow(line(segs, [0,1,2,3]), origin='lower', vmin=-math.pi, vmax=math.pi)
+        # Remove old references if they are now internal points of a polyline
+        if start in end_to_start:
+            del end_to_start[start]
+        if end in start_to_end:
+            del start_to_end[end]
 
-# axs[1].imshow(line((0,0),(0,30)), origin='lower', vmin=-math.pi, vmax=math.pi)
-# axs[2].imshow(line((0,0),(30,30)), origin='lower', vmin=-math.pi, vmax=math.pi)
-# axs[3].imshow(line((0,0),(30,-30)), origin='lower', vmin=-math.pi, vmax=math.pi)
+    return start_to_end
 
-plt.show()
+print(find_polyline_endpoints([((0,0),(0,1)),((0,1),(0,0))]))
+
+# while there are some ends that need repair
+tries = 3
+while find_polyline_endpoints(segs) and tries > 0:
+    tries -= 1
+    start_to_end = find_polyline_endpoints(segs)
+    print(start_to_end)
+    # Get a value in the map
+    new_start = start_to_end[next(iter(start_to_end))]
+
+    lines = []
+    lines.extend(segs)
+
+
+    pos = new_start
+    # find the segment I am a part of
+    my_seg = next(filter(lambda seg: seg[1] == pos, segs))
+    # find all other segments
+    other_segs = list(filter(lambda seg: seg[1] != pos, segs))
+
+    accum = 0
+    for seg in other_segs:
+        accum += edge_start(seg, pos)
+        accum += edge_end(seg, pos)
+    # target = accum + math.pi*0
+    target = math.pi
+
+    delta = None
+    for i in range(50):
+        angle_forward = get_direction(pos, other_segs, my_seg) + target +  math.pi
+        delta_new = angle_to_delta(angle_forward)
+        if delta is None:
+            delta = delta_new
+        closest_dist = 100000
+        closest_pt = None
+        for seg in segs:
+            for x,y in seg:
+                d = math.sqrt((y-pos[1])**2 + (x-pos[0])**2)
+                if d < closest_dist and d != 0:
+                    closest_dist = d
+                    closest_pt = (x,y)
+        multiplier = closest_dist / 2
+        if closest_dist < 0.001:
+            print("breaking after ", i)
+            break
+        # multiplier = 1
+        delta = delta_new
+        lines.append((pos, pos+(delta * multiplier)))
+        pos = pos + (delta * multiplier)
+
+
+    for p1, p2 in lines:
+        x_values = [p1[0], p2[0]]
+        y_values = [p1[1], p2[1]]
+        plt.plot(x_values, y_values, 'bo', linestyle="-")
+    plt.show()
+
+    if closest_dist < 0.001:
+        segs.append((new_start, closest_pt))
+    else:
+        raise "could not find pt"
+
