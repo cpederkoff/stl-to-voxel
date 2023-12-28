@@ -119,7 +119,21 @@ def get_direction(pos, segs, dangling_end):
     # accum += edge_start(dangling_end, pos)
 
     base = edge_end_baseline(dangling_end)
-    return -accum + base 
+    return base - accum
+
+def get_direction_iter(pos, segs, dangling_end, target):
+    x, y = pos
+    accum = 0
+    for seg in segs:
+        accum += edge_start(seg, pos)
+        accum += edge_end(seg, pos)
+    
+    # accum += edge_start(dangling_end, pos)
+
+    base = edge_end_baseline(dangling_end)
+    # target - accum is a compensation factor to point back toward the ideal winding number
+    print(accum)
+    return (base - accum) #+ (target - accum)
 
 
 def angle_to_delta(theta):
@@ -132,6 +146,7 @@ segs = [
     ((10,10),(-10,10)),
     ((5,-5), (10,0)),
     ((-10,8), (-10,2)),
+    ((-5, 4), (-10, -4)),
 ]
 
 def find_polyline_endpoints(segs):
@@ -164,7 +179,7 @@ def find_polyline_endpoints(segs):
 print(find_polyline_endpoints([((0,0),(0,1)),((0,1),(0,0))]))
 
 # while there are some ends that need repair
-tries = 3
+tries = 4
 while find_polyline_endpoints(segs) and tries > 0:
     tries -= 1
     start_to_end = find_polyline_endpoints(segs)
@@ -191,10 +206,11 @@ while find_polyline_endpoints(segs) and tries > 0:
 
     delta = None
     for i in range(50):
-        angle_forward = get_direction(pos, other_segs, my_seg) + target +  math.pi
-        delta_new = angle_to_delta(angle_forward)
-        if delta is None:
-            delta = delta_new
+        if i == 0:
+            angle_forward = get_direction(pos, other_segs, my_seg) + target + math.pi
+        else:
+            angle_forward = get_direction_iter(pos, segs, (new_start, pos), target) + target + math.pi
+        delta = angle_to_delta(angle_forward)
         closest_dist = 100000
         closest_pt = None
         for seg in segs:
@@ -203,12 +219,11 @@ while find_polyline_endpoints(segs) and tries > 0:
                 if d < closest_dist and d != 0:
                     closest_dist = d
                     closest_pt = (x,y)
-        multiplier = closest_dist / 2
+        multiplier = closest_dist / 4
         if closest_dist < 0.001:
             print("breaking after ", i)
             break
         # multiplier = 1
-        delta = delta_new
         lines.append((pos, pos+(delta * multiplier)))
         pos = pos + (delta * multiplier)
 
@@ -219,8 +234,8 @@ while find_polyline_endpoints(segs) and tries > 0:
         plt.plot(x_values, y_values, 'bo', linestyle="-")
     plt.show()
 
-    if closest_dist < 0.001:
-        segs.append((new_start, closest_pt))
-    else:
-        raise "could not find pt"
+    # if closest_dist < 0.001:
+    segs.append((new_start, closest_pt))
+    # else:
+    #     raise "could not find pt"
 
