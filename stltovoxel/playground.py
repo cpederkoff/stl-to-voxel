@@ -176,40 +176,29 @@ def find_polyline_endpoints(segs):
 
     return start_to_end
 
-print(find_polyline_endpoints([((0,0),(0,1)),((0,1),(0,0))]))
 
 # while there are some ends that need repair
-tries = 4
-while find_polyline_endpoints(segs) and tries > 0:
-    tries -= 1
+while find_polyline_endpoints(segs):
     start_to_end = find_polyline_endpoints(segs)
     print(start_to_end)
-    # Get a value in the map
-    new_start = start_to_end[next(iter(start_to_end))]
+    for start in start_to_end.keys():
+        end = start_to_end[start]
+        lines = []
+        lines.extend(segs)
+        pos = end
+        # find the segment I am a part of
+        my_seg = next(filter(lambda seg: seg[1] == pos, segs))
+        # find all other segments
+        other_segs = list(filter(lambda seg: seg[1] != pos, segs))
 
-    lines = []
-    lines.extend(segs)
+        # accum = 0
+        # for seg in other_segs:
+        #     accum += edge_start(seg, pos)
+        #     accum += edge_end(seg, pos)
+        # target = accum + math.pi*0
+        target = math.pi
 
-
-    pos = new_start
-    # find the segment I am a part of
-    my_seg = next(filter(lambda seg: seg[1] == pos, segs))
-    # find all other segments
-    other_segs = list(filter(lambda seg: seg[1] != pos, segs))
-
-    accum = 0
-    for seg in other_segs:
-        accum += edge_start(seg, pos)
-        accum += edge_end(seg, pos)
-    # target = accum + math.pi*0
-    target = math.pi
-
-    delta = None
-    for i in range(50):
-        if i == 0:
-            angle_forward = get_direction(pos, other_segs, my_seg) + target + math.pi
-        else:
-            angle_forward = get_direction_iter(pos, segs, (new_start, pos), target) + target + math.pi
+        angle_forward = get_direction(pos, other_segs, my_seg) + target + math.pi
         delta = angle_to_delta(angle_forward)
         closest_dist = 100000
         closest_pt = None
@@ -219,23 +208,20 @@ while find_polyline_endpoints(segs) and tries > 0:
                 if d < closest_dist and d != 0:
                     closest_dist = d
                     closest_pt = (x,y)
-        multiplier = closest_dist / 4
+        # multiplier = closest_dist / 4
+        multiplier = 1
         if closest_dist < 0.001:
-            print("breaking after ", i)
-            break
-        # multiplier = 1
-        lines.append((pos, pos+(delta * multiplier)))
-        pos = pos + (delta * multiplier)
+            segs.append((pos, closest_pt))
+            continue
+        else:
+            newpos = pos+(delta * multiplier)
+            segs.append((pos, tuple(newpos)))
 
 
-    for p1, p2 in lines:
-        x_values = [p1[0], p2[0]]
-        y_values = [p1[1], p2[1]]
-        plt.plot(x_values, y_values, 'bo', linestyle="-")
-    plt.show()
+        for p1, p2 in lines:
+            x_values = [p1[0], p2[0]]
+            y_values = [p1[1], p2[1]]
+            plt.plot(x_values, y_values, 'bo', linestyle="-")
+        plt.show()
 
-    # if closest_dist < 0.001:
-    segs.append((new_start, closest_pt))
-    # else:
-    #     raise "could not find pt"
 
