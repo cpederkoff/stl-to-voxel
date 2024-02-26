@@ -43,6 +43,14 @@ cd stl-to-voxel
 python3 -m stltovoxel input.stl output.png
 ```
 
+### See help
+```bash
+$ stltovoxel
+usage: stltovoxel [-h] [--pad PAD] [--no-parallel] [--colors COLORS] [--resolution RESOLUTION | 
+   --resolution-xyz RESOLUTION RESOLUTION RESOLUTION | 
+   --voxel-size VOXEL_SIZE | --voxel-size-xyz VOXEL_SIZE VOXEL_SIZE VOXEL_SIZE] input [input ...] output
+```
+
 ### Run unit tests
 ```bash
 cd stl-to-voxel
