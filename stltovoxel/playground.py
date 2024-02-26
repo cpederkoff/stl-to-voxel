@@ -70,22 +70,24 @@ def corners(segs, pt, step_towards):
 def edge_start(me_seg, them_pt):
     # Starter unpaired point
     s1, s2 = me_seg
-    start = s1
     angle = (s1[1] - s2[1], s1[0] - s2[0])
-    p1 = (start[1] - them_pt[1], start[0] - them_pt[0])
+    p1 = (s1[1] - them_pt[1], s1[0] - them_pt[0])
     return math.atan2(*atansum(negatan(p1), angle))
 
 def edge_end(me_seg, them_pt):
     # Starter unpaired point
     s1, s2 = me_seg
-    start = s2
     angle = (s1[1] - s2[1], s1[0] - s2[0])
-    p1 = (start[1] - them_pt[1], start[0] - them_pt[0])
+    p1 = (s2[1] - them_pt[1], s2[0] - them_pt[0])
     return math.atan2(*atansum(p1, negatan(angle)))
+
+def edge_start_baseline(me_seg):
+    s1, s2 = me_seg
+    angle = (s2[1] - s1[1], s2[0] - s1[0])
+    return math.atan2(*angle)
 
 def edge_end_baseline(me_seg):
     s1, s2 = me_seg
-    start = s2
     angle = (s1[1] - s2[1], s1[0] - s2[0])
     return math.atan2(*angle)
 
@@ -111,7 +113,6 @@ def line(segs, inc):
 
 
 def get_direction(pos, segs, dangling_end):
-    x, y = pos
     accum = 0
     for seg in segs:
         accum += edge_start(seg, pos)
@@ -121,8 +122,17 @@ def get_direction(pos, segs, dangling_end):
     base = edge_end_baseline(dangling_end)
     return base - accum
 
+def get_direction_backwards(pos, segs, dangling_start):
+    accum = 0
+    for seg in segs:
+        accum -= edge_start(seg, pos)
+        accum -= edge_end(seg, pos)
+    # accum += edge_start(dangling_end, pos)
+
+    base = edge_start_baseline(dangling_start)
+    return base - accum
+
 def get_direction_iter(pos, segs, dangling_end, target):
-    x, y = pos
     accum = 0
     for seg in segs:
         accum += edge_start(seg, pos)
@@ -183,33 +193,26 @@ while find_polyline_endpoints(segs):
     print(start_to_end)
     for start in start_to_end.keys():
         end = start_to_end[start]
-        lines = []
-        lines.extend(segs)
+
+        # add the end point
         pos = end
         # find the segment I am a part of
         my_seg = next(filter(lambda seg: seg[1] == pos, segs))
         # find all other segments
         other_segs = list(filter(lambda seg: seg[1] != pos, segs))
 
-        # accum = 0
-        # for seg in other_segs:
-        #     accum += edge_start(seg, pos)
-        #     accum += edge_end(seg, pos)
-        # target = accum + math.pi*0
         target = math.pi
-
         angle_forward = get_direction(pos, other_segs, my_seg) + target + math.pi
         delta = angle_to_delta(angle_forward)
         closest_dist = 100000
         closest_pt = None
-        for seg in segs:
-            for x,y in seg:
-                d = math.sqrt((y-pos[1])**2 + (x-pos[0])**2)
-                if d < closest_dist and d != 0:
-                    closest_dist = d
-                    closest_pt = (x,y)
-        # multiplier = closest_dist / 4
-        multiplier = 1
+        for x,y in start_to_end.keys():
+            d = math.sqrt((y-pos[1])**2 + (x-pos[0])**2)
+            if d < closest_dist and d != 0:
+                closest_dist = d
+                closest_pt = (x,y)
+        multiplier = closest_dist / 4
+        # multiplier = 1
         if closest_dist < 0.001:
             segs.append((pos, closest_pt))
             continue
@@ -217,11 +220,40 @@ while find_polyline_endpoints(segs):
             newpos = pos+(delta * multiplier)
             segs.append((pos, tuple(newpos)))
 
+        # add the start point
+        pos = start
+        # find the segment I am a part of
+        my_seg = next(filter(lambda seg: seg[0] == pos, segs))
+        # find all other segments
+        other_segs = list(filter(lambda seg: seg[0] != pos, segs))
 
-        for p1, p2 in lines:
-            x_values = [p1[0], p2[0]]
-            y_values = [p1[1], p2[1]]
-            plt.plot(x_values, y_values, 'bo', linestyle="-")
-        plt.show()
+        print(get_direction_backwards(pos, other_segs, my_seg))
+        target = math.pi
+        angle_forward = get_direction_backwards(pos, other_segs, my_seg) + target + math.pi
+        print(angle_forward)
+        delta = angle_to_delta(angle_forward)
+        closest_dist = 100000
+        closest_pt = None
+        for x,y in start_to_end.values():
+            d = math.sqrt((y-pos[1])**2 + (x-pos[0])**2)
+            if d < closest_dist and d != 0:
+                closest_dist = d
+                closest_pt = (x,y)
+        multiplier = closest_dist / 4
+        # multiplier = 1
+        if closest_dist < 0.001:
+            segs.append((closest_pt, pos))
+            continue
+        else:
+            newpos = pos+(delta * multiplier)
+            segs.append((tuple(newpos), pos))
+
+    for p1, p2 in segs:
+        x_values = [p1[0], p2[0]]
+        y_values = [p1[1], p2[1]]
+        plt.plot(x_values, y_values, 'bo', linestyle="-")
+    
+
+    plt.show()
 
 
