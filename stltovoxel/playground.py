@@ -111,6 +111,12 @@ def line(segs, inc):
             im[y+50][x+50] = accum
     return im
 
+def get_winding(pos, segs):
+    accum = 0
+    for seg in segs:
+        accum += edge_start(seg, pos)
+        accum += edge_end(seg, pos)
+    return accum
 
 def get_direction(pos, segs, dangling_end):
     accum = 0
@@ -186,11 +192,21 @@ def find_polyline_endpoints(segs):
 
     return start_to_end
 
+background = np.zeros((200,200))
+for posxa in range(200):
+    for posya in range(200):
+        posx = (posxa - 100) * 0.2
+        posy = (posya - 100) * 0.2
+        winding = get_winding((posx, posy), segs)
+        # if abs(winding - math.pi) < .1:
+            # winding = math.pi*2
+        background[199-posya][posxa] = winding
 
 # while there are some ends that need repair
 while find_polyline_endpoints(segs):
     start_to_end = find_polyline_endpoints(segs)
     print(start_to_end)
+
     for start in start_to_end.keys():
         end = start_to_end[start]
 
@@ -253,6 +269,10 @@ while find_polyline_endpoints(segs):
         y_values = [p1[1], p2[1]]
         plt.plot(x_values, y_values, 'bo', linestyle="-")
     
+
+    
+
+    plt.imshow(background, aspect='auto', cmap='viridis', extent=[-20, 20, -20, 20], vmin=-math.pi, vmax=math.pi*2)
 
     plt.show()
 
