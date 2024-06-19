@@ -74,6 +74,13 @@ def edge_start(me_seg, them_pt):
     p1 = (s1[1] - them_pt[1], s1[0] - them_pt[0])
     return math.atan2(*atansum(negatan(p1), angle))
 
+def edge_start_no_atan(me_seg, them_pt):
+    # Starter unpaired point
+    s1, s2 = me_seg
+    angle = (s1[1] - s2[1], s1[0] - s2[0])
+    p1 = (s1[1] - them_pt[1], s1[0] - them_pt[0])
+    return atansum(negatan(p1), angle)
+
 def edge_end(me_seg, them_pt):
     # Starter unpaired point
     s1, s2 = me_seg
@@ -158,11 +165,9 @@ def angle_to_delta(theta):
     return np.array([delta_x, delta_y])
 
 segs = [
-    ((0,0),(5,-5)),
-    ((10,10),(-10,10)),
-    ((5,-5), (10,0)),
-    ((-10,8), (-10,2)),
-    ((-5, 4), (-10, -4)),
+    ((0,0),(20,0)),
+    ((20,10),(0,10)),
+    # ((0,2.5),(0,7.5)),
 ]
 
 def find_polyline_endpoints(segs):
@@ -198,82 +203,80 @@ for posxa in range(200):
         posx = (posxa - 100) * 0.2
         posy = (posya - 100) * 0.2
         winding = get_winding((posx, posy), segs)
-        # if abs(winding - math.pi) < .1:
-            # winding = math.pi*2
+        if abs(winding - math.pi) < .1:
+            winding = math.pi*2
         background[199-posya][posxa] = winding
 
+def grad(ox,oy,pt):
+    px,py = pt
+    x = ox - px
+    y = oy - py
+    gx = -((y)/(x**2 + y**2))
+    gy = x/(x**2 + y**2)
+    return (gx, gy)
+
+def accum_grad_90(x, y, segs):
+    ax = 0
+    ay = 0
+    for start, end in segs:
+        # for pt in [start, end]:
+        gx, gy = grad(x+0.00001,y+0.00001,start)
+        ax += gy
+        ay -= gx
+        gx, gy = grad(x+0.00001,y+0.00001,end)
+        ax -= gy
+        ay += gx
+    return (ax, ay)
+
+def vecnorm(pt):
+    x, y = pt
+    dist = math.sqrt(x**2 + y**2)
+    return (x / dist, y / dist)
+
+# cx, cy = -.5,0
+# for i in range(200):
+#     # calculate gradient for current position
+#     mgx, mgy = vecnorm(accum_grad_90(cx, cy, segs))
+#     # move forward
+#     mgxnorm = mgx * 0.1
+#     mgynorm = mgy * 0.1
+#     plt.plot([cx, cx + mgxnorm], [cy, cy + mgynorm], 'bo', linestyle="-")
+#     cx += mgxnorm
+#     cy += mgynorm
+#     # add back segment
+for x in range(-10,10):
+    for y in range(-10,10):
+        ax, ay = accum_grad_90(x,y,segs)
+        plt.quiver(x,y, ax, ay, color=['r','b','g'], scale=21)
+
+
+
+
+    
+
+
 # while there are some ends that need repair
-while find_polyline_endpoints(segs):
-    start_to_end = find_polyline_endpoints(segs)
-    print(start_to_end)
+# while find_polyline_endpoints(segs):
+start_to_end = find_polyline_endpoints(segs)
+# print(start_to_end)
 
-    for start in start_to_end.keys():
-        end = start_to_end[start]
-
-        # add the end point
-        pos = end
-        # find the segment I am a part of
-        my_seg = next(filter(lambda seg: seg[1] == pos, segs))
-        # find all other segments
-        other_segs = list(filter(lambda seg: seg[1] != pos, segs))
-
-        target = math.pi
-        angle_forward = get_direction(pos, other_segs, my_seg) + target + math.pi
-        delta = angle_to_delta(angle_forward)
-        closest_dist = 100000
-        closest_pt = None
-        for x,y in start_to_end.keys():
-            d = math.sqrt((y-pos[1])**2 + (x-pos[0])**2)
-            if d < closest_dist and d != 0:
-                closest_dist = d
-                closest_pt = (x,y)
-        multiplier = closest_dist / 4
-        # multiplier = 1
-        if closest_dist < 0.001:
-            segs.append((pos, closest_pt))
-            continue
-        else:
-            newpos = pos+(delta * multiplier)
-            segs.append((pos, tuple(newpos)))
-
-        # add the start point
-        pos = start
-        # find the segment I am a part of
-        my_seg = next(filter(lambda seg: seg[0] == pos, segs))
-        # find all other segments
-        other_segs = list(filter(lambda seg: seg[0] != pos, segs))
-
-        print(get_direction_backwards(pos, other_segs, my_seg))
-        target = math.pi
-        angle_forward = get_direction_backwards(pos, other_segs, my_seg) + target + math.pi
-        print(angle_forward)
-        delta = angle_to_delta(angle_forward)
-        closest_dist = 100000
-        closest_pt = None
-        for x,y in start_to_end.values():
-            d = math.sqrt((y-pos[1])**2 + (x-pos[0])**2)
-            if d < closest_dist and d != 0:
-                closest_dist = d
-                closest_pt = (x,y)
-        multiplier = closest_dist / 4
-        # multiplier = 1
-        if closest_dist < 0.001:
-            segs.append((closest_pt, pos))
-            continue
-        else:
-            newpos = pos+(delta * multiplier)
-            segs.append((tuple(newpos), pos))
-
-    for p1, p2 in segs:
-        x_values = [p1[0], p2[0]]
-        y_values = [p1[1], p2[1]]
-        plt.plot(x_values, y_values, 'bo', linestyle="-")
-    
-
-    
-
-    plt.imshow(background, aspect='auto', cmap='viridis', extent=[-20, 20, -20, 20], vmin=-math.pi, vmax=math.pi*2)
-
-    plt.show()
+start = list(start_to_end.keys())[0]
+end = start_to_end[start]
+# find the segment I am a part of
+my_seg = next(filter(lambda seg: seg[0] == start, segs))
+# find all other segments
+other_segs = list(filter(lambda seg: seg[0] != start, segs))
+target = math.pi
+angle_forward = get_direction_backwards(start, other_segs, my_seg) + target + math.pi
+delta = angle_to_delta(angle_forward)
+pos = start + (delta * 0.1)
+# plt.quiver(*start, *delta, color=['r','b','g'], scale=21)
+for i in range(100):
+    delt = vecnorm(accum_grad_90(*pos, segs))
+    plt.plot([pos[0], pos[0] + delt[0]], [pos[1], pos[1] + delt[1]], 'bo', linestyle="-")
+    pos += delt
 
 
+plt.imshow(background, aspect='auto', cmap='viridis', extent=[-20, 20, -20, 20], vmin=-math.pi, vmax=math.pi*2)
+
+plt.show()
