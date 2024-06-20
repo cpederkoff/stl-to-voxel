@@ -144,26 +144,23 @@ def total_winding_contour(pos, segs):
     return vecnorm(accum)
 
 def find_flow(start, ends, segs):
-    for seg in segs:
-        plt.plot([seg[0][0], seg[1][0]], [seg[0][1], seg[1][1]], 'bo', linestyle="-")
-
     # find the segment I am a part of
     my_seg = next(filter(lambda seg: seg[0] == start, segs))
     # find all other segments
     other_segs = list(filter(lambda seg: seg[0] != start, segs))
     delta = find_initial_angle(start, other_segs, my_seg)
     pos = start + (delta * 0.1)
+    seg_outs = [(tuple(pos), tuple(start), )]
     for _ in range(200):
         delt = total_winding_contour(pos, segs)
-        plt.plot([pos[0], pos[0] + delt[0]], [pos[1], pos[1] + delt[1]], 'bo', linestyle="-")
+        seg_outs.append((tuple(pos + delt), tuple(pos), ))
         pos += delt
         for end in ends:
             print(pos, end, dist(pos, end))
             if dist(pos, end) < 1:
-                plt.show()
-                return end
+                seg_outs.append((tuple(end), tuple(pos)))
+                return seg_outs
 
-    plt.show()
     raise "Flow not found"
 
 class WindingQuery():
@@ -190,6 +187,9 @@ class WindingQuery():
             old_seg_length = len(self.polylines)
             self.collapse_segments()
             assert old_seg_length - 1 == len(self.polylines)
+            # for seg in self.original_segments:
+            #     plt.plot([seg[0][0], seg[1][0]], [seg[0][1], seg[1][1]], 'bo', linestyle="-")
+            # plt.show()
         assert len(self.polylines) == 0
 
     def repair_segment(self):
@@ -198,6 +198,5 @@ class WindingQuery():
 
         # Search will conclude when it finds the beginning of any polyline (including itself)
         endpoints = [polyline[-1] for polyline in self.polylines]
-        end = find_flow(start, endpoints, self.original_segments)
-        new_segment = (end, start)
-        self.original_segments.append(new_segment)
+        new_segs = find_flow(start, endpoints, self.original_segments)
+        self.original_segments.extend(new_segs)
