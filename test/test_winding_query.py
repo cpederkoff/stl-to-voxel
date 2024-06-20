@@ -15,7 +15,7 @@ class TestWindingQuery(unittest.TestCase):
             [(40, 40), (10, 40)],
             [(10, 40), (10, 9.9)],
         ]
-        wq = winding_query.WindingRepair(segments)
+        wq = winding_query.WindingQuery(segments)
         self.assertAlmostEqual(wq.query_winding((35, 35)), math.pi*2, places=2)
         self.assertAlmostEqual(wq.query_winding((35, 24)), 0, places=2)
         self.assertAlmostEqual(wq.query_winding((35, 12)), math.pi*2, places=2)
@@ -60,7 +60,7 @@ class TestWindingQuery(unittest.TestCase):
             ((21, 6), (21, 5)),
             ((22, 5), (55, 0)),
         ]
-        wq = winding_query.WindingRepair(segments3)
+        wq = winding_query.WindingQuery(segments3)
         wq.repair_all()
         self.assertEqual(wq.loops, [[
                 (55, 0),

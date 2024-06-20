@@ -64,31 +64,6 @@ def find_polylines(segments):  # noqa: C901
 
     return polylines
 
-
-def closest_distance(point, goals):
-    return min([dist(point, goal) for goal in goals])
-
-
-def dist(p1, p2):
-    x1, y1 = p1
-    x2, y2 = p2
-    return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
-
-
-def normalize(num):
-    return ((num + math.pi) % (2*math.pi)) - math.pi
-
-
-def signed_point_line_dist(line, point):
-    a, b = line
-    x1, y1 = a
-    x2, y2 = b
-    x0, y0 = point
-    num = ((x2 - x1)*(y1 - y0) - (x1 - x0)*(y2 - y1))
-    denom = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-    return num / denom
-
-
 def atansum(f1, f2):
     y, x = f1
     z, w = f2
@@ -142,8 +117,8 @@ def accum_grad_zero(pt, segs):
     return acc
 
 def vecnorm(pt):
-    dist = math.sqrt(pt[0]**2 + pt[1]**2)
-    return np.array([pt[0]/dist, pt[1]/dist])
+    len = math.sqrt(pt[0]**2 + pt[1]**2)
+    return np.array([pt[0]/len, pt[1]/len])
 
 def dist(pt1, pt2):
     x1, y1 = pt1
@@ -158,7 +133,7 @@ def follow_flow(segs, start, goals):
     path = [(tuple(start), tuple(pos))]
 
     last_dist = 0.00001
-    for _ in range(250):
+    for _ in range(500):
         delt = vecnorm(accum_grad_zero(pos, segs)) * (last_dist * .1)
         path.append((tuple(pos), tuple(pos+delt)))
         pos += delt
@@ -195,7 +170,7 @@ class WindingQuery():
             self.repair_segment()
             old_seg_length = len(self.polylines)
             self.collapse_segments()
-            # assert old_seg_length - 1 == len(self.polylines)
+            assert old_seg_length - 1 == len(self.polylines)
         assert len(self.polylines) == 0
 
     def repair_segment(self):

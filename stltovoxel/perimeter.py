@@ -4,7 +4,7 @@ from . import winding_query
 def repaired_lines_to_voxels(line_list, pixels):
     if not line_list:
         return
-    wq = winding_query.WindingRepair([[tuple(pt.tolist())[:2] for pt in seg] for seg in line_list])
+    wq = winding_query.WindingQuery([[tuple(pt.tolist())[:2] for pt in seg] for seg in line_list])
     wq.repair_all()
     new_line_list = []
     for polyline in wq.loops:
