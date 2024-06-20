@@ -197,14 +197,12 @@ def get_direction(pos, segs, dangling_end):
     return base - accum
 
 def get_direction_backwards(pos, segs, dangling_start):
-    accum = 0
+    accum = edge_start_baseline(dangling_start)
     for seg in segs:
-        accum -= edge_start(seg, pos)
-        accum -= edge_end(seg, pos)
-    # accum += edge_start(dangling_end, pos)
+        accum += edge_start(seg, pos)
+        accum += edge_end(seg, pos)
 
-    base = edge_start_baseline(dangling_start)
-    return base - accum
+    return accum
 
 def get_direction_iter(pos, segs, dangling_end, target):
     accum = 0
@@ -218,18 +216,6 @@ def get_direction_iter(pos, segs, dangling_end, target):
     # target - accum is a compensation factor to point back toward the ideal winding number
     print(accum)
     return (base - accum) #+ (target - accum)
-
-
-def angle_to_delta(theta):
-    delta_x = math.cos(theta)
-    delta_y = math.sin(theta)
-    return np.array([delta_x, delta_y])
-
-segs = [
-    ((0,10),(0,0)),
-    ((0,0),(10,0)),
-    ((10,5),(5,10)),
-]
 
 def find_polyline_endpoints(segs):
     start_to_end = dict()
@@ -257,16 +243,6 @@ def find_polyline_endpoints(segs):
             del start_to_end[end]
 
     return start_to_end
-
-background = np.zeros((200,200))
-for posxa in range(200):
-    for posya in range(200):
-        posx = (posxa - 100) * 0.2
-        posy = (posya - 100) * 0.2
-        winding = get_winding((posx, posy), segs)
-        if abs(winding - math.pi) < .1:
-            winding = math.pi*2
-        background[199-posya][posxa] = winding
 
 def grad(ox,oy,pt):
     px,py = pt
@@ -300,9 +276,10 @@ def dist(p1, p2):
     return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
 
 def find_initial_angle(start, other_segs, my_seg):
-    target = math.pi
-    angle_forward = get_direction_backwards(start, other_segs, my_seg) + target + math.pi
-    delta = angle_to_delta(angle_forward)
+    angle_forward = get_direction_backwards(start, other_segs, my_seg)
+    delta_x = math.cos(angle_forward)
+    delta_y = math.sin(angle_forward)
+    delta = np.array([delta_x, delta_y])
     return delta
 
 def grad_90_norm(pos, segs):
@@ -319,7 +296,6 @@ def find_flow(start, ends, segs):
     other_segs = list(filter(lambda seg: seg[0] != start, segs))
     delta = find_initial_angle(start, other_segs, my_seg)
     pos = start + (delta * 0.1)
-    # plt.quiver(*start, *delta, color=['r','b','g'], scale=21)
     for _ in range(200):
         delt = grad_90_norm(pos, segs)
         plt.plot([pos[0], pos[0] + delt[0]], [pos[1], pos[1] + delt[1]], 'bo', linestyle="-")
