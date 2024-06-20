@@ -2,6 +2,7 @@ import numpy as np
 import math
 import functools
 from queue import PriorityQueue
+import matplotlib.pyplot as plt
 
 
 def find_polylines(segments):  # noqa: C901
@@ -88,14 +89,88 @@ def signed_point_line_dist(line, point):
     return num / denom
 
 
-def close_to_goal(start, goals):
-    sx, sy = start
-    for goal in goals:
-        gx, gy = goal
-        if abs(sx-gx) <= 1 and abs(sy-gy) <= 1:
-            return goal
-    return False
+def atansum(f1, f2):
+    y, x = f1
+    z, w = f2
+    return (y*w + x*z, x*w - y*z)
 
+def atandiff(f1, f2):
+    y1, x1 = f1
+    y2, x2 = f2
+    return (y1*x2 - x1*y2, x1*x2 + y1*y2)
+
+def negatan(f1):
+    y,x = f1
+    return -y, x
+
+def edge_start_baseline(s1, s2):
+    return (s1[1] - s2[1], s1[0] - s2[0])
+
+def edge_start(start, them_pt):
+    return (start[1] - them_pt[1], start[0] - them_pt[0])
+
+def edge_end(other, them_pt):
+    return other[1] - them_pt[1], other[0] - them_pt[0]
+
+def get_direction(pos, segs, dangling_start):
+    accum = edge_start_baseline(dangling_start[0], dangling_start[1])
+    for seg in segs:
+        accum = atansum(accum, edge_start(seg[1], pos))
+        accum = atansum(accum, edge_end(seg[0], pos))
+    y, x = accum
+    return vecnorm((x,y))
+
+def angle_to_delta(theta):
+    delta_x = math.cos(theta)
+    delta_y = math.sin(theta)
+    return np.array([delta_x, delta_y])
+
+def grad_zero(pos, monopole, repel=True):
+    dir = pos - monopole
+    denom = (dir[0]**2 + dir[1]**2)
+    grad = dir / denom
+    if repel:
+        return grad
+    else:
+        return -grad
+    
+def accum_grad_zero(pt, segs):
+    acc = np.array([0.0,0.0])
+    for start, end in segs:
+        acc += grad_zero(pt,start, repel=False)
+        acc += grad_zero(pt,end, repel=True)
+    return acc
+
+def vecnorm(pt):
+    dist = math.sqrt(pt[0]**2 + pt[1]**2)
+    return np.array([pt[0]/dist, pt[1]/dist])
+
+def dist(pt1, pt2):
+    x1, y1 = pt1
+    x2, y2 = pt2
+    return math.sqrt((x2-x1)**2 + (y2-y1)**2)
+
+def follow_flow(segs, start, goals):
+    my_seg = next(filter(lambda seg: seg[1] == start, segs))
+    other_segs = list(filter(lambda seg: seg[1] != start, segs))
+    delta = get_direction(start, other_segs, my_seg)
+    pos = start + (delta * 0.0001)
+    path = [(tuple(start), tuple(pos))]
+
+    last_dist = 0.00001
+    for _ in range(250):
+        delt = vecnorm(accum_grad_zero(pos, segs)) * (last_dist * .1)
+        path.append((tuple(pos), tuple(pos+delt)))
+        pos += delt
+        last_dist = dist(goals[0], pos)
+        for goal in goals:
+            d = dist(goal, pos)
+            last_dist = min(last_dist, d)
+            if d < .0001:
+                print(f"found endpoint {goal}")
+                path.append((tuple(pos), tuple(goal)))
+                return path
+    raise Exception("ran out of iterations")
 
 class WindingQuery():
     def __init__(self, segments):
@@ -120,7 +195,7 @@ class WindingQuery():
             self.repair_segment()
             old_seg_length = len(self.polylines)
             self.collapse_segments()
-            assert old_seg_length - 1 == len(self.polylines)
+            # assert old_seg_length - 1 == len(self.polylines)
         assert len(self.polylines) == 0
 
     def repair_segment(self):
@@ -128,95 +203,9 @@ class WindingQuery():
         start = self.polylines[0][-1]
 
         # Search will conclude when it finds the beginning of any polyline (including itself)
-        endpoints = [polyline[0] for polyline in self.polylines]
-        end = self.a_star(start, endpoints)
+        goals = [polyline[0] for polyline in self.polylines]
+        more_path = follow_flow(self.original_segments, start, goals)
 
-        new_segment = (start, end)
-        self.original_segments.append(new_segment)
+        # new_segment = (start, end)
+        self.original_segments.extend(more_path)
 
-    def a_star(self, start, goals):
-        frontier = PriorityQueue()
-        frontier.put((0, start))
-        cost_so_far = {start: 0}
-
-        current = None
-        while not frontier.empty():
-            score, current = frontier.get()
-            close_goal = close_to_goal(current, goals)
-            if close_goal:
-                current = close_goal
-                break
-
-            for dx in range(-1, 2):
-                for dy in range(-1, 2):
-                    next_point = (current[0] + dx, current[1] + dy)
-                    heuristic_cost = closest_distance(next_point, goals)
-                    new_cost = cost_so_far[current] + abs(self.query_winding(next_point) - math.pi) * 200
-
-                    if next_point not in cost_so_far or new_cost < cost_so_far[next_point]:
-                        cost_so_far[next_point] = new_cost
-                        priority = new_cost + heuristic_cost
-                        frontier.put((priority, next_point))
-        assert current is not None
-        return current
-
-    def query_winding(self, point):
-        total = 0
-        for polyline in self.polylines:
-            total += self.winding_segment(polyline, point)
-        return total
-
-    def winding_segment(self, polyline, point):
-        collapsed = (polyline[0], polyline[-1])
-        inner_line, outer_line = self.get_lines(tuple(polyline))
-
-        if len(polyline) == 2:
-            # This is the actual segment so okay to be behind it.
-            return self.winding(collapsed, point)
-        elif signed_point_line_dist(inner_line, point) < 0:
-            # We are inside and beyond any concavity
-            return self.winding(collapsed, point)
-        elif signed_point_line_dist(outer_line, point) > 0:
-            # We are outside beyond any convexity
-            return self.winding(collapsed, point)
-        else:
-            split = int(len(polyline) / 2)
-            # Otherwise, split the segment
-            return self.winding_segment(polyline[:split+1], point) + self.winding_segment(polyline[split:], point)
-
-    def winding(self, segment, point):
-        start, end = segment
-        start = np.array(start)
-        end = np.array(end)
-        point = np.array(point)
-        # Side 1
-        offset = point - start
-        ang1 = math.atan2(offset[1], offset[0])
-        # Side 2
-        offset = point - end
-        ang2 = math.atan2(offset[1], offset[0])
-        return normalize(ang2 - ang1)
-
-    @functools.lru_cache(maxsize=None)
-    def get_lines(self, polyline):
-        start = np.array(polyline[0])
-        end = np.array(polyline[-1])
-        slope = end - start
-
-        furthest_in = 0
-        innermost = polyline[0]
-        furthest_out = 0
-        outermost = polyline[0]
-        for pt in polyline:
-            dist = signed_point_line_dist((polyline[0], polyline[-1]), pt)
-            if dist < furthest_in:
-                innermost = pt
-                furthest_in = dist
-            elif dist > furthest_out:
-                outermost = pt
-                furthest_out = dist
-        innermost = np.array(innermost)
-        outermost = np.array(outermost)
-        inner_line = (innermost, innermost + slope)
-        outer_line = (outermost, outermost + slope)
-        return inner_line, outer_line

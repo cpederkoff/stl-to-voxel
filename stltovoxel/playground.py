@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import winding_query
 
 def atansum(f1, f2):
     y, x = f1
@@ -70,20 +71,6 @@ for start, end in segs:
     plt.plot([start[0], end[0]], [start[1], end[1]], 'bo', linestyle="-")
 
 start = segs[0][1]
-my_seg = next(filter(lambda seg: seg[1] == start, segs))
-other_segs = list(filter(lambda seg: seg[1] != start, segs))
-angle_forward = get_direction(start, other_segs, my_seg)
-delta = angle_to_delta(angle_forward)
-pos = start + (delta * 0.0001)
+goals = [seg[0] for seg in segs]
 
-plt.quiver(*start, *delta, color=['r','b','g'], scale=21)
-for i in range(25):
-    delt = vecnorm(accum_grad_zero(pos, segs))
-    plt.quiver(*pos, *(delt), color=['r','b','g'], scale=21)
-    plt.plot([pos[0], pos[0] + delt[0]], [pos[1], pos[1] + delt[1]], 'bo', linestyle="-")
-    pos += delt
-    for start, end in segs:
-        if dist(end, pos) < 1:
-            print(f"found endpoint {end}")
-
-plt.show()
+winding_query.follow_flow(segs, start, goals)
