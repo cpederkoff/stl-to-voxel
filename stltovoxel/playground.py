@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-import pdb
 
 def normalize(num):
     return ((num + math.pi) % (2*math.pi)) - math.pi
@@ -165,9 +164,9 @@ def angle_to_delta(theta):
     return np.array([delta_x, delta_y])
 
 segs = [
-    ((0,0),(20,0)),
-    ((20,10),(0,10)),
-    # ((0,2.5),(0,7.5)),
+    ((0,10),(0,0)),
+    ((0,0),(10,0)),
+    ((10,5),(5,10)),
 ]
 
 def find_polyline_endpoints(segs):
@@ -233,27 +232,10 @@ def vecnorm(pt):
     dist = math.sqrt(x**2 + y**2)
     return (x / dist, y / dist)
 
-# cx, cy = -.5,0
-# for i in range(200):
-#     # calculate gradient for current position
-#     mgx, mgy = vecnorm(accum_grad_90(cx, cy, segs))
-#     # move forward
-#     mgxnorm = mgx * 0.1
-#     mgynorm = mgy * 0.1
-#     plt.plot([cx, cx + mgxnorm], [cy, cy + mgynorm], 'bo', linestyle="-")
-#     cx += mgxnorm
-#     cy += mgynorm
-#     # add back segment
 for x in range(-10,10):
     for y in range(-10,10):
         ax, ay = accum_grad_90(x,y,segs)
         plt.quiver(x,y, ax, ay, color=['r','b','g'], scale=21)
-
-
-
-
-    
-
 
 # while there are some ends that need repair
 # while find_polyline_endpoints(segs):
