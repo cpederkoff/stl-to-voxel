@@ -37,24 +37,24 @@ class TestWindingQuery(unittest.TestCase):
         self.assertEqual(actual_polylines, expected_polylines)
 
     def test_get_direction(self):
-        my_seg = ((0,0),(0,1))
-        other_segs = [((0,1),(1,1)),((1,1),(1,0))]
+        other_segs = [((1,0),(1,1)),((1,1),(0,1)),]
+        my_seg = ((0,1),(0,0))
         actual = winding_query.find_initial_angle(my_seg, other_segs)
         actual = tuple(actual)
         expected = (1.0,0)
         self.tuples_almost_equal(actual, expected)
 
     def test_get_direction2(self):
-        my_seg = ((1,1),(0,1))
-        other_segs = [((0,0),(1,0))]
+        other_segs = [((1,0),(0,0))]
+        my_seg = ((0,1),(1,1))
         actual = winding_query.find_initial_angle(my_seg, other_segs)
         actual = tuple(actual)
         expected = winding_query.vecnorm((-1,-1))
         self.tuples_almost_equal(actual, expected)
 
     def test_get_direction3(self):
-        my_seg = ((0,0),(1,0))
-        other_segs = [((1,0),(1,1))]
+        other_segs = [((1,1),(1,0))]
+        my_seg = ((1,0),(0,0))
         actual = winding_query.find_initial_angle(my_seg, other_segs)
         actual = tuple(actual)
         expected = winding_query.vecnorm((1,1))
@@ -62,10 +62,10 @@ class TestWindingQuery(unittest.TestCase):
 
     def test_grad_90_norm(self):
         segs = [((0,0),(1,0)), ((1,0),(1,1))]
-        pos = np.array((0,0)) + np.array((0.1,0.1))
+        pos = np.array((1,1)) - np.array((0.1,0.1))
         # Treats starts as repellers and ends as attractors
         actual = winding_query.total_winding_contour(pos, segs)
-        expected = winding_query.vecnorm((1,1))
+        expected = winding_query.vecnorm((-1,-1))
         self.tuples_almost_equal(actual, expected)
 
     
@@ -73,24 +73,24 @@ class TestWindingQuery(unittest.TestCase):
         segs = [((0,0),(1,0)), ((1,0),(1,1)), ((1,1),(0,1))]
         pos = (0,0.5)
         actual = winding_query.total_winding_contour(pos, segs)
-        expected = winding_query.vecnorm((0,1))
+        expected = winding_query.vecnorm((0,-1))
         self.tuples_almost_equal(actual, expected)
 
         pos = (-.5,0.5)
         actual = winding_query.total_winding_contour(pos, segs)
-        expected = winding_query.vecnorm((0,1))
+        expected = winding_query.vecnorm((0,-1))
         self.tuples_almost_equal(actual, expected)
 
         pos = (.5,0.5)
         actual = winding_query.total_winding_contour(pos, segs)
-        expected = winding_query.vecnorm((0,1))
+        expected = winding_query.vecnorm((0,-1))
         self.tuples_almost_equal(actual, expected)
 
     def test_grad_90_norm3(self):
         segs = [((0,0),(1,0)), ((1,1),(0,1))]
         pos = (0.00001, 0.00001)
         actual = winding_query.total_winding_contour(pos, segs)
-        expected = winding_query.vecnorm((1,1))
+        expected = winding_query.vecnorm((-1,-1))
         self.tuples_almost_equal(actual, expected)
     
 

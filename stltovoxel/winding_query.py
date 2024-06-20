@@ -122,13 +122,13 @@ def dist(p1, p2):
 
 def find_initial_angle(my_seg, other_segs):
     start, end = my_seg
-    accum = subtract(end, start)
+    accum = subtract(start, end)
     for seg in other_segs:
         s1, s2 = seg
-        p1 = subtract(s1, start)
-        p2 = subtract(s2, start)
-        accum = atansum(accum, p2)
-        accum = atansum(accum, negatan(p1))
+        p1 = subtract(s1, end)
+        p2 = subtract(s2, end)
+        accum = atansum(accum, p1)
+        accum = atansum(accum, negatan(p2))
         accum = vecnorm(accum)
     return np.array(accum)
 
@@ -137,25 +137,25 @@ def total_winding_contour(pos, segs):
     for start, end in segs:
         start_grad = winding_contour(pos, start)
         end_grad = winding_contour(pos, end)
-        accum = add(accum, start_grad)
-        accum = subtract(accum, end_grad)
+        accum = subtract(accum, start_grad)
+        accum = add(accum, end_grad)
     return vecnorm(accum)
 
 def find_flow(start, ends, segs):
     # find the segment I am a part of
-    my_seg = next(filter(lambda seg: seg[0] == start, segs))
+    my_seg = next(filter(lambda seg: seg[1] == start, segs))
     # find all other segments
-    other_segs = list(filter(lambda seg: seg[0] != start, segs))
+    other_segs = list(filter(lambda seg: seg[1] != start, segs))
     delta = find_initial_angle(my_seg, other_segs)
     pos = start + (delta * 0.1)
-    seg_outs = [(tuple(pos), tuple(start), )]
+    seg_outs = [(tuple(start), tuple(pos))]
     for _ in range(200):
         delt = total_winding_contour(pos, segs)
-        seg_outs.append((tuple(pos + delt), tuple(pos)))
+        seg_outs.append((tuple(pos), tuple(pos + delt)))
         pos += delt
         for end in ends:
             if dist(pos, end) < 1:
-                seg_outs.append((tuple(end), tuple(pos)))
+                seg_outs.append((tuple(pos), tuple(end)))
                 return seg_outs
 
     raise "Flow not found"
@@ -184,16 +184,16 @@ class WindingQuery():
             old_seg_length = len(self.polylines)
             self.collapse_segments()
             assert old_seg_length - 1 == len(self.polylines)
-            # for seg in self.original_segments:
-            #     plt.plot([seg[0][0], seg[1][0]], [seg[0][1], seg[1][1]], 'bo', linestyle="-")
-            # plt.show()
+            for seg in self.original_segments:
+                plt.plot([seg[0][0], seg[1][0]], [seg[0][1], seg[1][1]], 'bo', linestyle="-")
+            plt.show()
         assert len(self.polylines) == 0
 
     def repair_segment(self):
         # Search starts at the end of a polyline
-        start = self.polylines[0][0]
+        start = self.polylines[0][-1]
 
         # Search will conclude when it finds the beginning of any polyline (including itself)
-        endpoints = [polyline[-1] for polyline in self.polylines]
+        endpoints = [polyline[0] for polyline in self.polylines]
         new_segs = find_flow(start, endpoints, self.original_segments)
         self.original_segments.extend(new_segs)
