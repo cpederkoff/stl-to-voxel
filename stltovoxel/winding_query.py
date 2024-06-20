@@ -1,5 +1,6 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
+import math
 
 def find_polylines(segments):  # noqa: C901
     polylines = []
@@ -60,53 +61,31 @@ def find_polylines(segments):  # noqa: C901
 
     return polylines
 
-import matplotlib.pyplot as plt
-import numpy as np
-import math
-
-def normalize(num):
-    return ((num + math.pi) % (2*math.pi)) - math.pi
-
 def atansum(f1, f2):
-    y, x = f1
-    z, w = f2
-    return (y*w + x*z, x*w - y*z)
-
-def atandiff(f1, f2):
-    y1, x1 = f1
-    y2, x2 = f2
-    return (y1*x2 - x1*y2, x1*x2 + y1*y2)
-
-def negatan(f1):
-    y,x = f1
-    return -y, x
+    x,y = f1
+    w,z = f2
+    return ( x*w - y*z, y*w + x*z,)
 
 def edge_start(me_seg, them_pt):
     # Starter unpaired point
     s1, s2 = me_seg
-    angle = (s1[1] - s2[1], s1[0] - s2[0])
-    p1 = (s1[1] - them_pt[1], s1[0] - them_pt[0])
-    return atansum(negatan(p1), angle)
+    angle = ( s1[0] - s2[0], s1[1] - s2[1],)
+    p1 = ( s1[0] - them_pt[0],them_pt[1] - s1[1],)
+    return atansum(p1, angle)
 
 def edge_end(me_seg, them_pt):
     # Starter unpaired point
     s1, s2 = me_seg
-    angle = (s1[1] - s2[1], s1[0] - s2[0])
-    p1 = (s2[1] - them_pt[1], s2[0] - them_pt[0])
-    return atansum(p1, negatan(angle))
+    angle = ( s1[0] - s2[0], s2[1] - s1[1],)
+    p1 = (s2[0] - them_pt[0], s2[1] - them_pt[1], )
+    return atansum(p1, angle)
 
-def edge_start_baseline(me_seg):
-    s1, s2 = me_seg
-    angle = (s2[1] - s1[1], s2[0] - s1[0])
+def subtract(s1, s2):
+    angle = (s1[0] - s2[0], s1[1] - s2[1])
     return angle
 
-def edge_end_baseline(me_seg):
-    s1, s2 = me_seg
-    angle = (s1[1] - s2[1], s1[0] - s2[0])
-    return math.atan2(*angle)
-
 def get_direction_backwards(pos, segs, dangling_start):
-    accum = edge_start_baseline(dangling_start)
+    accum = subtract(dangling_start[1], dangling_start[0])
     for seg in segs:
         accum = atansum(accum, edge_start(seg, pos))
         accum = atansum(accum, edge_end(seg, pos))
@@ -152,11 +131,10 @@ def accum_grad_90(x, y, segs):
     ax = 0
     ay = 0
     for start, end in segs:
-        # for pt in [start, end]:
-        gx, gy = grad(x+0.00001,y+0.00001,start)
+        gx, gy = grad(x,y,start)
         ax += gy
         ay -= gx
-        gx, gy = grad(x+0.00001,y+0.00001,end)
+        gx, gy = grad(x,y,end)
         ax -= gy
         ay += gx
     return (ax, ay)
@@ -172,7 +150,7 @@ def dist(p1, p2):
     return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
 
 def find_initial_angle(start, other_segs, my_seg):
-    delta_y, delta_x = get_direction_backwards(start, other_segs, my_seg)
+    delta_x, delta_y = get_direction_backwards(start, other_segs, my_seg)
     delta = np.array([delta_x, delta_y])
     return delta
 
