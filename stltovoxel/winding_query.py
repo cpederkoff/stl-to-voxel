@@ -66,29 +66,24 @@ def atansum(f1, f2):
     w,z = f2
     return ( x*w - y*z, y*w + x*z,)
 
-def edge_start(me_seg, them_pt):
-    # Starter unpaired point
-    s1, s2 = me_seg
-    angle = ( s1[0] - s2[0], s1[1] - s2[1],)
-    p1 = ( s1[0] - them_pt[0],them_pt[1] - s1[1],)
-    return atansum(p1, angle)
-
-def edge_end(me_seg, them_pt):
-    # Starter unpaired point
-    s1, s2 = me_seg
-    angle = ( s1[0] - s2[0], s2[1] - s1[1],)
-    p1 = (s2[0] - them_pt[0], s2[1] - them_pt[1], )
-    return atansum(p1, angle)
+def negatan(f1):
+    x,y = f1
+    return x,-y
 
 def subtract(s1, s2):
-    angle = (s1[0] - s2[0], s1[1] - s2[1])
-    return angle
+    return (s1[0] - s2[0], s1[1] - s2[1])
+
+def add(s1, s2):
+    return (s1[0] + s2[0], s1[1] + s2[1])
 
 def get_direction_backwards(pos, segs, dangling_start):
     accum = subtract(dangling_start[1], dangling_start[0])
     for seg in segs:
-        accum = atansum(accum, edge_start(seg, pos))
-        accum = atansum(accum, edge_end(seg, pos))
+        s1, s2 = seg
+        p1 = subtract(s1, pos)
+        p2 = subtract(s2, pos)
+        accum = atansum(accum, p2)
+        accum = atansum(accum, negatan(p1))
         accum = vecnorm(accum)
     return accum
 
@@ -119,25 +114,12 @@ def find_polyline_endpoints(segs):
 
     return start_to_end
 
-def grad(ox,oy,pt):
-    px,py = pt
-    x = ox - px
-    y = oy - py
-    gx = -((y)/(x**2 + y**2))
-    gy = x/(x**2 + y**2)
+def winding_contour(pos,pt):
+    x,y = subtract(pos, pt)
+    dist = (x**2 + y**2)
+    gx = x/dist
+    gy = y/dist
     return (gx, gy)
-
-def accum_grad_90(x, y, segs):
-    ax = 0
-    ay = 0
-    for start, end in segs:
-        gx, gy = grad(x,y,start)
-        ax += gy
-        ay -= gx
-        gx, gy = grad(x,y,end)
-        ax -= gy
-        ay += gx
-    return (ax, ay)
 
 def vecnorm(pt):
     x, y = pt
@@ -150,13 +132,16 @@ def dist(p1, p2):
     return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
 
 def find_initial_angle(start, other_segs, my_seg):
-    delta_x, delta_y = get_direction_backwards(start, other_segs, my_seg)
-    delta = np.array([delta_x, delta_y])
-    return delta
+    return  np.array(get_direction_backwards(start, other_segs, my_seg))
 
-def grad_90_norm(pos, segs):
-    delt = vecnorm(accum_grad_90(*pos, segs))
-    return delt
+def total_winding_contour(pos, segs):
+    accum = (0,0)
+    for start, end in segs:
+        start_grad = winding_contour(pos, start)
+        end_grad = winding_contour(pos, end)
+        accum = add(accum, start_grad)
+        accum = subtract(accum, end_grad)
+    return vecnorm(accum)
 
 def find_flow(start, ends, segs):
     for seg in segs:
@@ -169,7 +154,7 @@ def find_flow(start, ends, segs):
     delta = find_initial_angle(start, other_segs, my_seg)
     pos = start + (delta * 0.1)
     for _ in range(200):
-        delt = grad_90_norm(pos, segs)
+        delt = total_winding_contour(pos, segs)
         plt.plot([pos[0], pos[0] + delt[0]], [pos[1], pos[1] + delt[1]], 'bo', linestyle="-")
         pos += delt
         for end in ends:
@@ -214,7 +199,5 @@ class WindingQuery():
         # Search will conclude when it finds the beginning of any polyline (including itself)
         endpoints = [polyline[-1] for polyline in self.polylines]
         end = find_flow(start, endpoints, self.original_segments)
-        print(self.original_segments)
         new_segment = (end, start)
-        print(new_segment)
         self.original_segments.append(new_segment)
