@@ -39,7 +39,7 @@ class TestWindingQuery(unittest.TestCase):
     def test_get_direction(self):
         my_seg = ((0,0),(0,1))
         other_segs = [((0,1),(1,1)),((1,1),(1,0))]
-        actual = winding_query.find_initial_angle(my_seg[0], other_segs, my_seg)
+        actual = winding_query.find_initial_angle(my_seg, other_segs)
         actual = tuple(actual)
         expected = (1.0,0)
         self.tuples_almost_equal(actual, expected)
@@ -47,7 +47,7 @@ class TestWindingQuery(unittest.TestCase):
     def test_get_direction2(self):
         my_seg = ((1,1),(0,1))
         other_segs = [((0,0),(1,0))]
-        actual = winding_query.find_initial_angle(my_seg[0], other_segs, my_seg)
+        actual = winding_query.find_initial_angle(my_seg, other_segs)
         actual = tuple(actual)
         expected = winding_query.vecnorm((-1,-1))
         self.tuples_almost_equal(actual, expected)
@@ -55,7 +55,7 @@ class TestWindingQuery(unittest.TestCase):
     def test_get_direction3(self):
         my_seg = ((0,0),(1,0))
         other_segs = [((1,0),(1,1))]
-        actual = winding_query.find_initial_angle(my_seg[0], other_segs, my_seg)
+        actual = winding_query.find_initial_angle(my_seg, other_segs)
         actual = tuple(actual)
         expected = winding_query.vecnorm((1,1))
         self.tuples_almost_equal(actual, expected)

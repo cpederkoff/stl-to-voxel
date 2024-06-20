@@ -76,17 +76,6 @@ def subtract(s1, s2):
 def add(s1, s2):
     return (s1[0] + s2[0], s1[1] + s2[1])
 
-def get_direction_backwards(pos, segs, dangling_start):
-    accum = subtract(dangling_start[1], dangling_start[0])
-    for seg in segs:
-        s1, s2 = seg
-        p1 = subtract(s1, pos)
-        p2 = subtract(s2, pos)
-        accum = atansum(accum, p2)
-        accum = atansum(accum, negatan(p1))
-        accum = vecnorm(accum)
-    return accum
-
 def find_polyline_endpoints(segs):
     start_to_end = dict()
     end_to_start = dict()
@@ -131,8 +120,17 @@ def dist(p1, p2):
     x2, y2 = p2
     return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
 
-def find_initial_angle(start, other_segs, my_seg):
-    return  np.array(get_direction_backwards(start, other_segs, my_seg))
+def find_initial_angle(my_seg, other_segs):
+    start, end = my_seg
+    accum = subtract(end, start)
+    for seg in other_segs:
+        s1, s2 = seg
+        p1 = subtract(s1, start)
+        p2 = subtract(s2, start)
+        accum = atansum(accum, p2)
+        accum = atansum(accum, negatan(p1))
+        accum = vecnorm(accum)
+    return np.array(accum)
 
 def total_winding_contour(pos, segs):
     accum = (0,0)
@@ -148,15 +146,14 @@ def find_flow(start, ends, segs):
     my_seg = next(filter(lambda seg: seg[0] == start, segs))
     # find all other segments
     other_segs = list(filter(lambda seg: seg[0] != start, segs))
-    delta = find_initial_angle(start, other_segs, my_seg)
+    delta = find_initial_angle(my_seg, other_segs)
     pos = start + (delta * 0.1)
     seg_outs = [(tuple(pos), tuple(start), )]
     for _ in range(200):
         delt = total_winding_contour(pos, segs)
-        seg_outs.append((tuple(pos + delt), tuple(pos), ))
+        seg_outs.append((tuple(pos + delt), tuple(pos)))
         pos += delt
         for end in ends:
-            print(pos, end, dist(pos, end))
             if dist(pos, end) < 1:
                 seg_outs.append((tuple(end), tuple(pos)))
                 return seg_outs
