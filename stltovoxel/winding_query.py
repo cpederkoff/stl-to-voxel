@@ -133,7 +133,7 @@ def edge_start(me_seg, them_pt):
     s1, s2 = me_seg
     angle = (s1[1] - s2[1], s1[0] - s2[0])
     p1 = (s1[1] - them_pt[1], s1[0] - them_pt[0])
-    return math.atan2(*atansum(negatan(p1), angle))
+    return atansum(negatan(p1), angle)
 
 def edge_start_no_atan(me_seg, them_pt):
     # Starter unpaired point
@@ -147,12 +147,12 @@ def edge_end(me_seg, them_pt):
     s1, s2 = me_seg
     angle = (s1[1] - s2[1], s1[0] - s2[0])
     p1 = (s2[1] - them_pt[1], s2[0] - them_pt[0])
-    return math.atan2(*atansum(p1, negatan(angle)))
+    return atansum(p1, negatan(angle))
 
 def edge_start_baseline(me_seg):
     s1, s2 = me_seg
     angle = (s2[1] - s1[1], s2[0] - s1[0])
-    return math.atan2(*angle)
+    return angle
 
 def edge_end_baseline(me_seg):
     s1, s2 = me_seg
@@ -199,10 +199,10 @@ def get_direction(pos, segs, dangling_end):
 def get_direction_backwards(pos, segs, dangling_start):
     accum = edge_start_baseline(dangling_start)
     for seg in segs:
-        accum += edge_start(seg, pos)
-        accum += edge_end(seg, pos)
+        accum = atansum(accum, edge_start(seg, pos))
+        accum = atansum(accum, edge_end(seg, pos))
 
-    return accum
+    return math.atan2(*accum)
 
 def get_direction_iter(pos, segs, dangling_end, target):
     accum = 0
