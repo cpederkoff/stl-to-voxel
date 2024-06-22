@@ -28,11 +28,6 @@ def edge_start_baseline(me_seg):
     angle = (s2[1] - s1[1], s2[0] - s1[0])
     return math.atan2(*angle)
 
-def edge_end_baseline(me_seg):
-    s1, s2 = me_seg
-    angle = (s1[1] - s2[1], s1[0] - s2[0])
-    return math.atan2(*angle)
-
 def get_winding(pos, segs):
     accum = 0
     for seg in segs:
@@ -40,23 +35,14 @@ def get_winding(pos, segs):
         accum += edge_end(seg, pos)
     return accum
 
-def get_angle(pos, segs, dangling_end, target):
-    accum = 0
-    for seg in segs:
-        accum += edge_start(seg, pos)
-        accum += edge_end(seg, pos)
-
-    base = edge_end_baseline(dangling_end)
-    return (base - accum) + target + math.pi
-
-def get_angle_backwards(pos, segs, dangling_start, target):
+def get_angle(pos, segs, dangling_start, target):
     accum = 0
     for seg in segs:
         accum -= edge_start(seg, pos)
         accum -= edge_end(seg, pos)
 
     base = edge_start_baseline(dangling_start)
-    return (base - accum) + target + math.pi
+    return base - accum + math.pi - target
 
 def angle_to_delta(theta):
     delta_x = math.cos(theta)
@@ -98,8 +84,8 @@ def vecnorm(pt):
     return (x / dist, y / dist)
 
 segs = [
-    ((0,10),(0,0)),
-    ((0,0),(10,0)),
+    ((-10,15),(-10,-15)),
+    ((-10,-15),(10,-15)),
     ((10,5),(5,10)),
 ]
 
@@ -113,12 +99,13 @@ for posxa in range(200):
             winding = math.pi*2
         background[199-posya][posxa] = winding
 
-for x in range(-20,20, 1):
-    for y in range(-20,20, 1):
+for x in range(-20,20):
+    for y in range(-20,20):
         ax, ay = sum_contour(x,y,segs)
         if abs(ax) > 1000 or abs(ay) > 1000:
+            # Too big, likely near a segment point
             continue
-        plt.quiver(x,y, ax, ay, color=['r'], scale=21)
+        plt.quiver(x,y, ax, ay, color=['r'], scale=20)
 
 start = segs[0][0]
 end = segs[0][1]
@@ -126,10 +113,10 @@ end = segs[0][1]
 my_seg = next(filter(lambda seg: seg[0] == start, segs))
 # find all other segments
 other_segs = list(filter(lambda seg: seg[0] != start, segs))
-angle_forward = get_angle_backwards(start, other_segs, my_seg, math.pi) 
+angle_forward = get_angle(start, other_segs, my_seg, math.pi) 
 delta = angle_to_delta(angle_forward)
 pos = start + (delta * 0.1)
-plt.quiver(*start, *delta, color=['g'], scale=21)
+plt.quiver(*start, *(delta * 10), color=['g'], scale=40)
 for i in range(100):
     delt = vecnorm(sum_contour(*pos, segs))
     plt.plot([pos[0], pos[0] + delt[0]], [pos[1], pos[1] + delt[1]], 'bo', linestyle="-")

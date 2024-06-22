@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 
 def find_polylines(segments):  # noqa: C901
@@ -61,24 +60,6 @@ def find_polylines(segments):  # noqa: C901
 
     return polylines
 
-def atan_sum(f1, f2):
-    # Angle sum and difference identity
-    # atan2(atan_sum(f1, f2)) == atan2(f1) + atan2(f2)
-    x1,y1 = f1
-    x2,y2 = f2
-    return ( x1*x2 - y1*y2, y1*x2 + x1*y2)
-
-def atan_neg(f1):
-    # atan2(atan_neg(f1)) == -atan2(f1)
-    x,y = f1
-    return x,-y
-
-def subtract(s1, s2):
-    return (s1[0] - s2[0], s1[1] - s2[1])
-
-def add(s1, s2):
-    return (s1[0] + s2[0], s1[1] + s2[1])
-
 def find_polyline_endpoints(segs):
     start_to_end = dict()
     end_to_start = dict()
@@ -106,14 +87,32 @@ def find_polyline_endpoints(segs):
 
     return start_to_end
 
-def winding_contour_monopole(pos, pt, repel):
+def atan_sum(f1, f2):
+    # Angle sum and difference identity
+    # atan2(atan_sum(f1, f2)) == atan2(f1) + atan2(f2)
+    x1,y1 = f1
+    x2,y2 = f2
+    return ( x1*x2 - y1*y2, y1*x2 + x1*y2)
+
+def atan_neg(f1):
+    # atan2(atan_neg(f1)) == -atan2(f1)
+    x,y = f1
+    return x,-y
+
+def subtract(s1, s2):
+    return (s1[0] - s2[0], s1[1] - s2[1])
+
+def add(s1, s2):
+    return (s1[0] + s2[0], s1[1] + s2[1])
+
+def winding_contour_pole(pos, pt, repel):
     # The total winding number of a system is composed of a sum of atan2 functions (one at each point of each line segment)
     # The gradient of atan2(y,x) is 
     # Gx = -y/(x^2+y^2); Gy = x/(x^2+y^2)
     # The contour (direction of no increase) is orthogonal to the gradient, either
     # (-Gy,Gx) or (Gy,-Gx)
     # This is represented by:
-    # Cx = x/(x^2+y^2); Cy = y/(x^2+y^2) or
+    # Cx =  x/(x^2+y^2); Cy =  y/(x^2+y^2) or
     # Cx = -x/(x^2+y^2); Cy = -y/(x^2+y^2)
     # In practice, one of each is used per line segment which repels & attracts the vector field.
     x, y = subtract(pos, pt)
@@ -136,16 +135,20 @@ def distance(p1, p2):
     return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
 
 def initial_direction(my_seg, other_segs):
-    # Computing the winding number of a given point requires 2 atan2 calls per line segment (one per point).
-    # This method takes a line segment (my_seg) and makes 1 atan2 call for that and 2 atan2 calls for all other line segments (other_segs).
-    # This produces an angle which if followed out of the end of my_seg would produce a winding number of the target value.
-    # In theory this target winding number can be any value, but here pi radians / 180 degrees is used for simplicity.
+    # Computing the winding number of a given point requires 2 angle computations per line segment (one per point).
+    # This method makes 2 angle computations for every segment in other_segs to compute the winding number at my_seg[1].
+    # It also makes one angle computation from my_seg[0] to my_seg[1].
+    # The result is an angle out of my_seg which leads to a winding number of a target value. 
+    # In theory this target winding number can be any value, but here pi radians (180 degrees) is used for simplicity.
+    # Also, generally angle computation would take the form of [atan2(start-pt)-atan2(end-pt)]+... , but multiple atan2 calls
+    # can be avoided through use of atan2 identities. 
+    # Since the final angle would be converted back into a vector, no atan2 call is required.
     pt = my_seg[1]
     accum = subtract(my_seg[0], my_seg[1])
     for seg_start, seg_end in other_segs:
         accum = atan_sum(accum, subtract(seg_start, pt))
         accum = atan_sum(accum, atan_neg(subtract(seg_end, pt)))
-        # Without this accum can get arbitrarily large which causes problems with lots of segments
+        # Without this accum can get arbitrarily large and lead to floating point problems
         accum = normalize(accum)
     return np.array(accum)
 
@@ -153,14 +156,14 @@ def winding_contour(pos, segs):
     accum = (0,0)
     for start, end in segs:
         # Starting points attract the vector field
-        start_vec = winding_contour_monopole(pos, start, repel=False)
+        start_vec = winding_contour_pole(pos, start, repel=False)
         accum = add(accum, start_vec)
         # Ending points repel the vector field
-        end_vec = winding_contour_monopole(pos, end, repel=True)
+        end_vec = winding_contour_pole(pos, end, repel=True)
         accum = add(accum, end_vec)
     return normalize(accum)
 
-def find_flow(start, ends, segs, polyline_endpoints):
+def winding_number_search(start, ends, segs, polyline_endpoints):
     # find the segment I am a part of
     my_seg = next(filter(lambda seg: seg[1] == start, segs))
     # find all other segments
@@ -172,10 +175,10 @@ def find_flow(start, ends, segs, polyline_endpoints):
     seg_outs = [(tuple(start), tuple(pos))]
     for _ in range(200):
         # Flow lines in this vector field have equivalent winding numbers
-        # As an optimization, polyline endpoints are used instead of original_segments for winding_contour because each line segment pair
-        # which has a start and end at the same point will cancel out.
+        # As an optimization, polyline endpoints are used instead of original_segments for winding_contour because
+        # start and end points in the same place cancel out.
         direction = winding_contour(pos, polyline_endpoints)
-        # March along the flowline using euler's method to find where it terminates.
+        # March along the flowline to find where it terminates.
         new_pos = pos + direction
         seg_outs.append((tuple(pos), tuple(new_pos)))
         pos = new_pos
@@ -187,7 +190,7 @@ def find_flow(start, ends, segs, polyline_endpoints):
 
     raise Exception("Max iteration number exceeded to repair mesh")
 
-class WindingQuery():
+class PolygonRepair():
     def __init__(self, segments):
         # Maps endpoints to the polygon they form
         self.loops = []
@@ -207,20 +210,17 @@ class WindingQuery():
 
     def repair_all(self):
         while self.polylines:
-            self.repair_segment()
+            self.repair_polyline()
             old_seg_length = len(self.polylines)
             self.collapse_segments()
             assert old_seg_length - 1 == len(self.polylines)
-            # for seg in self.original_segments:
-            #     plt.plot([seg[0][0], seg[1][0]], [seg[0][1], seg[1][1]], 'bo', linestyle="-")
-            # plt.show()
         assert len(self.polylines) == 0
 
-    def repair_segment(self):
+    def repair_polyline(self):
         # Search starts at the end of an arbitrary polyline
         search_start = self.polylines[0][-1]
         # Search will conclude when it finds the beginning of any polyline (including itself)
         search_ends = [polyline[0] for polyline in self.polylines]
         polyline_endpoints = [(polyline[0], polyline[-1]) for polyline in self.polylines]
-        new_segs = find_flow(search_start, search_ends, self.original_segments, polyline_endpoints)
+        new_segs = winding_number_search(search_start, search_ends, self.original_segments, polyline_endpoints)
         self.original_segments.extend(new_segs)

@@ -144,3 +144,6 @@ cython_debug/
 
 # Mac Desktop Services Store file
 .DS_STORE
+
+# vscode
+.vscode/
