@@ -37,60 +37,60 @@ class TestWindingQuery(unittest.TestCase):
         self.assertEqual(actual_polylines, expected_polylines)
 
     def test_get_direction(self):
-        other_segs = [((1,0),(1,1)),((1,1),(0,1)),]
-        my_seg = ((0,1),(0,0))
+        other_segs = [((1, 0), (1, 1)), ((1, 1), (0, 1)), ]
+        my_seg = ((0, 1), (0, 0))
         actual = polygon_repair.initial_direction(my_seg, other_segs)
         actual = tuple(actual)
-        expected = (1.0,0)
+        expected = (1.0, 0)
         self.tuples_almost_equal(actual, expected)
 
     def test_get_direction2(self):
-        other_segs = [((1,0),(0,0))]
-        my_seg = ((0,1),(1,1))
+        other_segs = [((1, 0), (0, 0))]
+        my_seg = ((0, 1), (1, 1))
         actual = polygon_repair.initial_direction(my_seg, other_segs)
         actual = tuple(actual)
-        expected = polygon_repair.normalize((-1,-1))
+        expected = polygon_repair.normalize((-1, -1))
         self.tuples_almost_equal(actual, expected)
 
     def test_get_direction3(self):
-        other_segs = [((1,1),(1,0))]
-        my_seg = ((1,0),(0,0))
+        other_segs = [((1, 1), (1, 0))]
+        my_seg = ((1, 0), (0, 0))
         actual = polygon_repair.initial_direction(my_seg, other_segs)
         actual = tuple(actual)
-        expected = polygon_repair.normalize((1,1))
+        expected = polygon_repair.normalize((1, 1))
         self.tuples_almost_equal(actual, expected)
 
     def test_grad_90_norm(self):
-        segs = [((0,0),(1,0)), ((1,0),(1,1))]
-        pos = np.array((1,1)) - np.array((0.1,0.1))
+        segs = [((0, 0), (1, 0)), ((1, 0), (1, 1))]
+        pos = np.array((1, 1)) - np.array((0.1, 0.1))
         # Treats starts as repellers and ends as attractors
         actual = polygon_repair.winding_contour(pos, segs)
-        expected = polygon_repair.normalize((-1,-1))
+        expected = polygon_repair.normalize((-1, -1))
         self.tuples_almost_equal(actual, expected)
 
     
     def test_grad_90_norm2(self):
-        segs = [((0,0),(1,0)), ((1,0),(1,1)), ((1,1),(0,1))]
-        pos = (0,0.5)
+        segs = [((0, 0), (1, 0)), ((1, 0), (1, 1)), ((1, 1), (0, 1))]
+        pos = (0, 0.5)
         actual = polygon_repair.winding_contour(pos, segs)
-        expected = polygon_repair.normalize((0,-1))
+        expected = polygon_repair.normalize((0, -1))
         self.tuples_almost_equal(actual, expected)
 
-        pos = (-.5,0.5)
+        pos = (-.5, 0.5)
         actual = polygon_repair.winding_contour(pos, segs)
-        expected = polygon_repair.normalize((0,-1))
+        expected = polygon_repair.normalize((0, -1))
         self.tuples_almost_equal(actual, expected)
 
-        pos = (.5,0.5)
+        pos = (.5, 0.5)
         actual = polygon_repair.winding_contour(pos, segs)
-        expected = polygon_repair.normalize((0,-1))
+        expected = polygon_repair.normalize((0, -1))
         self.tuples_almost_equal(actual, expected)
 
     def test_grad_90_norm3(self):
-        segs = [((0,0),(1,0)), ((1,1),(0,1))]
+        segs = [((0, 0), (1, 0)), ((1, 1), (0, 1))]
         pos = (0.00001, 0.00001)
         actual = polygon_repair.winding_contour(pos, segs)
-        expected = polygon_repair.normalize((-1,-1))
+        expected = polygon_repair.normalize((-1, -1))
         self.tuples_almost_equal(actual, expected)
     
 

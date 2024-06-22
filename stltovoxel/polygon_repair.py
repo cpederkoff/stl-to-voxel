@@ -60,6 +60,7 @@ def find_polylines(segments):  # noqa: C901
 
     return polylines
 
+
 def find_polyline_endpoints(segs):
     start_to_end = dict()
     end_to_start = dict()
@@ -87,30 +88,35 @@ def find_polyline_endpoints(segs):
 
     return start_to_end
 
+
 def atan_sum(f1, f2):
     # Angle sum and difference identity
     # atan2(atan_sum(f1, f2)) == atan2(f1) + atan2(f2)
-    x1,y1 = f1
-    x2,y2 = f2
+    x1, y1 = f1
+    x2, y2 = f2
     return ( x1*x2 - y1*y2, y1*x2 + x1*y2)
+
 
 def atan_neg(f1):
     # atan2(atan_neg(f1)) == -atan2(f1)
-    x,y = f1
-    return x,-y
+    x, y = f1
+    return x, -y
+
 
 def subtract(s1, s2):
     return (s1[0] - s2[0], s1[1] - s2[1])
 
+
 def add(s1, s2):
     return (s1[0] + s2[0], s1[1] + s2[1])
 
+
 def winding_contour_pole(pos, pt, repel):
     # The total winding number of a system is composed of a sum of atan2 functions (one at each point of each line segment)
-    # The gradient of atan2(y,x) is 
+    # The gradient of atan2(y, x) is
     # Gx = -y/(x^2+y^2); Gy = x/(x^2+y^2)
     # The contour (direction of no increase) is orthogonal to the gradient, either
-    # (-Gy,Gx) or (Gy,-Gx)
+    # (-Gy, Gx) or (Gy, -Gx)
     # This is represented by:
     # Cx =  x/(x^2+y^2); Cy =  y/(x^2+y^2) or
     # Cx = -x/(x^2+y^2); Cy = -y/(x^2+y^2)
@@ -124,24 +130,27 @@ def winding_contour_pole(pos, pt, repel):
     else:
         return (-cx, -cy)
 
+
 def normalize(pt):
     x, y = pt
     dist = math.sqrt(x**2 + y**2)
     return (x / dist, y / dist)
+
 
 def distance(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
     return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
 
+
 def initial_direction(my_seg, other_segs):
     # Computing the winding number of a given point requires 2 angle computations per line segment (one per point).
     # This method makes 2 angle computations for every segment in other_segs to compute the winding number at my_seg[1].
     # It also makes one angle computation from my_seg[0] to my_seg[1].
-    # The result is an angle out of my_seg which leads to a winding number of a target value. 
+    # The result is an angle out of my_seg which leads to a winding number of a target value.
     # In theory this target winding number can be any value, but here pi radians (180 degrees) is used for simplicity.
     # Also, generally angle computation would take the form of [atan2(start-pt)-atan2(end-pt)]+... , but multiple atan2 calls
-    # can be avoided through use of atan2 identities. 
+    # can be avoided through use of atan2 identities.
     # Since the final angle would be converted back into a vector, no atan2 call is required.
     pt = my_seg[1]
     accum = subtract(my_seg[0], my_seg[1])
@@ -152,8 +161,9 @@ def initial_direction(my_seg, other_segs):
         accum = normalize(accum)
     return np.array(accum)
 
+
 def winding_contour(pos, segs):
-    accum = (0,0)
+    accum = (0, 0)
     for start, end in segs:
         # Starting points attract the vector field
         start_vec = winding_contour_pole(pos, start, repel=False)
@@ -162,6 +172,7 @@ def winding_contour(pos, segs):
         end_vec = winding_contour_pole(pos, end, repel=True)
         accum = add(accum, end_vec)
     return normalize(accum)
+
 
 def winding_number_search(start, ends, segs, polyline_endpoints, max_iterations):
     # find the segment I am a part of
@@ -189,6 +200,7 @@ def winding_number_search(start, ends, segs, polyline_endpoints, max_iterations)
                 return end
 
     raise Exception("Failed to repair mesh")
+
 
 class PolygonRepair():
     def __init__(self, segments, dimensions):
