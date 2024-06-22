@@ -163,7 +163,7 @@ def winding_contour(pos, segs):
         accum = add(accum, end_vec)
     return normalize(accum)
 
-def winding_number_search(start, ends, segs, polyline_endpoints):
+def winding_number_search(start, ends, segs, polyline_endpoints, max_iterations):
     # find the segment I am a part of
     my_seg = next(filter(lambda seg: seg[1] == start, segs))
     # find all other segments
@@ -171,9 +171,9 @@ def winding_number_search(start, ends, segs, polyline_endpoints):
     # Find the initial direction to start marching towards.
     direction = initial_direction(my_seg, other_segs)
     # Move slightly toward that direction to pick the contour that we will use below
-    pos = start + (direction * 0.001)
+    pos = start + (direction * 0.1)
     seg_outs = [(tuple(start), tuple(pos))]
-    for _ in range(200):
+    for _ in range(max_iterations):
         # Flow lines in this vector field have equivalent winding numbers
         # As an optimization, polyline endpoints are used instead of original_segments for winding_contour because
         # start and end points in the same place cancel out.
@@ -186,17 +186,18 @@ def winding_number_search(start, ends, segs, polyline_endpoints):
         for end in ends:
             if distance(pos, end) < 1:
                 seg_outs.append((tuple(pos), tuple(end)))
-                return seg_outs
+                return end
 
-    raise Exception("Max iteration number exceeded to repair mesh")
+    raise Exception("Failed to repair mesh")
 
 class PolygonRepair():
-    def __init__(self, segments):
+    def __init__(self, segments, dimensions):
         # Maps endpoints to the polygon they form
         self.loops = []
         # Populate initially
         self.polylines = []
         self.original_segments = segments
+        self.dimensions = dimensions
         self.collapse_segments()
 
     def collapse_segments(self):
@@ -222,5 +223,6 @@ class PolygonRepair():
         # Search will conclude when it finds the beginning of any polyline (including itself)
         search_ends = [polyline[0] for polyline in self.polylines]
         polyline_endpoints = [(polyline[0], polyline[-1]) for polyline in self.polylines]
-        new_segs = winding_number_search(search_start, search_ends, self.original_segments, polyline_endpoints)
-        self.original_segments.extend(new_segs)
+        max_iterations = self.dimensions[0] + self.dimensions[1]
+        end = winding_number_search(search_start, search_ends, self.original_segments, polyline_endpoints, max_iterations)
+        self.original_segments.append((search_start, end))

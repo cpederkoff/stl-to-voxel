@@ -66,7 +66,7 @@ def paint_z_plane(mesh, height, plane_shape):
                 pt2 = points[(i + 1) % 3]
                 lines.append((pt, pt2))
 
-    perimeter.repaired_lines_to_voxels(lines, pixels)
+    perimeter.repaired_lines_to_voxels(lines, pixels, plane_shape)
 
     return height, pixels
 

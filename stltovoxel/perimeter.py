@@ -1,11 +1,11 @@
 from . import polygon_repair
 
 
-def repaired_lines_to_voxels(line_list, pixels):
+def repaired_lines_to_voxels(line_list, pixels, plane_shape):
     if not line_list:
         return
     segments = [[tuple(pt.tolist())[:2] for pt in seg] for seg in line_list]
-    wq = polygon_repair.PolygonRepair(segments)
+    wq = polygon_repair.PolygonRepair(segments, plane_shape)
     wq.repair_all()
     new_line_list = []
     for polyline in wq.loops:
