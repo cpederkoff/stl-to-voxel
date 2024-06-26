@@ -1,6 +1,7 @@
 import numpy as np
 import math
 
+
 def find_polylines(segments):  # noqa: C901
     polylines = []
     segment_forward_dict = {}
@@ -94,7 +95,7 @@ def atan_sum(f1, f2):
     # atan2(atan_sum(f1, f2)) == atan2(f1) + atan2(f2)
     x1, y1 = f1
     x2, y2 = f2
-    return ( x1*x2 - y1*y2, y1*x2 + x1*y2)
+    return (x1*x2 - y1*y2, y1*x2 + x1*y2)
 
 
 def atan_neg(f1):

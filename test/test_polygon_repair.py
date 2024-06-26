@@ -1,11 +1,10 @@
-import unittest
-import math
 import numpy as np
+import unittest
 
 from stltovoxel import polygon_repair
 
 
-class TestWindingQuery(unittest.TestCase):
+class TestPolygonRepair(unittest.TestCase):
     def tuples_almost_equal(self, actual, expected):
         for ac_val, exp_val in zip(actual, expected):
             self.assertAlmostEqual(ac_val, exp_val, 3, f"{actual} != {expected}")
@@ -68,7 +67,6 @@ class TestWindingQuery(unittest.TestCase):
         expected = polygon_repair.normalize((-1, -1))
         self.tuples_almost_equal(actual, expected)
 
-    
     def test_grad_90_norm2(self):
         segs = [((0, 0), (1, 0)), ((1, 0), (1, 1)), ((1, 1), (0, 1))]
         pos = (0, 0.5)
@@ -92,7 +90,7 @@ class TestWindingQuery(unittest.TestCase):
         actual = polygon_repair.winding_contour(pos, segs)
         expected = polygon_repair.normalize((-1, -1))
         self.tuples_almost_equal(actual, expected)
-    
+
 
 if __name__ == '__main__':
     unittest.main()
