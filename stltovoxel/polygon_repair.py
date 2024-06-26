@@ -91,17 +91,20 @@ def find_polyline_endpoints(segs):
 
 
 def atan_sum(f1, f2):
-    # Angle sum and difference identity
+    # Atan sum identity
     # atan2(atan_sum(f1, f2)) == atan2(f1) + atan2(f2)
     x1, y1 = f1
     x2, y2 = f2
     return (x1*x2 - y1*y2, y1*x2 + x1*y2)
 
 
-def atan_neg(f1):
-    # atan2(atan_neg(f1)) == -atan2(f1)
-    x, y = f1
-    return x, -y
+def atan_diff(f1, f2):
+    # Atan difference identity
+    # atan2(atan_diff(f1, f2)) == atan2(f1) - atan2(f2)
+    x1, y1 = f1
+    x2, y2 = f2
+    return (x1*x2 + y1*y2, y1*x2 - x1*y2)
+
 
 
 def subtract(s1, s2):
@@ -144,7 +147,7 @@ def distance(p1, p2):
     return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
 
 
-def initial_direction(my_seg, other_segs):
+def initial_direction(pt, segs):
     # Computing the winding number of a given point requires 2 angle computations per line segment (one per point).
     # This method makes 2 angle computations for every segment in other_segs to compute the winding number at my_seg[1].
     # It also makes one angle computation from my_seg[0] to my_seg[1].
@@ -153,11 +156,15 @@ def initial_direction(my_seg, other_segs):
     # Also, generally angle computation would take the form of [atan2(start-pt)-atan2(end-pt)]+... , but multiple atan2 calls
     # can be avoided through use of atan2 identities.
     # Since the final angle would be converted back into a vector, no atan2 call is required.
-    pt = my_seg[1]
-    accum = subtract(my_seg[0], my_seg[1])
-    for seg_start, seg_end in other_segs:
-        accum = atan_sum(accum, subtract(seg_start, pt))
-        accum = atan_sum(accum, atan_neg(subtract(seg_end, pt)))
+    accum = (1, 0)
+    for seg_start, seg_end in segs:
+        # Low quality meshes may have multiple segments with the same start or end point, so we should not attempt
+        # to compute the angle from pt because the result is undefined.
+        if seg_start != pt:
+            accum = atan_sum(accum, subtract(seg_start, pt))
+        if seg_end != pt:
+            # This will trigger for at least one segment because pt comes from this same list of segments.
+            accum = atan_diff(accum, subtract(seg_end, pt))
         # Without this accum can get arbitrarily large and lead to floating point problems
         accum = normalize(accum)
     return np.array(accum)
@@ -176,12 +183,8 @@ def winding_contour(pos, segs):
 
 
 def winding_number_search(start, ends, segs, polyline_endpoints, max_iterations):
-    # find the segment I am a part of
-    my_seg = next(filter(lambda seg: seg[1] == start, segs))
-    # find all other segments
-    other_segs = list(filter(lambda seg: seg[1] != start, segs))
     # Find the initial direction to start marching towards.
-    direction = initial_direction(my_seg, other_segs)
+    direction = initial_direction(start, segs)
     # Move slightly toward that direction to pick the contour that we will use below
     pos = start + (direction * 0.1)
     seg_outs = [(tuple(start), tuple(pos))]
