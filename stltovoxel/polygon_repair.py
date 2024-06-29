@@ -106,7 +106,6 @@ def atan_diff(f1, f2):
     return (x1*x2 + y1*y2, y1*x2 - x1*y2)
 
 
-
 def subtract(s1, s2):
     return (s1[0] - s2[0], s1[1] - s2[1])
 
