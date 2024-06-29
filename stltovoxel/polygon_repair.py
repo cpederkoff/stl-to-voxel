@@ -140,13 +140,13 @@ def normalize(pt):
     return (x / dist, y / dist)
 
 
-def distance(p1, p2):
+def distance_squared(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
-    return math.sqrt((y2 - y1)**2 + (x2 - x1)**2)
+    return (y2 - y1)**2 + (x2 - x1)**2
 
 
-def initial_direction(pt, segs):
+def initial_direction(pt, polyline_endpoints):
     # Computing the winding number of a given point requires 2 angle computations per line segment (one per point).
     # This method makes 2 angle computations for every segment in other_segs to compute the winding number at my_seg[1].
     # It also makes one angle computation from my_seg[0] to my_seg[1].
@@ -156,15 +156,15 @@ def initial_direction(pt, segs):
     # can be avoided through use of atan2 identities.
     # Since the final angle would be converted back into a vector, no atan2 call is required.
     accum = (1, 0)
-    for seg_start, seg_end in segs:
+    for start, end in polyline_endpoints:
         # Low quality meshes may have multiple segments with the same start or end point, so we should not attempt
         # to compute the angle from pt because the result is undefined.
-        if seg_start != pt:
-            accum = atan_sum(accum, subtract(seg_start, pt))
-        if seg_end != pt:
-            # This will trigger for at least one segment because pt comes from this same list of segments.
-            accum = atan_diff(accum, subtract(seg_end, pt))
-        # Without this accum can get arbitrarily large and lead to floating point problems
+        if start != pt:
+            accum = atan_sum(accum, subtract(start, pt))
+        if end != pt:
+            # This will trigger for at least one segment because pt is the end of a polyline.
+            accum = atan_diff(accum, subtract(end, pt))
+        # Without this, accum can get arbitrarily large and lead to floating point problems
         accum = normalize(accum)
     return np.array(accum)
 
@@ -181,25 +181,23 @@ def winding_contour(pos, segs):
     return normalize(accum)
 
 
-def winding_number_search(start, ends, segs, polyline_endpoints, max_iterations):
+def winding_number_search(start, ends, polyline_endpoints, max_iterations):
     # Find the initial direction to start marching towards.
-    direction = initial_direction(start, segs)
+    # As an optimization, polyline endpoints are used instead of original_segments for initial_direction because
+    # start and end points in the same place cancel out.
+    direction = initial_direction(start, polyline_endpoints)
     # Move slightly toward that direction to pick the contour that we will use below
     pos = start + (direction * 0.1)
-    seg_outs = [(tuple(start), tuple(pos))]
     for _ in range(max_iterations):
         # Flow lines in this vector field have equivalent winding numbers
         # As an optimization, polyline endpoints are used instead of original_segments for winding_contour because
         # start and end points in the same place cancel out.
         direction = winding_contour(pos, polyline_endpoints)
         # March along the flowline to find where it terminates.
-        new_pos = pos + direction
-        seg_outs.append((tuple(pos), tuple(new_pos)))
-        pos = new_pos
+        pos = pos + direction
         # It should terminate at an endpoint
         for end in ends:
-            if distance(pos, end) < 1:
-                seg_outs.append((tuple(pos), tuple(end)))
+            if distance_squared(pos, end) < 1:
                 return end
 
     raise Exception("Failed to repair mesh")
@@ -239,5 +237,5 @@ class PolygonRepair():
         search_ends = [polyline[0] for polyline in self.polylines]
         polyline_endpoints = [(polyline[0], polyline[-1]) for polyline in self.polylines]
         max_iterations = self.dimensions[0] + self.dimensions[1]
-        end = winding_number_search(search_start, search_ends, self.original_segments, polyline_endpoints, max_iterations)
+        end = winding_number_search(search_start, search_ends, polyline_endpoints, max_iterations)
         self.original_segments.append((search_start, end))

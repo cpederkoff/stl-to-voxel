@@ -1,4 +1,3 @@
-import numpy as np
 import unittest
 
 from stltovoxel import polygon_repair
@@ -36,7 +35,7 @@ class TestPolygonRepair(unittest.TestCase):
         self.assertEqual(actual_polylines, expected_polylines)
 
     def test_initial_direction(self):
-        segs = [((0, 1), (0, 0)), ((1, 0), (1, 1)), ((1, 1), (0, 1)), ]
+        segs = [((1, 0), (0, 0))]
         pt = (0, 0)
         actual = polygon_repair.initial_direction(pt, segs)
         actual = tuple(actual)
@@ -61,7 +60,7 @@ class TestPolygonRepair(unittest.TestCase):
 
     def test_winding_contour(self):
         segs = [((0, 0), (1, 0)), ((1, 0), (1, 1))]
-        pos = np.array((1, 1)) - np.array((0.1, 0.1))
+        pos = (0.9, 0.9)
         # Treats starts as repellers and ends as attractors
         actual = polygon_repair.winding_contour(pos, segs)
         expected = polygon_repair.normalize((-1, -1))
