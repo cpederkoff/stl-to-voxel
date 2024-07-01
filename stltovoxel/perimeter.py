@@ -1,3 +1,5 @@
+import numpy as np
+
 from . import polygon_repair
 
 
@@ -16,7 +18,7 @@ def repaired_lines_to_voxels(line_list, pixels, plane_shape):
 
 def lines_to_voxels(line_list, pixels):
     current_line_indices = set()
-    x = 0.5
+    x = 0
     i = 0
     events = generate_line_events(line_list)
     while i < len(events):
@@ -65,8 +67,7 @@ def paint_y_axis(lines, pixels, x):
 
     yi = 0
     for target_y, inside_change in target_ys:
-        # Round causes the center of the voxel to be considered.
-        target_y = round(target_y)
+        target_y = int(np.ceil(target_y))
         assert target_y >= 0
         if inside > 0:
             # Bulk assign all pixels between yi -> target_y

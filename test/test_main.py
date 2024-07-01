@@ -63,12 +63,12 @@ class TestMain(unittest.TestCase):
 
     def test_convert_mesh(self):
         mesh = np.array([
-            [[30, 0, 25], [42, 11, 0], [18, 11, 0]],
-            [[30, 0, 25], [42, -13, 0], [42, 11, 0]],
-            [[30, 0, 25], [18, -13, 0], [42, -13, 0]],
-            [[42, -13, 0], [18, -13, 0], [42, 11, 0]],
-            [[18, -13, 0], [18, 11, 0], [42, 11, 0]],
-            [[30, 0, 25], [18, 11, 0], [18, -13, 0]],
+            [[30, 0, 25], [42.5, 12.5, 0], [17.5, 12.5, 0]],
+            [[30, 0, 25], [42.5, -12.5, 0], [42.5, 12.5, 0]],
+            [[30, 0, 25], [17.5, -12.5, 0], [42.5, -12.5, 0]],
+            [[42.5, -12.5, 0], [17.5, -12.5, 0], [42.5, 12.5, 0]],
+            [[17.5, -12.5, 0], [17.5, 12.5, 0], [42.5, 12.5, 0]],
+            [[30, 0, 25], [17.5, 12.5, 0], [17.5, -12.5, 0]],
         ])
         voxels, _scale, _shift = convert_mesh(mesh, resolution=10)
         voxels = voxels.astype(int)
@@ -85,7 +85,7 @@ class TestMain(unittest.TestCase):
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         ])
         self.assertEqual(expected.shape, voxels[6].shape)
-        self.assertTrue((expected == voxels[6]).all())
+        np.testing.assert_array_equal(expected,  voxels[6])
 
 
 if __name__ == '__main__':

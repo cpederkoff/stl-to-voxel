@@ -15,7 +15,7 @@ def mesh_to_plane(mesh, bounding_box, parallel):
     z = 0
     i = 0
     events = generate_tri_events(mesh)
-    while i < len(events):
+    while i < len(events) and z < bounding_box[2]:
         event_z, status, tri_ind = events[i]
         if event_z > z:
             mesh_subset = [mesh[ind] for ind in current_mesh_indices]
@@ -128,15 +128,13 @@ def calculate_scale_and_shift(mesh_min, mesh_max, resolution, voxel_size):
         resolution = bounding_box / voxel_size
     else:
         if isinstance(resolution, int):
+            # Integer resolution means number of slices in z
             resolution = resolution * bounding_box / bounding_box[2]
         else:
             resolution = np.array(resolution)
-    # Want to use all of the voxels we allocate space for.
-    # Takes one voxel to start rendering
     scale = resolution / bounding_box
-    # If the bounding box
     int_resolution = np.ceil(resolution).astype(int)
-    centering_offset = (int_resolution - resolution) / (2 * scale)
+    centering_offset = (int_resolution - resolution - 1) / (2 * scale)
     shift = mesh_min - centering_offset
     return scale, shift, int_resolution
 
