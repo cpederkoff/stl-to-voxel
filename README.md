@@ -59,7 +59,7 @@ PYTHONPATH=./ python3 test/test_slice.py
 
 <!--- https://commons.wikimedia.org/wiki/File:Stanford_Bunny.stl --->
 
-The resolution is optional and defaults to 100
+The resolution is optional and defaults to 100.
 
 ### Example:
 ![alt text](https://github.com/cpederkoff/stl-to-voxel/raw/master/data/stanford_bunny.png "STL version of the stanford bunny")
