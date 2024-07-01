@@ -85,7 +85,7 @@ class TestMain(unittest.TestCase):
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         ])
         self.assertEqual(expected.shape, voxels[6].shape)
-        self.assertTrue((expected == voxels[6]).all())
+        np.testing.assert_array_equal(expected,  voxels[6])
 
 
 if __name__ == '__main__':
