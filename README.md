@@ -72,3 +72,5 @@ The resolution is optional and defaults to 100.
 </p>
 
 [Model credit](https://www.thingiverse.com/thing:21773)
+
+### [Features a fast winding number based algorithm for polygon repair](https://github.com/cpederkoff/stl-to-voxel/wiki/Polygon-Repair-Method)
