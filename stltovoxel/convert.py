@@ -1,11 +1,12 @@
-import io
 import glob
+import io
 import os
-from PIL import Image, ImageOps
-from stl import mesh
 import xml.etree.cElementTree as ETree
 import zipfile
+
 import numpy as np
+from PIL import Image, ImageOps
+from stl import mesh
 
 from . import slice
 

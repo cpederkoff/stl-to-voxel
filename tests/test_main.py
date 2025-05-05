@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+
 import numpy as np
 
 from stltovoxel.convert import convert_file, convert_mesh

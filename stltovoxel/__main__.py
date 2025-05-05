@@ -1,5 +1,6 @@
 import argparse
 import os
+
 from PIL import ImageColor
 
 from .convert import convert_files
