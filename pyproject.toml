@@ -7,7 +7,7 @@ name = "stl-to-voxel"
 packages = [
     { include = "stltovoxel" },
 ]
-version = "v0.10.0"
+version = "v0.0.0"
 description = "Turn STL files into voxels, images, and videos"
 readme = "README.md"
 authors = ["Christian Pederkoff"]
