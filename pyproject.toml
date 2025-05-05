@@ -21,21 +21,23 @@ keywords = ['numpy', 'Pillow', 'numpy-stl']
 repository = "https://github.com/cpederkoff/stl-to-voxel"
 
 
-[tool.poetry.dependencies]
-python = "^3.9"
-numpy = "^2.0"
-Pillow = "^11.0.1"
-numpy-stl = "^3.0.0"
+[project]
+dependencies = [
+    "python>=3.9",
+    "matplotlib>=3.6",
+    "numpy>=1.13",
+    "Pillow>=10.0.1",
+    "numpy-stl>=2.17",
+]
 
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8.0"
-black = "^25.0"
-isort = "^6.0"
-flake8 = "^7.0"
-pep8-naming = "^0.15.0"
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "black>=25.0",
+    "isort>=6.0",
+    "flake8>=7.0",
+    "pep8-naming>=0.15.0",
+]
 
 [tool.poetry.scripts]
 stltovoxel = "stltovoxel.__main__:main"
