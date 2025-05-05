@@ -26,8 +26,8 @@ dev = [
     "pytest>=8.0",
     "black>=25.0",
     "isort>=6.0",
-    "flake8>=7.0",
-    "pep8-naming>=0.15.0",
+    "flake8>=5.0.4",
+    "pep8-naming>=0.13.2",
 ]
 
 [project.urls]
