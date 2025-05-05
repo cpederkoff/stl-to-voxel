@@ -1,7 +1,8 @@
-import numpy as np
 import unittest
 
-from stltovoxel import perimeter
+import numpy as np
+
+from stltovoxel.perimeter import generate_y, lines_to_voxels, paint_y_axis
 
 
 class TestPerimeter(unittest.TestCase):
@@ -11,7 +12,7 @@ class TestPerimeter(unittest.TestCase):
                 [(9, 9, 0), (3, 9, 0)],
                 [(3, 9, 0), (0, 0, 0)]]
         actual = np.zeros((13, 13), dtype=bool)
-        perimeter.lines_to_voxels(test, actual)
+        lines_to_voxels(test, actual)
         expected = [
             [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
