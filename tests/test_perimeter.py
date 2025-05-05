@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from stltovoxel.perimeter import generate_y, lines_to_voxels, paint_y_axis
+from stltovoxel.perimeter import lines_to_voxels
 
 
 class TestPerimeter(unittest.TestCase):

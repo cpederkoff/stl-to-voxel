@@ -17,13 +17,12 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-keywords = ['numpy', 'Pillow', 'matplotlib', 'numpy-stl']
+keywords = ['numpy', 'Pillow', 'numpy-stl']
 repository = "https://github.com/cpederkoff/stl-to-voxel"
 
 
 [tool.poetry.dependencies]
 python = "^3.8"
-matplotlib = "^3.6"
 numpy = "^1.13"
 Pillow = ">=10.0.1"
 numpy-stl = "^2.17"
