@@ -16,7 +16,6 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 dependencies = [
-    "python>=3.9",
     "numpy>=1.13",
     "Pillow>=10.0.1",
     "numpy-stl>=2.17",
