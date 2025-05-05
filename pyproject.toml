@@ -9,7 +9,7 @@ description = "Turn STL files into voxels, images, and videos"
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.9"
-authors = {name = "Christian Pederkoff"}
+authors = [{name = "Christian Pederkoff"}]
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
