@@ -69,6 +69,8 @@ def paint_y_axis(lines, pixels, x):
     for target_y, inside_change in target_ys:
         target_y = int(np.ceil(target_y))
         assert target_y >= 0
+        # If inside > 0, we are inside the polygon
+        # If inside < 0, the normals are likely inverted and we should still paint
         if inside != 0:
             # Bulk assign all pixels between yi -> target_y
             pixels[yi:target_y, int(x)] = True
