@@ -2,29 +2,21 @@
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry]
+[project]
 name = "stl-to-voxel"
-packages = [
-    { include = "stltovoxel" },
-]
-version = "v0.0.0"
+dynamic = [ "version" ]
 description = "Turn STL files into voxels, images, and videos"
+license = { text = "MIT" }
 readme = "README.md"
-authors = ["Christian Pederkoff"]
-license = "MIT"
+requires-python = ">=3.9"
+authors = {name = "Christian Pederkoff"}
 classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
-keywords = ['numpy', 'Pillow', 'numpy-stl']
-repository = "https://github.com/cpederkoff/stl-to-voxel"
-
-
-[project]
 dependencies = [
     "python>=3.9",
-    "matplotlib>=3.6",
     "numpy>=1.13",
     "Pillow>=10.0.1",
     "numpy-stl>=2.17",
@@ -38,6 +30,18 @@ dev = [
     "flake8>=7.0",
     "pep8-naming>=0.15.0",
 ]
+
+[project.urls]
+repository = "https://github.com/cpederkoff/stl-to-voxel"
+documentation = "https://github.com/cpederkoff/stl-to-voxel/wiki"
+"Bug Tracker" = "https://github.com/cpederkoff/stl-to-voxel/issues"
+
+
+[tool.poetry]
+packages = [
+    { include = "stltovoxel" },
+]
+version = "v0.0.0"
 
 [tool.poetry.scripts]
 stltovoxel = "stltovoxel.__main__:main"
