@@ -12,7 +12,7 @@ def repaired_lines_to_voxels(line_list, pixels, plane_shape):
     new_line_list = []
     for polyline in wq.loops:
         for i in range(len(polyline) - 1):
-            new_line_list.append((polyline[i], polyline[i+1]))
+            new_line_list.append((polyline[i], polyline[i + 1]))
     lines_to_voxels(new_line_list, pixels)
 
 
@@ -28,12 +28,12 @@ def lines_to_voxels(line_list, pixels):
             lines = [line_list[ind] for ind in current_line_indices]
             paint_y_axis(lines, pixels, x)
             x += 1
-        elif event_x <= x and status == 'begin':
+        elif event_x <= x and status == "begin":
             # If the events are behind our current x, process them
             assert line_ind not in current_line_indices
             current_line_indices.add(line_ind)
             i += 1
-        elif event_x <= x and status == 'end':
+        elif event_x <= x and status == "end":
             # Process end statuses so that vertical lines are not given to paint_y_axis
             assert line_ind in current_line_indices
             current_line_indices.remove(line_ind)
@@ -45,8 +45,8 @@ def generate_y(p1, p2, x):
     x2, y2 = p2[:2]
     assert x1 != x2
 
-    dy = (y2 - y1)
-    dx = (x2 - x1)
+    dy = y2 - y1
+    dx = x2 - x1
     y = dy * (x - x1) / dx + y1
 
     inside_change = 0
@@ -75,7 +75,11 @@ def paint_y_axis(lines, pixels, x):
 
         inside += inside_change
         yi = target_y
-    assert inside == 0, 'an error has occured at x%s inside:%s lines:%s' % (x, inside, lines)
+    assert inside == 0, "an error has occured at x%s inside:%s lines:%s" % (
+        x,
+        inside,
+        lines,
+    )
 
 
 def generate_line_events(line_list):
@@ -85,7 +89,7 @@ def generate_line_events(line_list):
         if first[0] == second[0]:
             # Ignore vertical lines
             continue
-        events.append((first[0], 'begin', i))
-        events.append((second[0], 'end', i))
+        events.append((first[0], "begin", i))
+        events.append((second[0], "end", i))
     # Sorting by x value, then put all begin events before end events
     return sorted(events)

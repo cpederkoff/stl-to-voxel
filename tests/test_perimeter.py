@@ -7,10 +7,12 @@ from stltovoxel.perimeter import generate_y, lines_to_voxels, paint_y_axis
 
 class TestPerimeter(unittest.TestCase):
     def test_lines_to_pixels(self):
-        test = [[(0, 0, 0), (3, 0, 0)],
-                [(3, 0, 0), (9, 9, 0)],
-                [(9, 9, 0), (3, 9, 0)],
-                [(3, 9, 0), (0, 0, 0)]]
+        test = [
+            [(0, 0, 0), (3, 0, 0)],
+            [(3, 0, 0), (9, 9, 0)],
+            [(9, 9, 0), (3, 9, 0)],
+            [(3, 9, 0), (0, 0, 0)],
+        ]
         actual = np.zeros((13, 13), dtype=bool)
         lines_to_voxels(test, actual)
         expected = [
@@ -26,9 +28,10 @@ class TestPerimeter(unittest.TestCase):
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ]
         self.assertEqual(expected, actual.astype(int).tolist())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

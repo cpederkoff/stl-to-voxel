@@ -95,7 +95,7 @@ def atan_sum(f1, f2):
     # atan2(atan_sum(f1, f2)) == atan2(f1) + atan2(f2)
     x1, y1 = f1
     x2, y2 = f2
-    return (x1*x2 - y1*y2, y1*x2 + x1*y2)
+    return (x1 * x2 - y1 * y2, y1 * x2 + x1 * y2)
 
 
 def atan_diff(f1, f2):
@@ -103,7 +103,7 @@ def atan_diff(f1, f2):
     # atan2(atan_diff(f1, f2)) == atan2(f1) - atan2(f2)
     x1, y1 = f1
     x2, y2 = f2
-    return (x1*x2 + y1*y2, y1*x2 - x1*y2)
+    return (x1 * x2 + y1 * y2, y1 * x2 - x1 * y2)
 
 
 def subtract(s1, s2):
@@ -125,9 +125,9 @@ def winding_contour_pole(pos, pt, repel):
     # Cx = -x/(x^2+y^2); Cy = -y/(x^2+y^2)
     # In practice, one of each is used per line segment which repels & attracts the vector field.
     x, y = subtract(pos, pt)
-    dist2 = (x**2 + y**2)
-    cx = x/dist2
-    cy = y/dist2
+    dist2 = x**2 + y**2
+    cx = x / dist2
+    cy = y / dist2
     if repel:
         return (cx, cy)
     else:
@@ -143,7 +143,7 @@ def normalize(pt):
 def distance_squared(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
-    return (y2 - y1)**2 + (x2 - x1)**2
+    return (y2 - y1) ** 2 + (x2 - x1) ** 2
 
 
 def initial_direction(pt, polyline_endpoints):
@@ -203,7 +203,7 @@ def winding_number_search(start, ends, polyline_endpoints, max_iterations):
     raise Exception("Failed to repair mesh")
 
 
-class PolygonRepair():
+class PolygonRepair:
     def __init__(self, segments, dimensions):
         # Maps endpoints to the polygon they form
         self.loops = []
@@ -235,7 +235,11 @@ class PolygonRepair():
         search_start = self.polylines[0][-1]
         # Search will conclude when it finds the beginning of any polyline (including itself)
         search_ends = [polyline[0] for polyline in self.polylines]
-        polyline_endpoints = [(polyline[0], polyline[-1]) for polyline in self.polylines]
+        polyline_endpoints = [
+            (polyline[0], polyline[-1]) for polyline in self.polylines
+        ]
         max_iterations = self.dimensions[0] + self.dimensions[1]
-        end = winding_number_search(search_start, search_ends, polyline_endpoints, max_iterations)
+        end = winding_number_search(
+            search_start, search_ends, polyline_endpoints, max_iterations
+        )
         self.original_segments.append((search_start, end))
