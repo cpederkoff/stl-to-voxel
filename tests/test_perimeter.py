@@ -1,5 +1,7 @@
 import unittest
 
+import numpy as np
+
 from stltovoxel.perimeter import lines_to_voxels
 
 
