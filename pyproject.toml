@@ -22,20 +22,20 @@ repository = "https://github.com/cpederkoff/stl-to-voxel"
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
-numpy = "^1.13"
-Pillow = ">=10.0.1"
-numpy-stl = "^2.17"
+python = "^3.9"
+numpy = "^2.0"
+Pillow = "^11.0.1"
+numpy-stl = "^3.0.0"
 
 [tool.poetry.group.dev]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.0"
-black = "^23.0"
-isort = "^5.0"
-flake8 = "^5.0.4"
-pep8-naming = "^0.13.2"
+pytest = "^8.0"
+black = "^25.0"
+isort = "^6.0"
+flake8 = "^7.0"
+pep8-naming = "^0.15.0"
 
 [tool.poetry.scripts]
 stltovoxel = "stltovoxel.__main__:main"
