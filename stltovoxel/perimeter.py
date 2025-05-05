@@ -69,7 +69,7 @@ def paint_y_axis(lines, pixels, x):
     for target_y, inside_change in target_ys:
         target_y = int(np.ceil(target_y))
         assert target_y >= 0
-        if inside > 0:
+        if inside != 0:
             # Bulk assign all pixels between yi -> target_y
             pixels[yi:target_y, int(x)] = True
 
