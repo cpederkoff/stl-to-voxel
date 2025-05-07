@@ -9,7 +9,12 @@ class TestPolygonRepair(unittest.TestCase):
             self.assertAlmostEqual(ac_val, exp_val, 3, f"{actual} != {expected}")
 
     def test_find_polylines_cycle(self):
-        line_segments = [((0, 0), (1, 0)), ((1, 0), (1, 1)), ((1, 1), (0, 1)), ((0, 1), (0, 0))]
+        line_segments = [
+            ((0, 0), (1, 0)),
+            ((1, 0), (1, 1)),
+            ((1, 1), (0, 1)),
+            ((0, 1), (0, 0)),
+        ]
         expected_polylines = [[(0, 0), (1, 0), (1, 1), (0, 1), (0, 0)]]
         actual_polylines = polygon_repair.find_polylines(line_segments)
         self.assertEqual(actual_polylines, expected_polylines)
@@ -22,9 +27,13 @@ class TestPolygonRepair(unittest.TestCase):
             ((4, 0), (5, 0)),
             ((5, 0), (6, 1)),
             ((7, 1), (8, 0)),
-            ((8, 0), (9, 0))
+            ((8, 0), (9, 0)),
         ]
-        expected_polylines = [[(0, 0), (1, 0), (2, 1)], [(3, 1), (4, 0), (5, 0), (6, 1)], [(7, 1), (8, 0), (9, 0)]]
+        expected_polylines = [
+            [(0, 0), (1, 0), (2, 1)],
+            [(3, 1), (4, 0), (5, 0), (6, 1)],
+            [(7, 1), (8, 0), (9, 0)],
+        ]
         actual_polylines = polygon_repair.find_polylines(line_segments)
         self.assertEqual(actual_polylines, expected_polylines)
 
@@ -73,12 +82,12 @@ class TestPolygonRepair(unittest.TestCase):
         expected = polygon_repair.normalize((0, -1))
         self.tuples_almost_equal(actual, expected)
 
-        pos = (-.5, 0.5)
+        pos = (-0.5, 0.5)
         actual = polygon_repair.winding_contour(pos, segs)
         expected = polygon_repair.normalize((0, -1))
         self.tuples_almost_equal(actual, expected)
 
-        pos = (.5, 0.5)
+        pos = (0.5, 0.5)
         actual = polygon_repair.winding_contour(pos, segs)
         expected = polygon_repair.normalize((0, -1))
         self.tuples_almost_equal(actual, expected)
@@ -91,7 +100,7 @@ class TestPolygonRepair(unittest.TestCase):
         self.tuples_almost_equal(actual, expected)
 
     def test_repair_all_close_case(self):
-        segs = [((0, 0), (1, 0)), ((1, .5), (0, .5))]
+        segs = [((0, 0), (1, 0)), ((1, 0.5), (0, 0.5))]
         repair = polygon_repair.PolygonRepair(segs, (10, 10))
         repair.repair_all()
         expected = [[(0, 0), (1, 0), (1, 0.5), (0, 0.5), (0, 0)]]
@@ -105,5 +114,5 @@ class TestPolygonRepair(unittest.TestCase):
         self.assertEqual(repair.loops, expected)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

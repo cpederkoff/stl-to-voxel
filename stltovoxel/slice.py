@@ -1,5 +1,6 @@
-import numpy as np
 import multiprocessing as mp
+
+import numpy as np
 
 from . import perimeter
 
@@ -20,18 +21,20 @@ def mesh_to_plane(mesh, bounding_box, parallel):
         if event_z > z:
             mesh_subset = [mesh[ind] for ind in current_mesh_indices]
             if parallel:
-                result_id = pool.apply_async(paint_z_plane, args=(mesh_subset, z, vol.shape[1:]))
+                result_id = pool.apply_async(
+                    paint_z_plane, args=(mesh_subset, z, vol.shape[1:])
+                )
                 result_ids.append(result_id)
             else:
                 _, pixels = paint_z_plane(mesh_subset, z, vol.shape[1:])
                 vol[z] = pixels
             z += 1
-        elif event_z <= z and status == 'begin':
+        elif event_z <= z and status == "begin":
             # If the events are behind our current x, process them
             assert tri_ind not in current_mesh_indices
             current_mesh_indices.add(tri_ind)
             i += 1
-        elif event_z <= z and status == 'end':
+        elif event_z <= z and status == "end":
             # Process end statuses so that vertical lines are not given to paint_y_axis
             assert tri_ind in current_mesh_indices
             current_mesh_indices.remove(tri_ind)
@@ -50,7 +53,7 @@ def mesh_to_plane(mesh, bounding_box, parallel):
 
 
 def paint_z_plane(mesh, height, plane_shape):
-    print('Processing layer %d' % (height))
+    print("Processing layer %d" % (height))
 
     pixels = np.zeros(plane_shape, dtype=bool)
 
@@ -72,30 +75,32 @@ def paint_z_plane(mesh, height, plane_shape):
 
 
 def linear_interpolation(p1, p2, distance):
-    '''
+    """
     :param p1: Point 1
     :param p2: Point 2
     :param distance: Between 0 and 1, Lower numbers return points closer to p1.
     :return: A point on the line between p1 and p2
-    '''
-    return p1 * (1-distance) + p2 * distance
+    """
+    return p1 * (1 - distance) + p2 * distance
 
 
 def triangle_to_intersecting_points(triangle, height):
-    assert (len(triangle) == 3)
+    assert len(triangle) == 3
     points = []
     # Find the pt index with the greatest z, start there
     start_index = max(range(3), key=lambda i: triangle[i][2])
-    if triangle[(start_index+1) % 3][2] == height:
+    if triangle[(start_index + 1) % 3][2] == height:
         # Corner-case where there is a tie for highest point.
         # The later point in the rotation should be chosen
-        start_index = (start_index+1) % 3
+        start_index = (start_index + 1) % 3
     for i in range(start_index, start_index + 3):
         pt = triangle[i % 3]
-        pt2 = triangle[(i+1) % 3]
+        pt2 = triangle[(i + 1) % 3]
         if pt[2] == height:
             points.append(pt)
-        elif (pt[2] < height and pt2[2] > height) or (pt[2] > height and pt2[2] < height):
+        elif (pt[2] < height and pt2[2] > height) or (
+            pt[2] > height and pt2[2] < height
+        ):
             intersection = where_line_crosses_z(pt, pt2, height)
             points.append(intersection)
 
@@ -103,7 +108,7 @@ def triangle_to_intersecting_points(triangle, height):
 
 
 def where_line_crosses_z(p1, p2, z):
-    if (p1[2] > p2[2]):
+    if p1[2] > p2[2]:
         p1, p2 = p2, p1
     # now p1 is below p2 in z
     if p2[2] == p1[2]:
@@ -149,6 +154,6 @@ def generate_tri_events(mesh):
     events = []
     for i, tri in enumerate(mesh):
         bottom, middle, top = sorted(tri, key=lambda pt: pt[2])
-        events.append((bottom[2], 'begin', i))
-        events.append((top[2], 'end', i))
+        events.append((bottom[2], "begin", i))
+        events.append((top[2], "end", i))
     return sorted(events, key=lambda tup: tup[0])
