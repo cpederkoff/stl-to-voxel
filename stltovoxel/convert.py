@@ -1,8 +1,5 @@
 import glob
-import io
 import os
-import xml.etree.cElementTree as ETree
-import zipfile
 
 import numpy as np
 from PIL import Image, ImageOps
@@ -74,8 +71,6 @@ def convert_files(
         export_pngs(vol, output_file_path, colors)
     elif output_file_extension == ".xyz":
         export_xyz(vol, output_file_path, scale, shift)
-    elif output_file_extension == ".svx":
-        export_svx(vol, output_file_path, scale, shift)
     elif output_file_extension == ".npy":
         export_npy(vol, output_file_path, scale, shift)
 
@@ -135,36 +130,3 @@ def export_npy(voxels, output_file_path, scale, shift):
                     point = (np.array([x, y, z]) / scale) + shift
                     out.append(point)
     np.save(output_file_path, out)
-
-
-def export_svx(voxels, output_file_path, scale, shift):
-    # Collapse all materials into one
-    voxels = voxels.astype(bool)
-    z_size, y_size, x_size = voxels.shape
-    size = str(len(str(z_size)) + 1)
-    root = ETree.Element(
-        "grid",
-        attrib={
-            "gridSizeX": str(x_size),
-            "gridSizeY": str(y_size),
-            "gridSizeZ": str(z_size),
-            "voxelSize": str(
-                1.0 / scale / 1000
-            ),  # STL is probably in mm, and svx needs meters
-            "subvoxelBits": "8",
-            "originX": str(shift[0]),
-            "originY": str(shift[1]),
-            "originZ": str(shift[2]),
-        },
-    )
-    manifest = ETree.tostring(root)
-    with zipfile.ZipFile(output_file_path, "w", zipfile.ZIP_DEFLATED) as zip_file:
-        for height in range(z_size):
-            img = Image.fromarray(voxels[height])
-            img = ImageOps.flip(img)
-            output = io.BytesIO()
-            img.save(output, format="PNG")
-            zip_file.writestr(
-                ("density/slice%0" + size + "d.png") % height, output.getvalue()
-            )
-        zip_file.writestr("manifest.xml", manifest)
