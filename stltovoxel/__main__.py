@@ -43,7 +43,7 @@ def main():
     )
     parser.add_argument(
         "--colors",
-        type=str,
+        type=lambda s: s.split(","),
         default="#FFFFFF",
         help="Output png colors. Ex red,#FF0000",
     )
@@ -76,7 +76,6 @@ def main():
     parser.set_defaults(parallel=True)
 
     args = parser.parse_args()
-    colors = args.colors.split(",")
     if os.path.splitext(args.output)[1] == ".png" and len(colors) < len(args.input):
         raise argparse.ArgumentTypeError("Must specify enough colors")
 
