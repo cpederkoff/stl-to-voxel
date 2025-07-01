@@ -109,24 +109,21 @@ def export_pngs(voxels, output_file_path, colors):
 
 
 def export_xyz(voxels, output_file_path, scale, shift):
-    voxels = voxels.astype(bool)
-    output = open(output_file_path, "w")
-    for z in range(voxels.shape[0]):
-        for y in range(voxels.shape[1]):
-            for x in range(voxels.shape[2]):
-                if voxels[z][y][x]:
-                    point = (np.array([x, y, z]) / scale) + shift
-                    output.write("%s %s %s\n" % tuple(point))
-    output.close()
+    points = _get_transformed_points(voxels, scale, shift)
+
+    with open(output_file_path, "w") as output:
+        for point in points:
+            output.write("%s %s %s\n" % tuple(point))
 
 
 def export_npy(voxels, output_file_path, scale, shift):
+    points = _get_transformed_points(voxels, scale, shift)
+    np.save(output_file_path, points)
+
+
+def _get_transformed_points(voxels, scale, shift):
     voxels = voxels.astype(bool)
-    out = []
-    for z in range(voxels.shape[0]):
-        for y in range(voxels.shape[1]):
-            for x in range(voxels.shape[2]):
-                if voxels[z][y][x]:
-                    point = (np.array([x, y, z]) / scale) + shift
-                    out.append(point)
-    np.save(output_file_path, out)
+    true_coords = np.where(voxels)
+    coords = np.vstack(true_coords).T
+    coords = coords[:, [2, 1, 0]]
+    return (coords / scale) + shift
